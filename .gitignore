@@ -35,3 +35,6 @@ storybook-static
 
 # Supabase
 supabase/.env
+
+# Windows Zone.Identifier files
+*.Zone.Identifier
