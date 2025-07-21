@@ -74,11 +74,13 @@ export function calculateNodeDimensions(
     hasIcon = false,
     hasChildren = false,
     hasControls = false,
-    minWidth = 100,
+    minWidth: initialMinWidth = 100,
     minHeight = 30,
     maxWidth = 400,
     padding = { x: 24, y: 16 }, // Default padding (px-3 py-2)
   } = options
+  
+  let minWidth = initialMinWidth
 
   // Measure the text
   const textDimensions = measureText(text, 'text-sm', maxWidth - padding.x * 2)
