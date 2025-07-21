@@ -1,0 +1,105 @@
+import type { Node, Edge } from '@xyflow/react'
+
+export interface BrainDumpEntry {
+  id: string
+  userId: string
+  title: string
+  rawText: string
+  createdAt: string
+  updatedAt: string
+  nodes: BrainDumpNode[]
+  edges: BrainDumpEdge[]
+  categories: Category[]
+  parentBrainDumpId?: string // ID of parent brain dump if created from a node
+  originNodeId?: string // ID of the node this was created from
+  originNodeType?: string // Original type of the node before conversion to root
+  originalParentNodeId?: string // ID of the parent node that the origin node was connected to
+  topicFocus?: string // The topic/label of the originating node
+  type?: 'general' | 'topic-focused' // To distinguish brain dump types
+}
+
+export interface NodeStyle {
+  backgroundColor?: string
+  borderColor?: string
+  textColor?: string
+  borderStyle?: 'solid' | 'dashed' | 'dotted'
+  borderWidth?: number
+  icon?: string
+}
+
+export interface BrainDumpNode extends Node {
+  width?: number
+  height?: number
+  data: {
+    label: string
+    category?: string
+    isCollapsed?: boolean
+    children?: string[]
+    parentId?: string
+    originalText?: string
+    aiGenerated?: boolean
+    style?: NodeStyle
+    isLink?: boolean
+    linkedBrainDumpId?: string
+    layoutMode?: 'horizontal' | 'freeform'
+    isGhost?: boolean // True if this is a reference to another node
+    referencedNodeId?: string // ID of the original node this ghost references
+    synonyms?: string[] // Alternative names/aliases for this node
+    isInstance?: boolean // True if this is an instance of a prototype
+    prototypeId?: string // ID of the prototype node (for instances)
+    instances?: string[] // IDs of instance nodes (for prototypes)
+    hasTopicBrainDump?: boolean // True if this node has an associated topic brain dump
+    topicBrainDumpId?: string // ID of the associated topic brain dump
+    importance?: number // Importance value (0-10 scale, stored as log value)
+    urgency?: number // Urgency value (0-10 scale, stored as log value)
+    priorityMode?: 'simple' | 'advanced' // Priority input mode (default: 'simple')
+    dueDate?: string // ISO date string for task due date
+    dueDateMode?: 'none' | 'specific' | 'relative' // Due date input mode
+    autoUrgencyFromDueDate?: boolean // Auto-calculate urgency from due date
+  }
+}
+
+export interface BrainDumpEdge extends Edge {
+  animated?: boolean
+}
+
+export interface Category {
+  id: string
+  name: string
+  color: string
+  description?: string
+  nodeCount: number
+}
+
+export interface ProcessedThought {
+  id: string
+  text: string
+  category: string
+  confidence: number
+  relatedThoughts: string[]
+}
+
+export interface BrainDumpProcessingResult {
+  thoughts: ProcessedThought[]
+  categories: Category[]
+  suggestedLayout: 'tree' | 'radial' | 'force'
+}
+
+export const DEFAULT_CATEGORIES: Category[] = [
+  { id: 'ideas', name: 'Ideas', color: '#3b82f6', nodeCount: 0 },
+  { id: 'tasks', name: 'Tasks', color: '#10b981', nodeCount: 0 },
+  { id: 'questions', name: 'Questions', color: '#f59e0b', nodeCount: 0 },
+  { id: 'insights', name: 'Insights', color: '#8b5cf6', nodeCount: 0 },
+  { id: 'problems', name: 'Problems', color: '#ef4444', nodeCount: 0 },
+  { id: 'misc', name: 'Miscellaneous', color: '#6b7280', nodeCount: 0 },
+]
+
+export const NODE_TYPES = {
+  category: 'category',
+  thought: 'thought',
+  root: 'root',
+  ghost: 'ghost',
+  link: 'link',
+} as const
+
+export type NodeType = (typeof NODE_TYPES)[keyof typeof NODE_TYPES]
