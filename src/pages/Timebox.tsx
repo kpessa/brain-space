@@ -842,8 +842,8 @@ export default function Timebox() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="flex h-screen relative">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
+      <div className="flex h-screen relative overflow-x-hidden">
         {/* Mobile menu button */}
         {(isMobile || isMobileLandscape) && (
           <button
@@ -1036,7 +1036,7 @@ export default function Timebox() {
 
         {/* Main timebox grid */}
         <div className={cn(
-          "flex-1 overflow-y-auto w-full",
+          "flex-1 overflow-y-auto overflow-x-hidden w-full max-w-full",
           isMobileLandscape && "pl-12" // Extra padding for mobile menu button
         )}>
           {/* Date navigation */}

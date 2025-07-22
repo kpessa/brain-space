@@ -253,8 +253,8 @@ export default function BrainDump() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brain-600 via-space-600 to-brain-700 p-4">
-      <div className="h-[calc(100vh-2rem)] px-4 lg:px-6 xl:px-8 2xl:px-12 3xl:px-16 4xl:px-20">
+    <div className="min-h-screen bg-gradient-to-br from-brain-600 via-space-600 to-brain-700 p-4 overflow-x-hidden">
+      <div className="h-[calc(100vh-2rem)] px-4 lg:px-6 xl:px-8 2xl:px-12 3xl:px-16 4xl:px-20 max-w-screen overflow-x-hidden">
         <header className="mb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -286,7 +286,7 @@ export default function BrainDump() {
           </p>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 h-[calc(100%-120px)]">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 h-[calc(100%-120px)] overflow-x-hidden">
           {/* Mobile menu button */}
           {(isMobile || isMobileLandscape) && (
             <button
@@ -446,7 +446,7 @@ export default function BrainDump() {
 
           {/* Main content area - always take full width on mobile, 3 columns on large screens */}
           <div className={cn(
-            "col-span-1 lg:col-span-3",
+            "col-span-1 lg:col-span-3 overflow-x-hidden",
             isMobileLandscape && "pl-12" // Extra padding for mobile menu button
           )}>
             {showInput ? (

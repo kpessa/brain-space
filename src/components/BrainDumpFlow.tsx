@@ -441,7 +441,7 @@ function BrainDumpFlowInner() {
   }
 
   return (
-    <div ref={elementRef} className="w-full h-full relative">
+    <div ref={elementRef} className="w-full h-full relative touch-pan-y">
       {viewMode === 'graph' ? (
         <ReactFlow
           nodes={visibleNodes}
@@ -459,6 +459,11 @@ function BrainDumpFlowInner() {
           onReconnectEnd={handleEdgeReconnectEnd}
           onConnectEnd={eventHandlers.onConnectEnd}
           reconnectRadius={20}
+          panOnScroll={false}
+          preventScrolling={true}
+          zoomOnScroll={false}
+          zoomOnPinch={true}
+          zoomOnDoubleClick={false}
           onPaneClick={(event: React.MouseEvent) => {
             // Close edge hover menu when clicking on pane
             dialogManager.setEdgeHoverMenu({ isOpen: false, edge: null, position: { x: 0, y: 0 } })

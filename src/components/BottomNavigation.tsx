@@ -39,8 +39,11 @@ export default function BottomNavigation() {
   // Render as side navigation in mobile landscape
   if (isMobileLandscape) {
     return (
-      <nav className="fixed left-0 top-0 bottom-0 z-50 w-16 bg-white dark:bg-gray-800 backdrop-blur-lg border-r border-gray-200 dark:border-gray-700 pl-safe pt-safe pb-safe shadow-lg">
-        <div className="flex flex-col h-full">
+      <nav 
+        className="fixed left-0 top-0 bottom-0 z-50 bg-white dark:bg-gray-800 backdrop-blur-lg border-r border-gray-200 dark:border-gray-700 pt-safe pb-safe shadow-lg"
+        style={{ width: 'calc(4rem + env(safe-area-inset-left))' }}
+      >
+        <div className="flex flex-col h-full pl-safe">
           {/* Branding at top */}
           <div className="flex items-center justify-center py-3 border-b border-gray-200 dark:border-gray-700">
             <Link to="/" className="text-brain-600 dark:text-brain-400 hover:text-brain-700 dark:hover:text-brain-300 transition-colors">

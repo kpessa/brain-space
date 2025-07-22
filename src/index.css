@@ -4,99 +4,127 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Global overflow prevention for mobile */
 @layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 287 72% 59%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 203 89% 48%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 287 72% 59%;
-
-    --radius: 0.5rem;
+  html {
+    overflow-x: hidden;
+    overscroll-behavior: none;
   }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 287 72% 59%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 203 89% 48%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 287 72% 59%;
+  
+  body {
+    overflow-x: hidden;
+    overscroll-behavior: none;
+    position: relative;
+    width: 100%;
+  }
+  
+  /* Prevent iOS bounce effect */
+  @supports (-webkit-touch-callout: none) {
+    body {
+      position: fixed;
+      width: 100%;
+      height: 100vh;
+    }
+    
+    #root {
+      height: 100vh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
   }
 }
 
 @layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.5rem;
+    
+    /* Brain theme colors */
+    --brain-50: 251 91% 97%;
+    --brain-100: 250 95% 92%;
+    --brain-200: 251 95% 85%;
+    --brain-300: 252 94% 75%;
+    --brain-400: 255 92% 63%;
+    --brain-500: 258 90% 53%;
+    --brain-600: 259 84% 44%;
+    --brain-700: 260 69% 36%;
+    --brain-800: 260 60% 30%;
+    --brain-900: 260 54% 25%;
+    
+    /* Space theme colors */
+    --space-50: 222 100% 97%;
+    --space-100: 222 100% 93%;
+    --space-200: 223 100% 86%;
+    --space-300: 224 100% 76%;
+    --space-400: 227 100% 64%;
+    --space-500: 231 100% 55%;
+    --space-600: 234 89% 49%;
+    --space-700: 235 75% 41%;
+    --space-800: 234 62% 34%;
+    --space-900: 233 50% 28%;
+  }
+  
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: hsl(212.7, 26.8%, 83.9%);
+  }
+  
   * {
     @apply border-border;
   }
-
+  
   body {
     @apply bg-background text-foreground;
-    font-feature-settings:
-      'rlig' 1,
-      'calt' 1;
+    font-family: 'Inter', sans-serif;
   }
-
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    @apply font-semibold tracking-tight;
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold;
   }
-
+  
   h1 {
     @apply text-4xl md:text-5xl;
   }
-
+  
   h2 {
     @apply text-3xl md:text-4xl;
   }
-
+  
   h3 {
     @apply text-2xl md:text-3xl;
   }
@@ -140,7 +168,7 @@
   }
 
   .btn-md {
-    @apply h-10 py-2 px-4;
+    @apply h-10 px-4 py-2;
   }
 
   .btn-lg {
@@ -155,12 +183,16 @@
     @apply flex flex-col space-y-1.5 p-6;
   }
 
-  .card-content {
-    @apply p-6 pt-0;
+  .card-title {
+    @apply text-2xl font-semibold leading-none tracking-tight;
   }
 
-  .card-footer {
-    @apply flex items-center p-6 pt-0;
+  .card-description {
+    @apply text-sm text-muted-foreground;
+  }
+
+  .card-content {
+    @apply p-6 pt-0;
   }
 }
 
@@ -193,30 +225,74 @@
   }
   
   /* Combined safe area utilities */
-  .mt-safe {
-    margin-top: env(safe-area-inset-top);
+  .p-safe {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
   }
   
-  .mb-safe {
-    margin-bottom: env(safe-area-inset-bottom);
+  /* Minimum heights including safe area */
+  .min-h-screen-safe {
+    min-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   }
   
-  /* Height accounting for safe areas */
-  .h-screen-safe {
-    height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  /* Touch handling utilities */
+  .touch-pan-y {
+    touch-action: pan-y;
   }
-  
-  /* Top position accounting for safe area */
-  .top-safe {
-    top: env(safe-area-inset-top);
+
+  .touch-pan-x {
+    touch-action: pan-x;
+  }
+
+  .touch-none {
+    touch-action: none;
+  }
+
+  .touch-pinch-zoom {
+    touch-action: pinch-zoom;
+  }
+
+  /* Overflow utilities for mobile */
+  .overflow-x-clip {
+    overflow-x: clip;
+  }
+
+  .max-w-screen {
+    max-width: 100vw;
   }
 }
 
-/* React Flow Edge Styles */
+/* Custom scrollbar styles */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--brain-400)) hsl(var(--brain-100));
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: hsl(var(--brain-100));
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: hsl(var(--brain-400));
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--brain-500));
+}
+
+/* React Flow edge styling for better clickability */
 .react-flow__edge-path {
-  stroke-width: 2;
-  transition:
-    stroke-width 0.2s,
+  stroke-width: 3;
+  transition: stroke-width 0.2s,
     stroke 0.2s;
   cursor: pointer;
 }

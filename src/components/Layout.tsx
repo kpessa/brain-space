@@ -107,11 +107,16 @@ export default function Layout() {
         </div>
       )}
 
-      <main className={cn(
-        "flex-1",
-        "pb-16 sm:pb-0", // Bottom padding for portrait mobile
-        isMobileLandscape && "pl-16 pb-0 pt-safe" // Left padding and top safe area for landscape mobile
-      )}>
+      <main 
+        className={cn(
+          "flex-1",
+          "pb-16 sm:pb-0", // Bottom padding for portrait mobile
+          isMobileLandscape && "pb-0 pt-safe" // Top safe area for landscape mobile
+        )}
+        style={{
+          paddingLeft: isMobileLandscape ? 'calc(4rem + env(safe-area-inset-left))' : undefined
+        }}
+      >
         <Outlet />
       </main>
 
