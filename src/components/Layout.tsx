@@ -23,10 +23,12 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <nav className={cn(
-        "bg-brain-700 shadow-lg sticky top-0 z-50 pt-safe",
-        isMobileLandscape && "hidden" // Hide top navbar in mobile landscape
-      )}>
+      <nav
+        className={cn(
+          'bg-brain-700 shadow-lg sticky top-0 z-50 pt-safe',
+          isMobileLandscape && 'hidden' // Hide top navbar in mobile landscape
+        )}
+      >
         <div className="px-4 lg:px-6 xl:px-8 2xl:px-12 3xl:px-16 4xl:px-20">
           <div className="flex items-center justify-between h-16 md:h-16">
             <Link to="/" className="flex items-center gap-2 text-white font-bold text-xl">
@@ -107,14 +109,17 @@ export default function Layout() {
         </div>
       )}
 
-      <main 
+      <main
         className={cn(
-          "flex-1",
-          "pb-16 sm:pb-0", // Bottom padding for portrait mobile
-          isMobileLandscape && "pb-0 pt-safe" // Top safe area for landscape mobile
+          'flex-1',
+          'sm:pb-0', // No bottom padding for desktop
+          isMobileLandscape && 'pb-0 pt-safe' // Top safe area for landscape mobile
         )}
         style={{
-          paddingLeft: isMobileLandscape ? 'calc(4rem + env(safe-area-inset-left))' : undefined
+          paddingLeft: isMobileLandscape ? 'calc(4rem + env(safe-area-inset-left))' : undefined,
+          paddingBottom: !isMobileLandscape
+            ? 'calc(4rem + env(safe-area-inset-bottom))'
+            : undefined,
         }}
       >
         <Outlet />
