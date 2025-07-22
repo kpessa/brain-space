@@ -62,17 +62,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signInWithGoogle = async () => {
-    // Determine the correct redirect URL based on environment
-    let redirectTo = window.location.origin
-
-    // If we're in Storybook, redirect to the main app
-    if (window.location.port === '6006') {
-      redirectTo = 'http://localhost:5173' // Default Vite port
-      // Try to detect if app is running on different port
-      if (window.location.hostname === 'localhost') {
-        redirectTo = 'http://localhost:5174' // Common alternative port
-      }
-    }
+    // Always use the current origin for redirects
+    const redirectTo = window.location.origin
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
