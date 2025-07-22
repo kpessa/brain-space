@@ -8,7 +8,11 @@ interface RecurrenceDialogProps {
   taskLabel: string
   currentPattern?: RecurrencePattern
   currentTaskType?: 'one-time' | 'recurring' | 'habit'
-  onSave: (taskId: string, pattern: RecurrencePattern | undefined, taskType: 'recurring' | 'habit') => void
+  onSave: (
+    taskId: string,
+    pattern: RecurrencePattern | undefined,
+    taskType: 'recurring' | 'habit'
+  ) => void
   onClose: () => void
 }
 
@@ -54,7 +58,7 @@ export function RecurrenceDialog({
                 type="radio"
                 value="recurring"
                 checked={taskType === 'recurring'}
-                onChange={(e) => setTaskType(e.target.value as 'recurring' | 'habit')}
+                onChange={e => setTaskType(e.target.value as 'recurring' | 'habit')}
                 className="mr-2"
               />
               <span className="text-sm">Recurring Task</span>
@@ -64,7 +68,7 @@ export function RecurrenceDialog({
                 type="radio"
                 value="habit"
                 checked={taskType === 'habit'}
-                onChange={(e) => setTaskType(e.target.value as 'recurring' | 'habit')}
+                onChange={e => setTaskType(e.target.value as 'recurring' | 'habit')}
                 className="mr-2"
               />
               <span className="text-sm">Habit (with streak tracking)</span>
@@ -78,11 +82,7 @@ export function RecurrenceDialog({
         </div>
 
         {/* Recurrence Pattern Selector */}
-        <RecurrenceSelector
-          pattern={currentPattern}
-          onChange={handleSave}
-          onClose={onClose}
-        />
+        <RecurrenceSelector pattern={currentPattern} onChange={handleSave} onClose={onClose} />
       </div>
     </div>
   )

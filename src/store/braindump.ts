@@ -540,9 +540,7 @@ export const useBrainDumpStore = create<BrainDumpState>((set, get) => ({
 
     // Update local state
     const updatedNodes = currentEntry.nodes.filter(n => n.id !== nodeId)
-    const updatedEdges = currentEntry.edges.filter(
-      e => e.source !== nodeId && e.target !== nodeId
-    )
+    const updatedEdges = currentEntry.edges.filter(e => e.source !== nodeId && e.target !== nodeId)
 
     set(state => {
       const updatedEntry = {

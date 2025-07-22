@@ -589,7 +589,7 @@ function BrainDumpFlowInner() {
       )}
 
       {/* Toolbar */}
-      <div 
+      <div
         className="absolute left-4 z-10 flex gap-2 bg-white rounded-lg shadow-lg p-2"
         style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}
       >
@@ -729,7 +729,9 @@ function BrainDumpFlowInner() {
                   variant={lassoMode !== 'off' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => {
-                    setLassoMode(lassoMode === 'off' ? 'partial' : lassoMode === 'partial' ? 'full' : 'off')
+                    setLassoMode(
+                      lassoMode === 'off' ? 'partial' : lassoMode === 'partial' ? 'full' : 'off'
+                    )
                     setShowMobileMenu(false)
                   }}
                   disabled={!currentEntry}
@@ -820,7 +822,7 @@ function BrainDumpFlowInner() {
 
       {/* Lasso Mode Indicator */}
       {lassoMode !== 'off' && (
-        <div 
+        <div
           className="absolute left-1/2 -translate-x-1/2 z-10 bg-purple-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2"
           style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}
         >
@@ -833,13 +835,13 @@ function BrainDumpFlowInner() {
       )}
 
       {/* Save Status */}
-      <div 
+      <div
         className={cn(
-          "absolute z-10 flex items-center gap-2 bg-white rounded-lg shadow-lg p-2",
-          isMobile ? "bottom-20 left-4 right-4 justify-between" : "right-4"
+          'absolute z-10 flex items-center gap-2 bg-white rounded-lg shadow-lg p-2',
+          isMobile ? 'bottom-20 left-4 right-4 justify-between' : 'right-4'
         )}
-        style={{ 
-          top: !isMobile ? 'calc(1rem + env(safe-area-inset-top))' : undefined 
+        style={{
+          top: !isMobile ? 'calc(1rem + env(safe-area-inset-top))' : undefined,
         }}
       >
         <Button
@@ -1256,56 +1258,58 @@ function BrainDumpFlowInner() {
       )}
 
       {/* Recurrence Dialog */}
-      {recurrenceDialog.isOpen && recurrenceDialog.nodeId && (() => {
-        const node = nodes.find(n => n.id === recurrenceDialog.nodeId)
-        if (!node) return null
-        
-        return (
-          <RecurrenceDialog
-            taskId={recurrenceDialog.nodeId}
-            taskLabel={node.data.label}
-            currentPattern={node.data.recurrencePattern}
-            currentTaskType={node.data.taskType}
-            onSave={async (taskId, pattern, taskType) => {
-              const targetNode = nodes.find(n => n.id === taskId)
-              if (!targetNode) return
+      {recurrenceDialog.isOpen &&
+        recurrenceDialog.nodeId &&
+        (() => {
+          const node = nodes.find(n => n.id === recurrenceDialog.nodeId)
+          if (!node) return null
 
-              // Update the node with recurrence data
-              const updatedNode = {
-                ...targetNode,
-                data: {
-                  ...targetNode.data,
-                  taskType,
-                  recurrencePattern: pattern,
-                },
-              }
+          return (
+            <RecurrenceDialog
+              taskId={recurrenceDialog.nodeId}
+              taskLabel={node.data.label}
+              currentPattern={node.data.recurrencePattern}
+              currentTaskType={node.data.taskType}
+              onSave={async (taskId, pattern, taskType) => {
+                const targetNode = nodes.find(n => n.id === taskId)
+                if (!targetNode) return
 
-              const updatedNodes = nodes.map(n => (n.id === taskId ? updatedNode : n))
-              setNodes(updatedNodes)
-
-              // Persist the changes
-              if (currentEntry) {
-                setSaveStatus('saving')
-                try {
-                  await updateEntry(currentEntry.id, {
-                    nodes: updatedNodes as BrainDumpNode[],
-                  })
-                  setSaveStatus('saved')
-                  setLastSaved(new Date())
-                  setTimeout(() => setSaveStatus('idle'), 2000)
-                } catch (error) {
-                  logger.error('UPDATE_RECURRENCE', 'Failed to update recurrence:', error)
-                  setSaveStatus('error')
-                  setTimeout(() => setSaveStatus('idle'), 3000)
+                // Update the node with recurrence data
+                const updatedNode = {
+                  ...targetNode,
+                  data: {
+                    ...targetNode.data,
+                    taskType,
+                    recurrencePattern: pattern,
+                  },
                 }
-              }
 
-              setRecurrenceDialog({ isOpen: false, nodeId: null })
-            }}
-            onClose={() => setRecurrenceDialog({ isOpen: false, nodeId: null })}
-          />
-        )
-      })()}
+                const updatedNodes = nodes.map(n => (n.id === taskId ? updatedNode : n))
+                setNodes(updatedNodes)
+
+                // Persist the changes
+                if (currentEntry) {
+                  setSaveStatus('saving')
+                  try {
+                    await updateEntry(currentEntry.id, {
+                      nodes: updatedNodes as BrainDumpNode[],
+                    })
+                    setSaveStatus('saved')
+                    setLastSaved(new Date())
+                    setTimeout(() => setSaveStatus('idle'), 2000)
+                  } catch (error) {
+                    logger.error('UPDATE_RECURRENCE', 'Failed to update recurrence:', error)
+                    setSaveStatus('error')
+                    setTimeout(() => setSaveStatus('idle'), 3000)
+                  }
+                }
+
+                setRecurrenceDialog({ isOpen: false, nodeId: null })
+              }}
+              onClose={() => setRecurrenceDialog({ isOpen: false, nodeId: null })}
+            />
+          )
+        })()}
     </div>
   )
 }

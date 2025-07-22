@@ -18,7 +18,7 @@ export function useOrientation(): OrientationState {
     const width = window.innerWidth
     const height = window.innerHeight
     const orientation = width > height ? 'landscape' : 'portrait'
-    
+
     return {
       orientation,
       dimensions: { width, height },
@@ -33,7 +33,7 @@ export function useOrientation(): OrientationState {
       const width = window.innerWidth
       const height = window.innerHeight
       const orientation = width > height ? 'landscape' : 'portrait'
-      
+
       const newState = {
         orientation,
         dimensions: { width, height },
@@ -41,7 +41,7 @@ export function useOrientation(): OrientationState {
         isMobileLandscape: width <= 932 && orientation === 'landscape',
         isTabletLandscape: width > 932 && width <= 1366 && orientation === 'landscape',
       }
-      
+
       setState(newState)
     }
 

@@ -132,7 +132,7 @@ export default function BrainDump() {
   const [sortBy, setSortBy] = useState<'date' | 'topic' | 'alphabetical'>('date')
   const [groupBy, setGroupBy] = useState<'none' | 'topic' | 'type'>('none')
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
-  
+
   // Mobile sidebar state
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
@@ -142,7 +142,7 @@ export default function BrainDump() {
   useEffect(() => {
     forceUpdate({})
   }, [currentEntry?.nodes?.length, currentEntry?.updatedAt])
-  
+
   // Mobile detection
   useEffect(() => {
     const checkMobile = () => {
@@ -153,7 +153,7 @@ export default function BrainDump() {
         setSidebarOpen(false) // Auto-close in mobile landscape
       }
     }
-    
+
     checkMobile()
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
@@ -292,14 +292,18 @@ export default function BrainDump() {
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className={cn(
-                "fixed z-50 p-2 bg-white/10 backdrop-blur-sm rounded-lg shadow-lg lg:hidden",
-                isMobileLandscape ? "top-20 left-2" : "top-24 left-4"
+                'fixed z-50 p-2 bg-white/10 backdrop-blur-sm rounded-lg shadow-lg lg:hidden',
+                isMobileLandscape ? 'top-20 left-2' : 'top-24 left-4'
               )}
             >
-              {sidebarOpen ? <X className="w-5 h-5 text-white" /> : <Menu className="w-5 h-5 text-white" />}
+              {sidebarOpen ? (
+                <X className="w-5 h-5 text-white" />
+              ) : (
+                <Menu className="w-5 h-5 text-white" />
+              )}
             </button>
           )}
-          
+
           {/* Overlay for mobile */}
           {(isMobile || isMobileLandscape) && sidebarOpen && (
             <div
@@ -307,14 +311,16 @@ export default function BrainDump() {
               onClick={() => setSidebarOpen(false)}
             />
           )}
-          
+
           {/* Sidebar with entries list */}
           <div
             className={cn(
-              "fixed lg:relative inset-y-0 left-0 z-40 lg:w-auto lg:col-span-1 bg-white lg:bg-transparent p-4 lg:p-0 lg:space-y-4 transform transition-transform duration-300 ease-in-out h-full overflow-y-auto",
-              "w-80 mobile-landscape:w-64", // Narrower in landscape
-              (isMobile || isMobileLandscape) && !sidebarOpen ? '-translate-x-full' : 'translate-x-0',
-              "lg:translate-x-0"
+              'fixed lg:relative inset-y-0 left-0 z-40 lg:w-auto lg:col-span-1 bg-white lg:bg-transparent p-4 lg:p-0 lg:space-y-4 transform transition-transform duration-300 ease-in-out h-full overflow-y-auto',
+              'w-80 mobile-landscape:w-64', // Narrower in landscape
+              (isMobile || isMobileLandscape) && !sidebarOpen
+                ? '-translate-x-full'
+                : 'translate-x-0',
+              'lg:translate-x-0'
             )}
           >
             <Card className="h-full overflow-hidden">
@@ -445,10 +451,12 @@ export default function BrainDump() {
           </div>
 
           {/* Main content area - always take full width on mobile, 3 columns on large screens */}
-          <div className={cn(
-            "col-span-1 lg:col-span-3 overflow-x-hidden",
-            isMobileLandscape && "pl-12" // Extra padding for mobile menu button
-          )}>
+          <div
+            className={cn(
+              'col-span-1 lg:col-span-3 overflow-x-hidden',
+              isMobileLandscape && 'pl-12' // Extra padding for mobile menu button
+            )}
+          >
             {showInput ? (
               <BrainDumpInput
                 onProcess={handleProcess}

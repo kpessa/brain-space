@@ -341,6 +341,82 @@ body.mobile-fullscreen-active {
   }
 }
 
+/* Hierarchical Card Stack Effects are now handled dynamically in the component */
+
+/* Splayed Card Deck Animations */
+@keyframes cardSplay {
+  from {
+    transform: translateX(0) scale(1);
+    opacity: 0;
+  }
+  to {
+    transform: var(--splay-transform, translateX(0) scale(1));
+    opacity: 1;
+  }
+}
+
+@keyframes cardFocus {
+  from {
+    transform: var(--current-transform) scale(0.95);
+  }
+  to {
+    transform: var(--current-transform) scale(1);
+  }
+}
+
+.splayed-card {
+  animation: cardSplay 0.3s ease-out forwards;
+}
+
+.splayed-card-focused {
+  animation: cardFocus 0.2s ease-out forwards;
+}
+
+/* Splay button pulse effect */
+@keyframes splayPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+  }
+}
+
+.splay-button-hint {
+  animation: splayPulse 2s infinite;
+}
+
+/* Accordion animations */
+@keyframes accordion-down {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+.animate-accordion-down {
+  animation: accordion-down 0.3s ease-out;
+}
+
+.animate-accordion-up {
+  animation: accordion-up 0.3s ease-out;
+}
+
 /* Make edge interaction area larger for easier clicking */
 .react-flow__edge-interaction {
   stroke-width: 30;
