@@ -112,14 +112,11 @@ export default function Layout() {
       <main
         className={cn(
           'flex-1',
-          'sm:pb-0', // No bottom padding for desktop
+          'pb-16 sm:pb-0', // Fixed bottom padding for mobile navigation (4rem = 64px)
           isMobileLandscape && 'pb-0 pt-safe' // Top safe area for landscape mobile
         )}
         style={{
           paddingLeft: isMobileLandscape ? 'calc(4rem + env(safe-area-inset-left))' : undefined,
-          paddingBottom: !isMobileLandscape
-            ? 'calc(4rem + env(safe-area-inset-bottom))'
-            : undefined,
         }}
       >
         <Outlet />

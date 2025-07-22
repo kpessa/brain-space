@@ -381,3 +381,30 @@ body.mobile-fullscreen-active {
     transform: scale(1);
   }
 }
+
+/* PWA Standalone Mode Fixes for iPhone */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  /* When in standalone mode, adjust bottom navigation */
+  @media (display-mode: standalone) {
+    /* Ensure bottom navigation sits properly above home indicator */
+    nav.fixed.bottom-0 {
+      bottom: 0 !important;
+    }
+    
+    /* Main content should only account for nav height, not safe area */
+    main.pb-16 {
+      padding-bottom: 4rem !important; /* Just the nav height */
+    }
+  }
+  
+  /* iOS Specific - using CSS environment variable check */
+  @supports (-webkit-touch-callout: none) {
+    /* Additional iOS PWA adjustments if needed */
+    @media (display-mode: standalone) {
+      /* Ensure smooth scrolling and proper viewport behavior */
+      body {
+        -webkit-overflow-scrolling: touch;
+      }
+    }
+  }
+}
