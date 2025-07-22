@@ -112,7 +112,7 @@ export default function Layout() {
       <main
         className={cn(
           'flex-1',
-          'pb-16 sm:pb-0', // Fixed bottom padding for mobile navigation (4rem = 64px)
+          'sm:pb-0', // No bottom padding needed with sticky nav
           isMobileLandscape && 'pb-0 pt-safe' // Top safe area for landscape mobile
         )}
         style={{

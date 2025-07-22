@@ -100,7 +100,7 @@ export default function BottomNavigation() {
 
   // Default bottom navigation for portrait mode
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 block sm:hidden bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg border-t border-gray-200 dark:border-gray-700 pb-safe">
+    <nav className="sticky bottom-0 left-0 right-0 z-50 block sm:hidden bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg border-t border-gray-200 dark:border-gray-700 pb-safe">
       <div className="grid grid-cols-5 h-16">
         {navItems.map(item => {
           const Icon = item.icon

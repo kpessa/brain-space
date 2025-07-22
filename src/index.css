@@ -384,16 +384,21 @@ body.mobile-fullscreen-active {
 
 /* PWA Standalone Mode Fixes for iPhone */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
+  /* Sticky positioning support for iOS Safari */
+  nav.sticky {
+    position: -webkit-sticky;
+    position: sticky;
+  }
+  
   /* When in standalone mode, adjust bottom navigation */
   @media (display-mode: standalone) {
-    /* Ensure bottom navigation sits properly above home indicator */
-    nav.fixed.bottom-0 {
+    /* Ensure bottom navigation sticks properly with safe area */
+    nav.sticky.bottom-0 {
       bottom: 0 !important;
-    }
-    
-    /* Main content should only account for nav height, not safe area */
-    main.pb-16 {
-      padding-bottom: 4rem !important; /* Just the nav height */
+      /* Force hardware acceleration for smoother scrolling */
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+      will-change: transform;
     }
   }
   
@@ -404,6 +409,12 @@ body.mobile-fullscreen-active {
       /* Ensure smooth scrolling and proper viewport behavior */
       body {
         -webkit-overflow-scrolling: touch;
+      }
+      
+      /* Ensure the sticky navbar works properly in iOS PWA */
+      nav.sticky {
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
       }
     }
   }
