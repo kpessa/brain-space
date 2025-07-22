@@ -407,7 +407,13 @@ function BrainDumpFlowInner() {
             )
           }
         }}
-        onCancel={() => dialogManager.setNodeInputDialog({ isOpen: false, position: null, parentNodeId: undefined })}
+        onCancel={() =>
+          dialogManager.setNodeInputDialog({
+            isOpen: false,
+            position: null,
+            parentNodeId: undefined,
+          })
+        }
       />
 
       <NodeContextMenu

@@ -20,6 +20,7 @@ import {
   AlertCircle,
   Calendar,
   Clock,
+  Repeat,
 } from 'lucide-react'
 import type { NodeStyle } from '../types/braindump'
 import { useBrainDumpStore } from '../store/braindump'
@@ -56,6 +57,7 @@ interface NodeContextMenuProps {
   onAddChild?: (nodeId: string) => void
   onNodeTypeChange?: (nodeId: string, newType: string) => void
   onUpdateNode?: (nodeId: string, data: any) => void
+  onMakeRecurring?: (nodeId: string) => void
   type?: 'node' | 'pane'
 }
 
@@ -88,6 +90,7 @@ export default function NodeContextMenu({
   onAddChild,
   onNodeTypeChange,
   onUpdateNode,
+  onMakeRecurring,
 }: NodeContextMenuProps) {
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     appearance: true,
@@ -833,6 +836,20 @@ export default function NodeContextMenu({
                   >
                     <FileText className="w-4 h-4" />
                     Create Topic Brain Dump
+                  </button>
+                )}
+
+                {/* Make Recurring */}
+                {onMakeRecurring && nodeData.type === 'thought' && (nodeData.taskType !== 'recurring' && nodeData.taskType !== 'habit') && (
+                  <button
+                    onClick={() => {
+                      onMakeRecurring(nodeId)
+                      onClose()
+                    }}
+                    className="w-full px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2 text-sm"
+                  >
+                    <Repeat className="w-4 h-4" />
+                    Make Recurring
                   </button>
                 )}
 

@@ -65,6 +65,9 @@ import { Lasso as LassoComponent } from './Lasso'
 import { ExportDialog } from './ExportDialog'
 import { graphToYaml, graphToJson, downloadFile } from '../lib/graphExport'
 
+// Recurrence functionality
+import { RecurrenceDialog } from './RecurrenceDialog'
+
 // Eisenhower Matrix view
 import { EisenhowerMatrix } from './EisenhowerMatrix'
 import { linearToLog } from '../lib/priorityUtils'
@@ -83,7 +86,8 @@ const edgeTypes = {
 
 function BrainDumpFlowInner() {
   const { fitView, screenToFlowPosition } = useReactFlow()
-  const { currentEntry, updateEntry, isSyncing, updateNode, createTopicBrainDump } = useBrainDumpStore()
+  const { currentEntry, updateEntry, isSyncing, updateNode, createTopicBrainDump } =
+    useBrainDumpStore()
 
   // UI state
   const { elementRef, isFullscreen, toggleFullscreen } = useFullscreen()
@@ -103,6 +107,13 @@ function BrainDumpFlowInner() {
   }>({
     isOpen: false,
     node: null,
+  })
+  const [recurrenceDialog, setRecurrenceDialog] = useState<{
+    isOpen: boolean
+    nodeId: string | null
+  }>({
+    isOpen: false,
+    nodeId: null,
   })
 
   // Extracted hooks
@@ -327,7 +338,7 @@ function BrainDumpFlowInner() {
       window.removeEventListener('node:drop', handleNodeDrop as EventListener)
     }
   }, [nodes, dialogManager.setNodeInputDialog, edgeManager.addEdgeBetweenNodes])
-  
+
   // Topic dump handlers
   const handleCreateTopicDump = useCallback(
     (nodeId: string) => {
@@ -338,7 +349,7 @@ function BrainDumpFlowInner() {
     },
     [nodes]
   )
-  
+
   const handleConfirmTopicDump = useCallback(
     async (thoughts: string) => {
       if (!topicDumpDialog.node || !currentEntry) return
@@ -746,7 +757,13 @@ function BrainDumpFlowInner() {
             )
           }
         }}
-        onCancel={() => dialogManager.setNodeInputDialog({ isOpen: false, position: null, parentNodeId: undefined })}
+        onCancel={() =>
+          dialogManager.setNodeInputDialog({
+            isOpen: false,
+            position: null,
+            parentNodeId: undefined,
+          })
+        }
       />
 
       <NodeContextMenu
@@ -889,7 +906,10 @@ function BrainDumpFlowInner() {
 
           // Check if parent has topic brain dump
           if (parentNode.data?.hasTopicBrainDump) {
-            logger.info('NODE_ADD_CHILD', 'Cannot add children to nodes that have topic brain dumps')
+            logger.info(
+              'NODE_ADD_CHILD',
+              'Cannot add children to nodes that have topic brain dumps'
+            )
             return
           }
 
@@ -940,6 +960,9 @@ function BrainDumpFlowInner() {
               setTimeout(() => setSaveStatus('idle'), 3000)
             }
           }
+        }}
+        onMakeRecurring={(nodeId: string) => {
+          setRecurrenceDialog({ isOpen: true, nodeId })
         }}
         onClose={() =>
           dialogManager.setContextMenu({ ...dialogManager.contextMenu, isOpen: false })
@@ -1077,6 +1100,58 @@ function BrainDumpFlowInner() {
           }}
         />
       )}
+
+      {/* Recurrence Dialog */}
+      {recurrenceDialog.isOpen && recurrenceDialog.nodeId && (() => {
+        const node = nodes.find(n => n.id === recurrenceDialog.nodeId)
+        if (!node) return null
+        
+        return (
+          <RecurrenceDialog
+            taskId={recurrenceDialog.nodeId}
+            taskLabel={node.data.label}
+            currentPattern={node.data.recurrencePattern}
+            currentTaskType={node.data.taskType}
+            onSave={async (taskId, pattern, taskType) => {
+              const targetNode = nodes.find(n => n.id === taskId)
+              if (!targetNode) return
+
+              // Update the node with recurrence data
+              const updatedNode = {
+                ...targetNode,
+                data: {
+                  ...targetNode.data,
+                  taskType,
+                  recurrencePattern: pattern,
+                },
+              }
+
+              const updatedNodes = nodes.map(n => (n.id === taskId ? updatedNode : n))
+              setNodes(updatedNodes)
+
+              // Persist the changes
+              if (currentEntry) {
+                setSaveStatus('saving')
+                try {
+                  await updateEntry(currentEntry.id, {
+                    nodes: updatedNodes as BrainDumpNode[],
+                  })
+                  setSaveStatus('saved')
+                  setLastSaved(new Date())
+                  setTimeout(() => setSaveStatus('idle'), 2000)
+                } catch (error) {
+                  logger.error('UPDATE_RECURRENCE', 'Failed to update recurrence:', error)
+                  setSaveStatus('error')
+                  setTimeout(() => setSaveStatus('idle'), 3000)
+                }
+              }
+
+              setRecurrenceDialog({ isOpen: false, nodeId: null })
+            }}
+            onClose={() => setRecurrenceDialog({ isOpen: false, nodeId: null })}
+          />
+        )
+      })()}
     </div>
   )
 }

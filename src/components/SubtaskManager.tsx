@@ -20,14 +20,14 @@ export function SubtaskManager({
   onToggleSubtask,
   onDeleteSubtask,
   isExpanded = true,
-  onToggleExpanded
+  onToggleExpanded,
 }: SubtaskManagerProps) {
   const [showAddForm, setShowAddForm] = useState(false)
   const [newSubtaskLabel, setNewSubtaskLabel] = useState('')
-  
+
   const completedCount = subtasks.filter(st => st.status === 'completed').length
   const totalCount = subtasks.length
-  
+
   const handleAddSubtask = (e: React.FormEvent) => {
     e.preventDefault()
     if (newSubtaskLabel.trim()) {
@@ -36,20 +36,22 @@ export function SubtaskManager({
       setShowAddForm(false)
     }
   }
-  
+
   return (
     <div className="mt-2">
       {/* Subtask header */}
       {totalCount > 0 && (
-        <div 
+        <div
           className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 cursor-pointer"
           onClick={onToggleExpanded}
         >
           {isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-          <span>Subtasks ({completedCount}/{totalCount})</span>
+          <span>
+            Subtasks ({completedCount}/{totalCount})
+          </span>
           {completedCount > 0 && (
             <div className="flex-1 max-w-[100px] h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-              <div 
+              <div
                 className="h-full bg-green-500 transition-all duration-300"
                 style={{ width: `${(completedCount / totalCount) * 100}%` }}
               />
@@ -57,15 +59,12 @@ export function SubtaskManager({
           )}
         </div>
       )}
-      
+
       {/* Subtask list */}
       {isExpanded && (
         <div className="ml-4 mt-2 space-y-1">
           {subtasks.map(subtask => (
-            <div 
-              key={subtask.id}
-              className="flex items-center gap-2 group"
-            >
+            <div key={subtask.id} className="flex items-center gap-2 group">
               <button
                 onClick={() => onToggleSubtask(subtask.id, subtask.status !== 'completed')}
                 className="p-0.5"
@@ -76,10 +75,12 @@ export function SubtaskManager({
                   <Circle className="w-3 h-3 text-gray-400" />
                 )}
               </button>
-              <span className={cn(
-                "text-xs flex-1",
-                subtask.status === 'completed' && "line-through text-gray-500"
-              )}>
+              <span
+                className={cn(
+                  'text-xs flex-1',
+                  subtask.status === 'completed' && 'line-through text-gray-500'
+                )}
+              >
                 {subtask.label}
               </span>
               {onDeleteSubtask && (
@@ -92,14 +93,14 @@ export function SubtaskManager({
               )}
             </div>
           ))}
-          
+
           {/* Add subtask form */}
           {showAddForm ? (
             <form onSubmit={handleAddSubtask} className="flex items-center gap-1">
               <input
                 type="text"
                 value={newSubtaskLabel}
-                onChange={(e) => setNewSubtaskLabel(e.target.value)}
+                onChange={e => setNewSubtaskLabel(e.target.value)}
                 placeholder="Add subtask..."
                 className="flex-1 text-xs px-2 py-1 bg-transparent border-b border-gray-300 dark:border-gray-600 focus:outline-none focus:border-brain-500"
                 autoFocus
@@ -109,10 +110,7 @@ export function SubtaskManager({
                   }
                 }}
               />
-              <button
-                type="submit"
-                className="text-xs text-brain-600 hover:text-brain-700"
-              >
+              <button type="submit" className="text-xs text-brain-600 hover:text-brain-700">
                 Add
               </button>
             </form>

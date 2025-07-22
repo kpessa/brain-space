@@ -27,6 +27,26 @@ export interface NodeStyle {
   icon?: string
 }
 
+// Recurrence pattern for recurring tasks and habits
+export interface RecurrencePattern {
+  type: 'daily' | 'weekly' | 'monthly' | 'custom'
+  frequency?: number // e.g., every 2 days, every 3 weeks
+  daysOfWeek?: number[] // for weekly (0-6, Sunday-Saturday)
+  dayOfMonth?: number // for monthly
+  customCron?: string // for complex patterns
+  startDate: string
+  endDate?: string // optional end date
+}
+
+// Completion record for recurring tasks
+export interface RecurringCompletion {
+  date: string // YYYY-MM-DD
+  completedAt: string // ISO timestamp
+  duration?: number // minutes
+  notes?: string
+  quality?: 'great' | 'good' | 'okay' | 'poor' // for habits
+}
+
 export interface BrainDumpNode extends Node {
   width?: number
   height?: number
@@ -76,6 +96,14 @@ export interface BrainDumpNode extends Node {
     subtasks?: string[] // Array of child task node IDs
     parentTaskId?: string // ID of parent task (if this is a subtask)
     subtaskProgress?: { completed: number; total: number } // Track subtask completion
+    
+    // Recurring task support
+    taskType?: 'one-time' | 'recurring' | 'habit' // Default to 'one-time' for backward compatibility
+    recurrencePattern?: RecurrencePattern
+    recurringCompletions?: RecurringCompletion[] // History of completions for recurring tasks
+    currentStreak?: number // For habits
+    longestStreak?: number // For habits
+    lastRecurringCompletionDate?: string // YYYY-MM-DD format
   }
 }
 

@@ -79,7 +79,7 @@ export function calculateNodeDimensions(
     maxWidth = 400,
     padding = { x: 24, y: 16 }, // Default padding (px-3 py-2)
   } = options
-  
+
   let minWidth = initialMinWidth
 
   // Measure the text

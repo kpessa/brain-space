@@ -165,7 +165,7 @@ export function useFlowEventHandlers({
               return []
             }
             visited.add(nodeId)
-            
+
             const descendants: string[] = []
             edges.forEach(edge => {
               if (edge.source === nodeId) {
@@ -313,8 +313,8 @@ export function useFlowEventHandlers({
   // Handle node input submit
   const handleNodeInputSubmit = useCallback(
     async (
-      text: string, 
-      type: 'thought' | 'category', 
+      text: string,
+      type: 'thought' | 'category',
       position: { x: number; y: number },
       parentNodeId?: string
     ) => {
@@ -344,7 +344,7 @@ export function useFlowEventHandlers({
         const nodePosition = position || getNewNodePosition(undefined, nodesRef.current || [])
 
         const newNodeId = crypto.randomUUID()
-        
+
         await addNode({
           id: newNodeId,
           type: nodeType,
@@ -363,12 +363,12 @@ export function useFlowEventHandlers({
         if (parentNodeId) {
           const parentNode = nodesRef.current?.find(n => n.id === parentNodeId)
           const childNode = { id: newNodeId }
-          
+
           if (parentNode) {
             // Determine appropriate source and target handles
             const sourceHandle = 'right-source' // Parent's right side
-            const targetHandle = 'left'         // Child's left side
-            
+            const targetHandle = 'left' // Child's left side
+
             const newEdge = {
               id: `xy-edge__${parentNodeId}${sourceHandle}-${newNodeId}${targetHandle}`,
               source: parentNodeId,
@@ -378,19 +378,19 @@ export function useFlowEventHandlers({
               type: 'floating',
               animated: true,
             }
-            
+
             // Add edge to current edges
             if (edgesRef.current) {
               const updatedEdges = [...edgesRef.current, newEdge]
               setEdges(updatedEdges)
-              
+
               // Save to database
               try {
                 await updateEntry(currentEntry.id, { edges: updatedEdges })
                 logger.info('EDGE_CREATE', 'Created edge between parent and child', {
                   parentId: parentNodeId,
                   childId: newNodeId,
-                  edgeId: newEdge.id
+                  edgeId: newEdge.id,
                 })
               } catch (error) {
                 logger.error('EDGE_CREATE', 'Failed to save edge to database', error)
@@ -404,7 +404,16 @@ export function useFlowEventHandlers({
         logger.error('NODE_INPUT', 'Failed to add node:', error)
       }
     },
-    [currentEntry, addNode, nodesRef, edgesRef, setEdges, updateEntry, setNodeInputDialog, setSynonymMatchDialog]
+    [
+      currentEntry,
+      addNode,
+      nodesRef,
+      edgesRef,
+      setEdges,
+      updateEntry,
+      setNodeInputDialog,
+      setSynonymMatchDialog,
+    ]
   )
 
   // Handle node double click

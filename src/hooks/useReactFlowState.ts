@@ -33,7 +33,7 @@ export function useReactFlowState() {
 
       const nodesToSet = currentEntry.nodes || []
       const rawEdges = currentEntry.edges || []
-      
+
       // Migrate handle IDs for compatibility with new handle system
       const edgesToSet = rawEdges.map(edge => migrateHandleIds(edge))
 

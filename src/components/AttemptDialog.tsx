@@ -10,22 +10,28 @@ interface AttemptDialogProps {
   onClose: () => void
 }
 
-export function AttemptDialog({ taskId, taskLabel, attempts, onAddAttempt, onClose }: AttemptDialogProps) {
+export function AttemptDialog({
+  taskId,
+  taskLabel,
+  attempts,
+  onAddAttempt,
+  onClose,
+}: AttemptDialogProps) {
   const [outcome, setOutcome] = useState<TaskAttempt['outcome']>('partial')
   const [duration, setDuration] = useState<string>('')
   const [notes, setNotes] = useState('')
   const [nextAction, setNextAction] = useState('')
-  
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     onAddAttempt({
       outcome,
       duration: duration ? parseInt(duration) : undefined,
       notes: notes.trim() || undefined,
-      nextAction: nextAction.trim() || undefined
+      nextAction: nextAction.trim() || undefined,
     })
-    
+
     // Reset form
     setOutcome('partial')
     setDuration('')
@@ -33,7 +39,7 @@ export function AttemptDialog({ taskId, taskLabel, attempts, onAddAttempt, onClo
     setNextAction('')
     onClose()
   }
-  
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
@@ -50,7 +56,7 @@ export function AttemptDialog({ taskId, taskLabel, attempts, onAddAttempt, onClo
             <X className="w-5 h-5" />
           </button>
         </div>
-        
+
         {/* Form */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4">
           <div className="space-y-4">
@@ -59,10 +65,26 @@ export function AttemptDialog({ taskId, taskLabel, attempts, onAddAttempt, onClo
               <label className="block text-sm font-medium mb-2">Outcome</label>
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { value: 'success', label: '✅ Success', color: 'bg-green-100 border-green-300 text-green-800' },
-                  { value: 'partial', label: '🔄 Partial', color: 'bg-yellow-100 border-yellow-300 text-yellow-800' },
-                  { value: 'failed', label: '❌ Failed', color: 'bg-red-100 border-red-300 text-red-800' },
-                  { value: 'blocked', label: '🚫 Blocked', color: 'bg-gray-100 border-gray-300 text-gray-800' }
+                  {
+                    value: 'success',
+                    label: '✅ Success',
+                    color: 'bg-green-100 border-green-300 text-green-800',
+                  },
+                  {
+                    value: 'partial',
+                    label: '🔄 Partial',
+                    color: 'bg-yellow-100 border-yellow-300 text-yellow-800',
+                  },
+                  {
+                    value: 'failed',
+                    label: '❌ Failed',
+                    color: 'bg-red-100 border-red-300 text-red-800',
+                  },
+                  {
+                    value: 'blocked',
+                    label: '🚫 Blocked',
+                    color: 'bg-gray-100 border-gray-300 text-gray-800',
+                  },
                 ].map(option => (
                   <button
                     key={option.value}
@@ -70,7 +92,7 @@ export function AttemptDialog({ taskId, taskLabel, attempts, onAddAttempt, onClo
                     onClick={() => setOutcome(option.value as TaskAttempt['outcome'])}
                     className={`p-2 rounded border-2 transition-all ${
                       outcome === option.value
-                        ? option.color + ' border-opacity-100'
+                        ? `${option.color} border-opacity-100`
                         : 'bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600'
                     }`}
                   >
@@ -79,7 +101,7 @@ export function AttemptDialog({ taskId, taskLabel, attempts, onAddAttempt, onClo
                 ))}
               </div>
             </div>
-            
+
             {/* Duration */}
             <div>
               <label htmlFor="duration" className="block text-sm font-medium mb-2">
@@ -89,13 +111,13 @@ export function AttemptDialog({ taskId, taskLabel, attempts, onAddAttempt, onClo
                 id="duration"
                 type="number"
                 value={duration}
-                onChange={(e) => setDuration(e.target.value)}
+                onChange={e => setDuration(e.target.value)}
                 placeholder="30"
                 min="0"
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
               />
             </div>
-            
+
             {/* Notes */}
             <div>
               <label htmlFor="notes" className="block text-sm font-medium mb-2">
@@ -104,13 +126,13 @@ export function AttemptDialog({ taskId, taskLabel, attempts, onAddAttempt, onClo
               <textarea
                 id="notes"
                 value={notes}
-                onChange={(e) => setNotes(e.target.value)}
+                onChange={e => setNotes(e.target.value)}
                 placeholder="Describe what you attempted..."
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
               />
             </div>
-            
+
             {/* Next Action */}
             {outcome !== 'success' && (
               <div>
@@ -120,7 +142,7 @@ export function AttemptDialog({ taskId, taskLabel, attempts, onAddAttempt, onClo
                 <textarea
                   id="nextAction"
                   value={nextAction}
-                  onChange={(e) => setNextAction(e.target.value)}
+                  onChange={e => setNextAction(e.target.value)}
                   placeholder="Next approach or what you need..."
                   rows={2}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
@@ -128,7 +150,7 @@ export function AttemptDialog({ taskId, taskLabel, attempts, onAddAttempt, onClo
               </div>
             )}
           </div>
-          
+
           {/* Previous Attempts */}
           {attempts.length > 0 && (
             <div className="mt-6">
@@ -155,7 +177,7 @@ export function AttemptDialog({ taskId, taskLabel, attempts, onAddAttempt, onClo
             </div>
           )}
         </form>
-        
+
         {/* Footer */}
         <div className="flex justify-end gap-2 p-4 border-t dark:border-gray-700">
           <button

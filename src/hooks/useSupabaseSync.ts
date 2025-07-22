@@ -161,7 +161,7 @@ export function useSupabaseSync() {
       logger.debug('REALTIME', 'Brain dump change detected', {
         eventType: payload.eventType,
         new: payload.new,
-        old: payload.old
+        old: payload.old,
       })
 
       // Check if this is an update to the current entry
@@ -173,7 +173,7 @@ export function useSupabaseSync() {
 
         logger.debug('REALTIME', 'Timestamp comparison', {
           localTimestamp,
-          remoteTimestamp
+          remoteTimestamp,
         })
 
         // If timestamps are very close (within 2 seconds), it's likely our own update

@@ -4,7 +4,11 @@ import type { BrainDumpNode } from '../types/braindump'
 
 interface DialogStates {
   deleteEdgeDialog: { isOpen: boolean; edge: Edge | null }
-  nodeInputDialog: { isOpen: boolean; position: { x: number; y: number } | null; parentNodeId?: string }
+  nodeInputDialog: {
+    isOpen: boolean
+    position: { x: number; y: number } | null
+    parentNodeId?: string
+  }
   linkNodeDialog: { isOpen: boolean; nodeId: string | null }
   synonymMatchDialog: {
     isOpen: boolean

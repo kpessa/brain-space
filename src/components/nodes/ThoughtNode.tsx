@@ -13,6 +13,7 @@ import {
   Plus,
   AlertCircle,
   Calendar,
+  Repeat,
 } from 'lucide-react'
 import { useBrainDumpStore } from '../../store/braindump'
 import { ConfirmDialog } from '../ConfirmDialog'
@@ -266,6 +267,21 @@ export function ThoughtNode({ id, data, selected }: { id: string; data: any; sel
               </div>
             )
           })()}
+
+        {/* Recurring task indicator */}
+        {(data.taskType === 'recurring' || data.taskType === 'habit') && (
+          <div
+            className={`absolute -bottom-2 ${
+              data.dueDate ? 'left-6' : '-left-2'
+            } px-2 py-1 rounded-full text-xs font-medium border shadow-sm z-10 bg-purple-100 border-purple-300 text-purple-700`}
+            title={`${data.taskType === 'habit' ? 'Habit' : 'Recurring task'} - ${data.recurrencePattern?.type || 'custom'}`}
+          >
+            <div className="flex items-center gap-1">
+              <Repeat className="w-3 h-3" />
+              <span>{data.taskType === 'habit' ? 'Habit' : 'Recurring'}</span>
+            </div>
+          </div>
+        )}
 
         {/* Due date indicator */}
         {data.dueDate && (

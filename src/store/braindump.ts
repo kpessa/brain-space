@@ -45,7 +45,7 @@ interface BrainDumpState {
   // Node operations
   addNode: (node: BrainDumpNode) => Promise<void>
   updateNode: (nodeId: string, data: Partial<BrainDumpNode['data']>) => Promise<void>
-  deleteNode: (nodeId: string) => void
+  deleteNode: (nodeId: string) => Promise<void>
   toggleNodeCollapse: (nodeId: string) => Promise<void>
 
   // Edge operations
@@ -495,7 +495,7 @@ export const useBrainDumpStore = create<BrainDumpState>((set, get) => ({
         entries: state.entries.map(e => (e.id === currentEntry.id ? updatedEntry : e)),
       }
     })
-    
+
     // Persist to database
     try {
       await updateEntry(currentEntry.id, {
@@ -532,18 +532,19 @@ export const useBrainDumpStore = create<BrainDumpState>((set, get) => ({
     await updateEntry(currentEntry.id, { nodes: updatedNodes })
   },
 
-  deleteNode: nodeId => {
-    const { currentEntry } = get()
+  deleteNode: async nodeId => {
+    const { currentEntry, updateEntry } = get()
     if (!currentEntry) return
 
-    // Only update local state, don't save to database
-    // The component will handle the database save to avoid race conditions
-    set(state => {
-      const updatedNodes = currentEntry.nodes.filter(n => n.id !== nodeId)
-      const updatedEdges = currentEntry.edges.filter(
-        e => e.source !== nodeId && e.target !== nodeId
-      )
+    logger.info('STORE', 'Deleting node', { nodeId })
 
+    // Update local state
+    const updatedNodes = currentEntry.nodes.filter(n => n.id !== nodeId)
+    const updatedEdges = currentEntry.edges.filter(
+      e => e.source !== nodeId && e.target !== nodeId
+    )
+
+    set(state => {
       const updatedEntry = {
         ...currentEntry,
         nodes: updatedNodes,
@@ -555,6 +556,17 @@ export const useBrainDumpStore = create<BrainDumpState>((set, get) => ({
         entries: state.entries.map(e => (e.id === currentEntry.id ? updatedEntry : e)),
       }
     })
+
+    // Persist to database
+    try {
+      await updateEntry(currentEntry.id, {
+        nodes: updatedNodes,
+        edges: updatedEdges,
+      })
+      logger.info('STORE', 'Node deleted successfully', { nodeId })
+    } catch (error) {
+      logger.error('STORE', 'Failed to delete node', { nodeId, error })
+    }
   },
 
   toggleNodeCollapse: async nodeId => {
@@ -594,7 +606,7 @@ export const useBrainDumpStore = create<BrainDumpState>((set, get) => ({
         entries: state.entries.map(e => (e.id === currentEntry.id ? updatedEntry : e)),
       }
     })
-    
+
     // Persist to database
     try {
       await updateEntry(currentEntry.id, {

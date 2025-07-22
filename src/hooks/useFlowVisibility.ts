@@ -17,7 +17,7 @@ export function useFlowVisibility(nodes: Node[], edges: Edge[]) {
     // This ensures newly added nodes are visible immediately
     const currentNodes = nodes.length > 0 ? nodes : currentEntry.nodes || []
     const currentEdges = edges.length > 0 ? edges : currentEntry.edges || []
-    
+
     logger.debug('FLOW_VISIBILITY', 'Node/Edge sources', {
       entryId: currentEntry.id,
       entryType: currentEntry.type,

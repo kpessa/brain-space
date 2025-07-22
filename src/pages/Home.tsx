@@ -74,7 +74,8 @@ export default function Home() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-gray-600 mb-4">
-                Drag and drop tasks from your brain dumps into 2-hour time blocks throughout your day.
+                Drag and drop tasks from your brain dumps into 2-hour time blocks throughout your
+                day.
               </p>
               <Link to="/timebox">
                 <Button variant="primary" className="w-full">
