@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Home, BookOpen, Brain, Clock, Trophy, Sparkles, LogOut } from 'lucide-react'
+import { Home, BookOpen, Brain, Clock, Trophy, Sparkles, LogOut, Grid } from 'lucide-react'
 import { cn } from '../lib/utils'
 import { useOrientation } from '../hooks/useOrientation'
 import { useAuth } from '@/contexts/AuthContext'
@@ -19,6 +19,7 @@ export default function BottomNavigation() {
     { path: '/', icon: Home, label: 'Home' },
     { path: '/journal', icon: BookOpen, label: 'Journal' },
     { path: '/braindump', icon: Brain, label: 'Brain' },
+    { path: '/matrix', icon: Grid, label: 'Matrix' },
     { path: '/timebox', icon: Clock, label: 'Timebox' },
     { path: '/progress', icon: Trophy, label: 'Progress' },
   ]
@@ -101,7 +102,7 @@ export default function BottomNavigation() {
   // Default bottom navigation for portrait mode
   return (
     <nav className="sticky bottom-0 left-0 right-0 z-50 block sm:hidden bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg border-t border-gray-200 dark:border-gray-700 pb-safe">
-      <div className="grid grid-cols-5 h-16">
+      <div className="grid grid-cols-6 h-16">
         {navItems.map(item => {
           const Icon = item.icon
           const isActive =
