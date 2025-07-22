@@ -264,6 +264,23 @@
   }
 }
 
+/* Mobile fullscreen styles */
+.mobile-fullscreen {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 9999 !important;
+  background: white;
+}
+
+body.mobile-fullscreen-active {
+  overflow: hidden !important;
+}
+
 /* Custom scrollbar styles */
 .custom-scrollbar {
   scrollbar-width: thin;

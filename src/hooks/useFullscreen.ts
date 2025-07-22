@@ -3,9 +3,26 @@ import { useState, useCallback, useEffect, useRef } from 'react'
 export function useFullscreen() {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const elementRef = useRef<HTMLDivElement>(null)
+  const [isMobileFullscreen, setIsMobileFullscreen] = useState(false)
+
+  // Check if fullscreen API is supported
+  const isFullscreenSupported = () => {
+    return !!(
+      document.fullscreenEnabled ||
+      (document as any).webkitFullscreenEnabled ||
+      (document as any).msFullscreenEnabled
+    )
+  }
 
   const enterFullscreen = useCallback(() => {
     if (!elementRef.current) return
+
+    // For mobile devices that don't support fullscreen API, use CSS fullscreen
+    if (!isFullscreenSupported()) {
+      setIsMobileFullscreen(true)
+      setIsFullscreen(true)
+      return
+    }
 
     const elem = elementRef.current
     if (elem.requestFullscreen) {
@@ -20,6 +37,13 @@ export function useFullscreen() {
   }, [])
 
   const exitFullscreen = useCallback(() => {
+    // For mobile devices using CSS fullscreen
+    if (isMobileFullscreen) {
+      setIsMobileFullscreen(false)
+      setIsFullscreen(false)
+      return
+    }
+
     if (document.exitFullscreen) {
       document.exitFullscreen()
     } else if ((document as any).webkitExitFullscreen) {
@@ -29,7 +53,7 @@ export function useFullscreen() {
       // IE/Edge
       ;(document as any).msExitFullscreen()
     }
-  }, [])
+  }, [isMobileFullscreen])
 
   const toggleFullscreen = useCallback(() => {
     if (isFullscreen) {
@@ -41,7 +65,9 @@ export function useFullscreen() {
 
   useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement)
+      if (!isMobileFullscreen) {
+        setIsFullscreen(!!document.fullscreenElement)
+      }
     }
 
     document.addEventListener('fullscreenchange', handleFullscreenChange)
@@ -53,7 +79,18 @@ export function useFullscreen() {
       document.removeEventListener('webkitfullscreenchange', handleFullscreenChange)
       document.removeEventListener('msfullscreenchange', handleFullscreenChange)
     }
-  }, [])
+  }, [isMobileFullscreen])
+  
+  // Apply CSS classes for mobile fullscreen
+  useEffect(() => {
+    if (elementRef.current && isMobileFullscreen) {
+      elementRef.current.classList.add('mobile-fullscreen')
+      document.body.classList.add('mobile-fullscreen-active')
+    } else if (elementRef.current) {
+      elementRef.current.classList.remove('mobile-fullscreen')
+      document.body.classList.remove('mobile-fullscreen-active')
+    }
+  }, [isMobileFullscreen])
 
   return {
     elementRef,
