@@ -4,12 +4,13 @@ import { useBrainDumpStore } from '@/store/braindump'
 import type { BrainDumpNode } from '@/types/braindump'
 import { getQuadrant, getQuadrantInfo, logToLinear } from '@/lib/priorityUtils'
 import { cn } from '@/lib/utils'
+import { evaluateTaskCompletion } from '@/lib/taskCompletionUtils'
 import { Calendar, Clock, ChevronLeft, ChevronRight, ArrowUpDown, Menu, X } from 'lucide-react'
 import { format, addDays, subDays } from '@/lib/dateUtils'
-import { 
-  generateRecurringTaskInstances, 
+import {
+  generateRecurringTaskInstances,
   isRecurringTaskCompletedForDate,
-  calculateCurrentStreak 
+  calculateCurrentStreak,
 } from '@/lib/recurringTasks'
 import type { RecurringCompletion } from '@/types/braindump'
 import { TimeboxContextMenu } from '@/components/TimeboxContextMenu'
@@ -67,13 +68,14 @@ function sortTasks(tasks: TimeboxTask[], sortBy: SortOption): TimeboxTask[] {
     if (!hasBPriority) return -1 // b goes to bottom
 
     switch (sortBy) {
-      case 'priority':
+      case 'priority': {
         // Combined score: importance + urgency (higher is better)
         const scoreA = (a.importance ?? 0) + (a.urgency ?? 0)
         const scoreB = (b.importance ?? 0) + (b.urgency ?? 0)
         return scoreB - scoreA
+      }
 
-      case 'eisenhower':
+      case 'eisenhower': {
         // Sort by quadrant order
         const quadrantOrder: Record<string, number> = {
           'do-first': 0,
@@ -91,14 +93,17 @@ function sortTasks(tasks: TimeboxTask[], sortBy: SortOption): TimeboxTask[] {
           return scoreB - scoreA
         }
         return orderDiff
+      }
 
-      case 'importance':
+      case 'importance': {
         const impDiff = (b.importance ?? 0) - (a.importance ?? 0)
         return impDiff !== 0 ? impDiff : a.label.localeCompare(b.label)
+      }
 
-      case 'urgency':
+      case 'urgency': {
         const urgDiff = (b.urgency ?? 0) - (a.urgency ?? 0)
         return urgDiff !== 0 ? urgDiff : a.label.localeCompare(b.label)
+      }
 
       case 'dueDate':
         if (!a.dueDate && !b.dueDate) return a.label.localeCompare(b.label)
@@ -167,7 +172,7 @@ export default function Timebox() {
     const saved = localStorage.getItem('timebox-show-completed')
     return saved !== 'false' // Default to true
   })
-  
+
   // Mobile sidebar state
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
@@ -185,7 +190,7 @@ export default function Timebox() {
     taskLabel: string
     attempts: any[]
   } | null>(null)
-  
+
   // Recurrence dialog state
   const [recurrenceDialog, setRecurrenceDialog] = useState<{
     taskId: string
@@ -193,7 +198,7 @@ export default function Timebox() {
     currentPattern?: RecurrencePattern
     taskType?: 'one-time' | 'recurring' | 'habit'
   } | null>(null)
-  
+
   // Force refresh state for recurring task updates
   const [refreshKey, setRefreshKey] = useState(0)
 
@@ -270,7 +275,7 @@ export default function Timebox() {
   useEffect(() => {
     localStorage.setItem('timebox-show-in-progress', showInProgress.toString())
   }, [showInProgress])
-  
+
   // Mobile detection
   useEffect(() => {
     const checkMobile = () => {
@@ -281,7 +286,7 @@ export default function Timebox() {
         setSidebarOpen(false) // Auto-close in mobile landscape
       }
     }
-    
+
     checkMobile()
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
@@ -291,7 +296,7 @@ export default function Timebox() {
   useEffect(() => {
     // Initialize time slots for the selected date
     initializeTimeSlots()
-    
+
     // Find all one-time tasks scheduled for the selected date
     const scheduledTasks = entries.flatMap(entry =>
       entry.nodes
@@ -318,7 +323,7 @@ export default function Timebox() {
     // Generate recurring task instances for the selected date
     const allNodes = entries.flatMap(entry => entry.nodes)
     const recurringInstances = generateRecurringTaskInstances(allNodes, selectedDate)
-    
+
     // Convert recurring instances to timebox tasks
     const recurringTasks = recurringInstances
       .filter(instance => instance.node.data.timeboxStartTime) // Only include if it has a scheduled time
@@ -329,7 +334,7 @@ export default function Timebox() {
         importance: instance.node.data.importance,
         urgency: instance.node.data.urgency,
         dueDate: instance.node.data.dueDate,
-        status: instance.isCompleted ? 'completed' as const : 'pending' as const,
+        status: instance.isCompleted ? ('completed' as const) : ('pending' as const),
         completedAt: instance.completion?.completedAt,
         attempts: [], // Recurring tasks don't use attempts
         totalAttempts: 0,
@@ -344,10 +349,10 @@ export default function Timebox() {
 
     // Combine all tasks and add to appropriate slots
     const allTasks = [...scheduledTasks, ...recurringTasks]
-    
+
     // Use a Set to track task IDs and prevent duplicates
     const addedTaskIds = new Set<string>()
-    
+
     allTasks.forEach(task => {
       if (!addedTaskIds.has(task.id) && task.timeboxStartTime) {
         const slotId = `slot-${task.timeboxStartTime.replace(':', '')}`
@@ -437,7 +442,7 @@ export default function Timebox() {
         if (task.originalNode) {
           // For recurring tasks, update the original node ID, not the instance ID
           const nodeIdToUpdate = task.isRecurring ? task.originalNode.id : task.id
-          
+
           updateNode(nodeIdToUpdate, {
             ...task.originalNode.data,
             timeboxStartTime: slot.startTime,
@@ -447,9 +452,12 @@ export default function Timebox() {
         }
       } else {
         // Adding new task from sidebar
-        
+
         // Check if this is a recurring task
-        if (task.originalNode?.data.taskType === 'recurring' || task.originalNode?.data.taskType === 'habit') {
+        if (
+          task.originalNode?.data.taskType === 'recurring' ||
+          task.originalNode?.data.taskType === 'habit'
+        ) {
           // For recurring tasks, only update the timebox time info, not the date
           // The useEffect will generate the correct instance
           if (task.originalNode) {
@@ -550,7 +558,7 @@ export default function Timebox() {
 
     // Close the context menu
     setSlotContextMenu(null)
-    
+
     // The task will be automatically added to the timebox slot by the useEffect
     // that watches for entry changes and loads scheduled tasks
   }
@@ -559,13 +567,15 @@ export default function Timebox() {
     // Handle recurring task instances differently
     if (taskId.includes('-') && taskId.split('-').length > 2) {
       // This is a recurring task instance - we can't delete individual instances
-      alert("You cannot delete individual occurrences of recurring tasks. Delete the recurring task from the BrainFlow view to remove all occurrences.")
+      alert(
+        'You cannot delete individual occurrences of recurring tasks. Delete the recurring task from the BrainFlow view to remove all occurrences.'
+      )
       return
     }
-    
+
     // For regular tasks, delete the node entirely
     deleteNode(taskId)
-    
+
     // Also remove from any time slots
     timeSlots.forEach(slot => {
       if (slot.tasks.some(t => t.id === taskId)) {
@@ -573,7 +583,7 @@ export default function Timebox() {
       }
     })
   }
-  
+
   const handleUpdateTask = (taskId: string, updates: { importance?: number; urgency?: number }) => {
     // Update the task in the timebox store
     if (contextMenu?.slotId) {
@@ -601,27 +611,25 @@ export default function Timebox() {
     // Format: originalId-YYYY-MM-DD (need at least 4 parts when split)
     const parts = taskId.split('-')
     const isRecurringInstance = parts.length >= 4 && /^\d{4}$/.test(parts[parts.length - 3])
-    
+
     if (isRecurringInstance) {
       // This is a recurring task instance
       // Extract the date part (last 3 segments: YYYY-MM-DD)
       const dateStr = parts.slice(-3).join('-')
       const originalId = parts.slice(0, -3).join('-')
       const task = timeSlots.flatMap(s => s.tasks).find(t => t.id === taskId)
-      
+
       if (!task?.originalNode) return
-      
+
       // Find which slot contains this task and update it for visual feedback
-      const slotWithTask = timeSlots.find(slot => 
-        slot.tasks.some(t => t.id === taskId)
-      )
+      const slotWithTask = timeSlots.find(slot => slot.tasks.some(t => t.id === taskId))
       if (slotWithTask) {
         updateTaskInSlot(taskId, {
           status: completed ? 'completed' : 'pending',
           completedAt: completed ? new Date().toISOString() : undefined,
         })
       }
-      
+
       if (completed) {
         // Add a completion record for this date
         const newCompletion: RecurringCompletion = {
@@ -631,55 +639,93 @@ export default function Timebox() {
           notes: undefined,
           quality: undefined, // Could be set via UI
         }
-        
+
         const existingCompletions = task.originalNode.data.recurringCompletions || []
         const updatedCompletions = existingCompletions.filter(c => c.date !== dateStr)
         updatedCompletions.push(newCompletion)
-        
+
         updateNode(originalId, {
           ...task.originalNode.data,
           recurringCompletions: updatedCompletions,
           lastRecurringCompletionDate: dateStr,
           // Update streak if it's a habit
           ...(task.originalNode.data.taskType === 'habit' && {
-            currentStreak: calculateCurrentStreak(updatedCompletions, task.originalNode.data.recurrencePattern!)
-          })
+            currentStreak: calculateCurrentStreak(
+              updatedCompletions,
+              task.originalNode.data.recurrencePattern!
+            ),
+          }),
         })
-        
+
         // Trigger a refresh to update the UI
         setRefreshKey(prev => prev + 1)
       } else {
         // Remove completion record for this date
         const existingCompletions = task.originalNode.data.recurringCompletions || []
         const updatedCompletions = existingCompletions.filter(c => c.date !== dateStr)
-        
+
         updateNode(originalId, {
           ...task.originalNode.data,
           recurringCompletions: updatedCompletions,
           // Update streak if it's a habit
           ...(task.originalNode.data.taskType === 'habit' && {
-            currentStreak: calculateCurrentStreak(updatedCompletions, task.originalNode.data.recurrencePattern!)
-          })
+            currentStreak: calculateCurrentStreak(
+              updatedCompletions,
+              task.originalNode.data.recurrencePattern!
+            ),
+          }),
         })
-        
+
         // Trigger a refresh to update the UI
         setRefreshKey(prev => prev + 1)
       }
     } else {
       // Regular one-time task
-      const task = allTasks.find(t => t.id === taskId) || 
-                  timeSlots.flatMap(s => s.tasks).find(t => t.id === taskId)
+      const task =
+        allTasks.find(t => t.id === taskId) ||
+        timeSlots.flatMap(s => s.tasks).find(t => t.id === taskId)
       if (!task) return
 
+      const newStatus = completed ? 'completed' : 'pending'
       const updates = {
-        taskStatus: completed ? ('completed' as const) : ('pending' as const),
+        taskStatus: newStatus as const,
         completedAt: completed ? new Date().toISOString() : undefined,
       }
-      
+
+      // Evaluate smart completion logic
+      const { currentEntry } = useBrainDumpStore.getState()
+      if (currentEntry) {
+        const completionResult = evaluateTaskCompletion(
+          taskId,
+          newStatus as any,
+          currentEntry.nodes,
+          currentEntry.edges
+        )
+
+        // Handle cascading completions
+        completionResult.affectedNodeIds.forEach(nodeId => {
+          if (nodeId !== taskId) {
+            const affectedNode = currentEntry.nodes.find(n => n.id === nodeId)
+            if (affectedNode) {
+              if (completionResult.shouldCompleteParent || completionResult.shouldCompleteChildren) {
+                updateNode(nodeId, {
+                  ...affectedNode.data,
+                  taskStatus: newStatus as any,
+                  completedAt: completed ? new Date().toISOString() : undefined,
+                })
+              }
+            }
+          }
+        })
+
+        // Show message if there were cascading effects
+        if (completionResult.message && completionResult.affectedNodeIds.length > 1) {
+          console.log(completionResult.message) // Could be replaced with toast notification
+        }
+      }
+
       // Find which slot contains this task and update it for visual feedback
-      const slotWithTask = timeSlots.find(slot => 
-        slot.tasks.some(t => t.id === taskId)
-      )
+      const slotWithTask = timeSlots.find(slot => slot.tasks.some(t => t.id === taskId))
       if (slotWithTask) {
         updateTaskInSlot(taskId, {
           status: updates.taskStatus,
@@ -804,28 +850,34 @@ export default function Timebox() {
 
     return allTasks.filter(t => task.subtasks?.includes(t.id) || t.parentTaskId === taskId)
   }
-  
+
   const handleMakeRecurring = (taskId: string) => {
     // Find the task to get its current state
-    const task = allTasks.find(t => t.id === taskId) || 
-                 timeSlots.flatMap(s => s.tasks).find(t => t.id === taskId)
-    
+    const task =
+      allTasks.find(t => t.id === taskId) ||
+      timeSlots.flatMap(s => s.tasks).find(t => t.id === taskId)
+
     if (!task) return
-    
+
     setRecurrenceDialog({
       taskId: task.id,
       taskLabel: task.label,
       currentPattern: task.originalNode?.data.recurrencePattern,
-      taskType: task.originalNode?.data.taskType || 'one-time'
+      taskType: task.originalNode?.data.taskType || 'one-time',
     })
   }
-  
-  const handleSaveRecurrence = (taskId: string, pattern: RecurrencePattern | undefined, taskType: 'recurring' | 'habit') => {
-    const task = allTasks.find(t => t.id === taskId) || 
-                 timeSlots.flatMap(s => s.tasks).find(t => t.id === taskId)
-    
+
+  const handleSaveRecurrence = (
+    taskId: string,
+    pattern: RecurrencePattern | undefined,
+    taskType: 'recurring' | 'habit'
+  ) => {
+    const task =
+      allTasks.find(t => t.id === taskId) ||
+      timeSlots.flatMap(s => s.tasks).find(t => t.id === taskId)
+
     if (!task?.originalNode) return
-    
+
     // Update the node with recurrence information
     updateNode(taskId, {
       ...task.originalNode.data,
@@ -836,7 +888,7 @@ export default function Timebox() {
       currentStreak: 0,
       longestStreak: 0,
     })
-    
+
     // Close the dialog
     setRecurrenceDialog(null)
   }
@@ -849,14 +901,14 @@ export default function Timebox() {
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className={cn(
-              "fixed z-50 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg md:hidden",
-              isMobileLandscape ? "top-20 left-2" : "top-24 left-4"
+              'fixed z-50 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg md:hidden',
+              isMobileLandscape ? 'top-20 left-2' : 'top-24 left-4'
             )}
           >
             {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         )}
-        
+
         {/* Overlay for mobile */}
         {(isMobile || isMobileLandscape) && sidebarOpen && (
           <div
@@ -864,14 +916,16 @@ export default function Timebox() {
             onClick={() => setSidebarOpen(false)}
           />
         )}
-        
+
         {/* Sidebar with unscheduled tasks */}
-        <div className={cn(
-          "fixed md:relative inset-y-0 left-0 z-40 bg-white dark:bg-gray-800 shadow-lg overflow-y-auto transform transition-transform duration-300 ease-in-out",
-          "w-80 mobile-landscape:w-64", // Narrower in landscape
-          (isMobile || isMobileLandscape) && !sidebarOpen && "-translate-x-full",
-          "md:translate-x-0"
-        )}>
+        <div
+          className={cn(
+            'fixed md:relative inset-y-0 left-0 z-40 bg-white dark:bg-gray-800 shadow-lg overflow-y-auto transform transition-transform duration-300 ease-in-out',
+            'w-80 mobile-landscape:w-64', // Narrower in landscape
+            (isMobile || isMobileLandscape) && !sidebarOpen && '-translate-x-full',
+            'md:translate-x-0'
+          )}
+        >
           <div className="p-4 border-b dark:border-gray-700">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
               Unscheduled Tasks
@@ -982,7 +1036,10 @@ export default function Timebox() {
                             {task.label}
                           </p>
                           {task.isRecurring && (
-                            <span className="text-xs bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-1.5 py-0.5 rounded-full" title="Recurring task">
+                            <span
+                              className="text-xs bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-1.5 py-0.5 rounded-full"
+                              title="Recurring task"
+                            >
                               🔁
                             </span>
                           )}
@@ -1035,10 +1092,12 @@ export default function Timebox() {
         </div>
 
         {/* Main timebox grid */}
-        <div className={cn(
-          "flex-1 overflow-y-auto overflow-x-hidden w-full max-w-full",
-          isMobileLandscape && "pl-12" // Extra padding for mobile menu button
-        )}>
+        <div
+          className={cn(
+            'flex-1 overflow-y-auto overflow-x-hidden w-full max-w-full',
+            isMobileLandscape && 'pl-12' // Extra padding for mobile menu button
+          )}
+        >
           {/* Date navigation */}
           <div className="sticky top-0 bg-white dark:bg-gray-800 shadow-sm z-10">
             <div className="flex items-center justify-between p-4">
@@ -1205,15 +1264,22 @@ export default function Timebox() {
                                             {task.label}
                                           </p>
                                           {task.isRecurring && (
-                                            <span className="text-xs bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-1.5 py-0.5 rounded-full" title="Recurring task">
+                                            <span
+                                              className="text-xs bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-1.5 py-0.5 rounded-full"
+                                              title="Recurring task"
+                                            >
                                               🔁
                                             </span>
                                           )}
-                                          {task.originalNode?.data.currentStreak && task.originalNode.data.currentStreak > 0 && (
-                                            <span className="text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-1.5 py-0.5 rounded-full" title={`${task.originalNode.data.currentStreak} day streak`}>
-                                              🔥{task.originalNode.data.currentStreak}
-                                            </span>
-                                          )}
+                                          {task.originalNode?.data.currentStreak &&
+                                            task.originalNode.data.currentStreak > 0 && (
+                                              <span
+                                                className="text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-1.5 py-0.5 rounded-full"
+                                                title={`${task.originalNode.data.currentStreak} day streak`}
+                                              >
+                                                🔥{task.originalNode.data.currentStreak}
+                                              </span>
+                                            )}
                                           {task.totalAttempts > 0 && (
                                             <span className="text-xs bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded-full">
                                               🔄{task.totalAttempts}
@@ -1234,7 +1300,7 @@ export default function Timebox() {
                                         <button
                                           onClick={() => {
                                             removeTaskFromSlot(task.id, slot.id)
-                                            
+
                                             // For recurring tasks, don't update the original node
                                             // For one-time tasks, clear timebox properties
                                             if (task.originalNode && !task.isRecurring) {
@@ -1312,7 +1378,7 @@ export default function Timebox() {
           onAddNode={handleAddNodeFromSlot}
         />
       )}
-      
+
       {/* Recurrence Dialog */}
       {recurrenceDialog && (
         <RecurrenceDialog

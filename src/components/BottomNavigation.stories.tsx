@@ -12,13 +12,14 @@ const meta = {
     },
   },
   decorators: [
-    (Story) => (
+    Story => (
       <MemoryRouter>
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 relative">
           <div className="p-4">
             <h1 className="text-2xl font-bold mb-4">Mobile View</h1>
             <p className="text-gray-600 dark:text-gray-400">
-              The bottom navigation only appears on mobile devices (screens smaller than sm breakpoint).
+              The bottom navigation only appears on mobile devices (screens smaller than sm
+              breakpoint).
             </p>
             <p className="text-gray-600 dark:text-gray-400 mt-2">
               Resize your browser window or use the viewport controls to see the navigation.
@@ -38,7 +39,7 @@ export const Default: Story = {}
 
 export const HomeActive: Story = {
   decorators: [
-    (Story) => (
+    Story => (
       <MemoryRouter initialEntries={['/']}>
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 relative">
           <div className="p-4">
@@ -53,7 +54,7 @@ export const HomeActive: Story = {
 
 export const JournalActive: Story = {
   decorators: [
-    (Story) => (
+    Story => (
       <MemoryRouter initialEntries={['/journal']}>
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 relative">
           <div className="p-4">
@@ -68,7 +69,7 @@ export const JournalActive: Story = {
 
 export const BrainDumpActive: Story = {
   decorators: [
-    (Story) => (
+    Story => (
       <MemoryRouter initialEntries={['/braindump']}>
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 relative">
           <div className="p-4">
@@ -86,7 +87,7 @@ export const DarkMode: Story = {
     backgrounds: { default: 'dark' },
   },
   decorators: [
-    (Story) => (
+    Story => (
       <MemoryRouter>
         <div className="min-h-screen bg-gray-900 relative dark">
           <div className="p-4">

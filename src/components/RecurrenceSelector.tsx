@@ -13,7 +13,7 @@ export function RecurrenceSelector({ pattern, onChange, onClose }: RecurrenceSel
   const [frequency, setFrequency] = useState(pattern?.frequency || 1)
   const [daysOfWeek, setDaysOfWeek] = useState<number[]>(pattern?.daysOfWeek || [])
   const [dayOfMonth, setDayOfMonth] = useState(pattern?.dayOfMonth || 1)
-  
+
   const handleSave = () => {
     const newPattern: RecurrencePattern = {
       type,
@@ -25,21 +25,21 @@ export function RecurrenceSelector({ pattern, onChange, onClose }: RecurrenceSel
     onChange(newPattern)
     onClose()
   }
-  
+
   const handleRemove = () => {
     onChange(undefined)
     onClose()
   }
-  
+
   return (
     <div className="p-4 space-y-4">
       <h3 className="font-semibold">Set Recurrence</h3>
-      
+
       <div>
         <label className="block text-sm font-medium mb-1">Pattern</label>
         <select
           value={type}
-          onChange={(e) => setType(e.target.value as RecurrencePattern['type'])}
+          onChange={e => setType(e.target.value as RecurrencePattern['type'])}
           className="w-full px-3 py-2 border rounded-lg"
         >
           <option value="daily">Daily</option>
@@ -47,7 +47,7 @@ export function RecurrenceSelector({ pattern, onChange, onClose }: RecurrenceSel
           <option value="monthly">Monthly</option>
         </select>
       </div>
-      
+
       <div>
         <label className="block text-sm font-medium mb-1">
           Every {type === 'daily' ? 'X days' : type === 'weekly' ? 'X weeks' : 'X months'}
@@ -56,11 +56,11 @@ export function RecurrenceSelector({ pattern, onChange, onClose }: RecurrenceSel
           type="number"
           min="1"
           value={frequency}
-          onChange={(e) => setFrequency(parseInt(e.target.value) || 1)}
+          onChange={e => setFrequency(parseInt(e.target.value) || 1)}
           className="w-full px-3 py-2 border rounded-lg"
         />
       </div>
-      
+
       {type === 'weekly' && (
         <div>
           <label className="block text-sm font-medium mb-1">Days of Week</label>
@@ -70,9 +70,7 @@ export function RecurrenceSelector({ pattern, onChange, onClose }: RecurrenceSel
                 key={index}
                 onClick={() => {
                   setDaysOfWeek(prev =>
-                    prev.includes(index)
-                      ? prev.filter(d => d !== index)
-                      : [...prev, index]
+                    prev.includes(index) ? prev.filter(d => d !== index) : [...prev, index]
                   )
                 }}
                 className={`w-8 h-8 rounded ${
@@ -87,7 +85,7 @@ export function RecurrenceSelector({ pattern, onChange, onClose }: RecurrenceSel
           </div>
         </div>
       )}
-      
+
       {type === 'monthly' && (
         <div>
           <label className="block text-sm font-medium mb-1">Day of Month</label>
@@ -96,12 +94,12 @@ export function RecurrenceSelector({ pattern, onChange, onClose }: RecurrenceSel
             min="1"
             max="31"
             value={dayOfMonth}
-            onChange={(e) => setDayOfMonth(parseInt(e.target.value) || 1)}
+            onChange={e => setDayOfMonth(parseInt(e.target.value) || 1)}
             className="w-full px-3 py-2 border rounded-lg"
           />
         </div>
       )}
-      
+
       <div className="flex gap-2">
         <button
           onClick={handleSave}

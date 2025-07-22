@@ -1,5 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
-import { X, CheckCircle, RotateCcw, Clock, FileText, Calendar, Plus, Trash2, Repeat } from 'lucide-react'
+import {
+  X,
+  CheckCircle,
+  RotateCcw,
+  Clock,
+  FileText,
+  Calendar,
+  Plus,
+  Trash2,
+  Repeat,
+  ChevronUp,
+  ChevronDown,
+  Layers,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { linearToLog, logToLinear } from '@/lib/priorityUtils'
 import { calculateUrgencyFromDueDate, getDueDateDescription, format } from '@/lib/dateUtils'
@@ -15,6 +28,11 @@ interface TimeboxContextMenuProps {
     status?: string
     attempts?: any[]
     dueDate?: string
+    hasChildren?: boolean
+    parentId?: string
+    parentLabel?: string
+    isCollapsed?: boolean
+    childrenCount?: number
   }
   onUpdateTask: (taskId: string, updates: { importance?: number; urgency?: number }) => void
   onTaskComplete?: (taskId: string, completed: boolean) => void
@@ -23,6 +41,9 @@ interface TimeboxContextMenuProps {
   onAddSubtask?: (taskId: string) => void
   onMakeRecurring?: (taskId: string) => void
   onDeleteTask?: (taskId: string) => void
+  onCollapseChildren?: (taskId: string) => void
+  onExpandChildren?: (taskId: string) => void
+  onCollapseToParent?: (taskId: string, parentId: string) => void
   onClose: () => void
 }
 
@@ -37,6 +58,9 @@ export function TimeboxContextMenu({
   onAddSubtask,
   onMakeRecurring,
   onDeleteTask,
+  onCollapseChildren,
+  onExpandChildren,
+  onCollapseToParent,
   onClose,
 }: TimeboxContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null)
@@ -183,13 +207,67 @@ export function TimeboxContextMenu({
                 <span>Add Subtask</span>
               </button>
             )}
-            
+
+            {/* Collapse/Expand Options */}
+            {task.hasChildren && !task.isCollapsed && onCollapseChildren && (
+              <button
+                onClick={() => {
+                  onCollapseChildren(task.id)
+                  onClose()
+                }}
+                className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-3"
+              >
+                <ChevronUp className="w-4 h-4 text-orange-600" />
+                <span>Collapse Children</span>
+                {task.childrenCount && (
+                  <span className="ml-auto text-xs bg-gray-200 dark:bg-gray-600 px-1.5 py-0.5 rounded">
+                    {task.childrenCount}
+                  </span>
+                )}
+              </button>
+            )}
+
+            {task.hasChildren && task.isCollapsed && onExpandChildren && (
+              <button
+                onClick={() => {
+                  onExpandChildren(task.id)
+                  onClose()
+                }}
+                className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-3"
+              >
+                <ChevronDown className="w-4 h-4 text-green-600" />
+                <span>Expand Children</span>
+                {task.childrenCount && (
+                  <span className="ml-auto text-xs bg-gray-200 dark:bg-gray-600 px-1.5 py-0.5 rounded">
+                    {task.childrenCount}
+                  </span>
+                )}
+              </button>
+            )}
+
+            {task.parentId && task.parentLabel && onCollapseToParent && (
+              <button
+                onClick={() => {
+                  onCollapseToParent(task.id, task.parentId!)
+                  onClose()
+                }}
+                className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-3"
+              >
+                <Layers className="w-4 h-4 text-purple-600" />
+                <span>Collapse to {task.parentLabel}</span>
+              </button>
+            )}
+
             {onDeleteTask && (
               <>
                 <div className="h-px bg-gray-200 dark:bg-gray-700 my-1" />
                 <button
                   onClick={() => {
-                    if (confirm(`Are you sure you want to delete "${task.label}"? This action cannot be undone.`)) {
+                    if (
+                      confirm(
+                        `Are you sure you want to delete "${task.label}"? This action cannot be undone.`
+                      )
+                    ) {
                       onDeleteTask(task.id)
                       onClose()
                     }

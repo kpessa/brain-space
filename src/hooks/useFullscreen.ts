@@ -80,7 +80,7 @@ export function useFullscreen() {
       document.removeEventListener('msfullscreenchange', handleFullscreenChange)
     }
   }, [isMobileFullscreen])
-  
+
   // Apply CSS classes for mobile fullscreen
   useEffect(() => {
     if (elementRef.current && isMobileFullscreen) {

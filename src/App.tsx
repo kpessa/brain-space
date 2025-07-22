@@ -23,6 +23,7 @@ import TestJournalFix from './pages/TestJournalFix'
 import DebugJournal from './pages/DebugJournal'
 import RecalculateProgress from './pages/RecalculateProgress'
 import Timebox from './pages/Timebox'
+import { Matrix } from './pages/Matrix'
 
 function AppContent() {
   const { user, loading } = useAuth()
@@ -100,6 +101,7 @@ function AppContent() {
               <Route path="debug-journal" element={<DebugJournal />} />
               <Route path="recalculate-progress" element={<RecalculateProgress />} />
               <Route path="timebox" element={<Timebox />} />
+              <Route path="matrix" element={<Matrix />} />
             </Route>
           ) : (
             <>

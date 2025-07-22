@@ -41,7 +41,7 @@ export const AchievementCategory = {
   SPECIAL: 'special',
 } as const
 
-export type AchievementCategory = typeof AchievementCategory[keyof typeof AchievementCategory]
+export type AchievementCategory = (typeof AchievementCategory)[keyof typeof AchievementCategory]
 
 export interface Level {
   level: number
@@ -106,7 +106,7 @@ export const QuestCategory = {
   ADVENTURE: 'adventure',
 } as const
 
-export type QuestCategory = typeof QuestCategory[keyof typeof QuestCategory]
+export type QuestCategory = (typeof QuestCategory)[keyof typeof QuestCategory]
 
 export interface DailyStats {
   date: string

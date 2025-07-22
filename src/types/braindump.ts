@@ -96,7 +96,10 @@ export interface BrainDumpNode extends Node {
     subtasks?: string[] // Array of child task node IDs
     parentTaskId?: string // ID of parent task (if this is a subtask)
     subtaskProgress?: { completed: number; total: number } // Track subtask completion
-    
+    subtaskLogic?: 'AND' | 'OR' | 'NONE' // How subtasks relate to parent completion (default: 'NONE')
+    isOptional?: boolean // Whether this subtask is optional for parent completion
+    autoCompleteParent?: boolean // Whether completing this task should auto-complete parent (for OR logic)
+
     // Recurring task support
     taskType?: 'one-time' | 'recurring' | 'habit' // Default to 'one-time' for backward compatibility
     recurrencePattern?: RecurrencePattern
