@@ -38,7 +38,6 @@ export function calculateHorizontalLayout(
   const rootNode = nodes.find(node => node.type === 'root' || !parentMap.has(node.id))
 
   if (!rootNode) {
-    console.warn('No root node found, returning original nodes')
     return nodes
   }
 
@@ -187,7 +186,6 @@ export function calculateParentChildLayout(
   // Find parent node
   const parentNode = nodes.find(n => n.id === parentId)
   if (!parentNode) {
-    console.warn('Parent node not found')
     return nodes
   }
 
@@ -197,7 +195,6 @@ export function calculateParentChildLayout(
   const childNodes = nodes.filter(n => childIds.has(n.id))
 
   if (childNodes.length === 0) {
-    console.log('No children found for parent node')
     return nodes
   }
 

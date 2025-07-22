@@ -83,7 +83,7 @@ const edgeTypes = {
 
 function BrainDumpFlowInner() {
   const { fitView, screenToFlowPosition } = useReactFlow()
-  const { currentEntry, updateEntry, isSyncing } = useBrainDumpStore()
+  const { currentEntry, updateEntry, isSyncing, updateNode, createTopicBrainDump } = useBrainDumpStore()
 
   // UI state
   const { elementRef, isFullscreen, toggleFullscreen } = useFullscreen()
@@ -97,6 +97,13 @@ function BrainDumpFlowInner() {
   const [lassoMode, setLassoMode] = useState<'off' | 'partial' | 'full'>('off')
   const [showExportDialog, setShowExportDialog] = useState(false)
   const [viewMode, setViewMode] = useState<'graph' | 'matrix'>('graph')
+  const [topicDumpDialog, setTopicDumpDialog] = useState<{
+    isOpen: boolean
+    node: BrainDumpNode | null
+  }>({
+    isOpen: false,
+    node: null,
+  })
 
   // Extracted hooks
   const dialogManager = useDialogManager()
@@ -320,6 +327,91 @@ function BrainDumpFlowInner() {
       window.removeEventListener('node:drop', handleNodeDrop as EventListener)
     }
   }, [nodes, dialogManager.setNodeInputDialog, edgeManager.addEdgeBetweenNodes])
+  
+  // Topic dump handlers
+  const handleCreateTopicDump = useCallback(
+    (nodeId: string) => {
+      const node = nodes.find(n => n.id === nodeId)
+      if (node) {
+        setTopicDumpDialog({ isOpen: true, node })
+      }
+    },
+    [nodes]
+  )
+  
+  const handleConfirmTopicDump = useCallback(
+    async (thoughts: string) => {
+      if (!topicDumpDialog.node || !currentEntry) return
+
+      logger.info('TOPIC_DUMP', 'Starting topic dump creation', {
+        nodeId: topicDumpDialog.node.id,
+        nodeType: topicDumpDialog.node.type,
+        nodeLabel: topicDumpDialog.node.data.label,
+        currentEntryId: currentEntry.id,
+        thoughts,
+      })
+
+      try {
+        // Helper function to gather all child nodes recursively
+        const gatherChildNodes = (
+          nodeId: string,
+          collectedNodes: Set<string> = new Set()
+        ): Set<string> => {
+          collectedNodes.add(nodeId)
+
+          // Find edges where this node is the source
+          const childEdges = edges.filter(e => e.source === nodeId)
+          childEdges.forEach(edge => {
+            if (!collectedNodes.has(edge.target)) {
+              gatherChildNodes(edge.target, collectedNodes)
+            }
+          })
+
+          return collectedNodes
+        }
+
+        // Gather all nodes in this branch
+        const nodeIds = Array.from(gatherChildNodes(topicDumpDialog.node.id))
+        const branchNodes = nodes.filter(n => nodeIds.includes(n.id))
+        const branchEdges = edges.filter(
+          e => nodeIds.includes(e.source) && nodeIds.includes(e.target)
+        )
+
+        logger.info('TOPIC_DUMP', 'Gathered branch data', {
+          nodeCount: branchNodes.length,
+          edgeCount: branchEdges.length,
+          nodeIds,
+        })
+
+        // Create the topic-focused brain dump
+        const result = await createTopicBrainDump({
+          parentBrainDumpId: currentEntry.id,
+          originNodeId: topicDumpDialog.node.id,
+          topicFocus: topicDumpDialog.node.data.label,
+          thoughts,
+          nodes: branchNodes,
+          edges: branchEdges,
+        })
+
+        logger.info('TOPIC_DUMP', 'Created topic brain dump', {
+          newEntryId: result.id,
+          success: true,
+        })
+
+        // Update the original node to show it has a topic dump
+        await updateNode(topicDumpDialog.node.id, {
+          hasTopicBrainDump: true,
+          topicBrainDumpId: result.id,
+        })
+
+        setTopicDumpDialog({ isOpen: false, node: null })
+      } catch (error) {
+        logger.error('TOPIC_DUMP', 'Failed to create topic dump', { error })
+        logger.error('TOPIC_DUMP', 'Failed to create topic dump', { error })
+      }
+    },
+    [topicDumpDialog.node, currentEntry, nodes, edges, createTopicBrainDump, updateNode]
+  )
 
   if (!currentEntry) {
     return (
@@ -699,7 +791,7 @@ function BrainDumpFlowInner() {
         onDelete={async (nodeId: string) => {
           const node = nodes.find(n => n.id === nodeId)
           if (node?.type === 'root') {
-            console.warn('Cannot delete root node')
+            logger.warn('NODE_DELETE', 'Cannot delete root node')
             return
           }
 
@@ -789,7 +881,7 @@ function BrainDumpFlowInner() {
         onAutoLayout={() => {}}
         onCreateGhost={() => {}}
         onUpdateSynonyms={() => {}}
-        onCreateTopicDump={() => {}}
+        onCreateTopicDump={handleCreateTopicDump}
         onDissolveTopicDump={() => {}}
         onAddChild={(nodeId: string) => {
           const parentNode = nodes.find(n => n.id === nodeId)
@@ -797,7 +889,7 @@ function BrainDumpFlowInner() {
 
           // Check if parent has topic brain dump
           if (parentNode.data?.hasTopicBrainDump) {
-            console.info('Cannot add children to nodes that have topic brain dumps')
+            logger.info('NODE_ADD_CHILD', 'Cannot add children to nodes that have topic brain dumps')
             return
           }
 
@@ -925,13 +1017,11 @@ function BrainDumpFlowInner() {
       />
 
       <TopicBrainDumpDialog
-        isOpen={dialogManager.topicDumpDialog.isOpen}
-        node={dialogManager.topicDumpDialog.node}
+        isOpen={topicDumpDialog.isOpen}
+        node={topicDumpDialog.node}
         parentEntry={currentEntry}
-        onConfirm={(topicFocus: string) => {
-          dialogManager.setTopicDumpDialog({ isOpen: false, node: null })
-        }}
-        onClose={() => dialogManager.setTopicDumpDialog({ isOpen: false, node: null })}
+        onConfirm={handleConfirmTopicDump}
+        onClose={() => setTopicDumpDialog({ isOpen: false, node: null })}
       />
 
       {/* Edge Click Menu */}

@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation } from 'react-router-dom'
-import { Home, BookOpen, Trophy, Sparkles, Brain, LogOut } from 'lucide-react'
+import { Home, BookOpen, Trophy, Sparkles, Brain, LogOut, Clock } from 'lucide-react'
 import { cn } from '../lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from './Button'
@@ -12,6 +12,7 @@ export default function Layout() {
     { path: '/', icon: Home, label: 'Home' },
     { path: '/journal', icon: BookOpen, label: 'Journal' },
     { path: '/braindump', icon: Brain, label: 'Brain Dump' },
+    { path: '/timebox', icon: Clock, label: 'Timebox' },
     { path: '/progress', icon: Trophy, label: 'Progress' },
   ]
 

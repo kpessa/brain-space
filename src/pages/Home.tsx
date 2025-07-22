@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Button } from '../components/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/Card'
-import { BookOpen, Sword, Trophy, Sparkles } from 'lucide-react'
+import { BookOpen, Sword, Trophy, Sparkles, Clock } from 'lucide-react'
 
 export default function Home() {
   return (
@@ -57,6 +57,28 @@ export default function Home() {
               <Link to="/progress">
                 <Button variant="secondary" className="w-full">
                   View Achievements
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-glow transition-all duration-300 animate-slideInLeft animation-delay-100">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <Clock className="w-8 h-8 text-brain-500" />
+                <CardTitle>Timebox Schedule</CardTitle>
+              </div>
+              <CardDescription>
+                Organize your tasks into time blocks for focused productivity
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-600 mb-4">
+                Drag and drop tasks from your brain dumps into 2-hour time blocks throughout your day.
+              </p>
+              <Link to="/timebox">
+                <Button variant="primary" className="w-full">
+                  Plan Your Day
                 </Button>
               </Link>
             </CardContent>

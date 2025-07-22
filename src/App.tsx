@@ -22,6 +22,7 @@ import DatabaseSetup from './pages/DatabaseSetup'
 import TestJournalFix from './pages/TestJournalFix'
 import DebugJournal from './pages/DebugJournal'
 import RecalculateProgress from './pages/RecalculateProgress'
+import Timebox from './pages/Timebox'
 
 function AppContent() {
   const { user, loading } = useAuth()
@@ -98,6 +99,7 @@ function AppContent() {
               <Route path="test-journal-fix" element={<TestJournalFix />} />
               <Route path="debug-journal" element={<DebugJournal />} />
               <Route path="recalculate-progress" element={<RecalculateProgress />} />
+              <Route path="timebox" element={<Timebox />} />
             </Route>
           ) : (
             <>

@@ -68,7 +68,7 @@ export function useSupabaseSync() {
 
     // Subscribe to real-time updates
     const subscription = supabaseService.subscribeToJournalEntries(user.id, payload => {
-      console.log('Journal entry change:', payload)
+      logger.debug('SYNC', 'Journal entry change detected', { payload })
       // Reload entries when changes occur
       loadJournalEntries()
     })
@@ -158,10 +158,11 @@ export function useSupabaseSync() {
 
     // Subscribe to real-time updates
     const subscription = supabaseService.subscribeToBrainDumps(user.id, payload => {
-      console.log('[REALTIME] Brain dump change detected:', payload)
-      console.log('[REALTIME] Event type:', payload.eventType)
-      console.log('[REALTIME] New data:', payload.new)
-      console.log('[REALTIME] Old data:', payload.old)
+      logger.debug('REALTIME', 'Brain dump change detected', {
+        eventType: payload.eventType,
+        new: payload.new,
+        old: payload.old
+      })
 
       // Check if this is an update to the current entry
       const currentEntry = useBrainDumpStore.getState().currentEntry
@@ -170,19 +171,21 @@ export function useSupabaseSync() {
         const localTimestamp = new Date(currentEntry.updatedAt).getTime()
         const remoteTimestamp = new Date(payload.new.updatedAt).getTime()
 
-        console.log('[REALTIME] Local timestamp:', localTimestamp)
-        console.log('[REALTIME] Remote timestamp:', remoteTimestamp)
+        logger.debug('REALTIME', 'Timestamp comparison', {
+          localTimestamp,
+          remoteTimestamp
+        })
 
         // If timestamps are very close (within 2 seconds), it's likely our own update
         if (Math.abs(remoteTimestamp - localTimestamp) < 2000) {
-          console.log('[REALTIME] Skipping reload - this appears to be our own update')
+          logger.debug('REALTIME', 'Skipping reload - this appears to be our own update')
           return
         }
       }
 
       // Add a small delay to avoid race conditions with local updates
       setTimeout(() => {
-        console.log('[REALTIME] Reloading brain dumps after delay...')
+        logger.debug('REALTIME', 'Reloading brain dumps after delay...')
         loadBrainDumps()
       }, 100)
     })

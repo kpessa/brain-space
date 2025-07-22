@@ -153,3 +153,61 @@ export function isOverdue(dueDate: string | undefined): boolean {
   if (!dueDate) return false
   return new Date(dueDate) < new Date()
 }
+
+/**
+ * Add days to a date
+ */
+export function addDays(date: Date, days: number): Date {
+  const result = new Date(date)
+  result.setDate(result.getDate() + days)
+  return result
+}
+
+/**
+ * Subtract days from a date
+ */
+export function subDays(date: Date, days: number): Date {
+  return addDays(date, -days)
+}
+
+/**
+ * Format date with custom format string
+ */
+export function format(date: Date, formatStr: string): string {
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                  'July', 'August', 'September', 'October', 'November', 'December']
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+  const monthsShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  
+  const day = date.getDate()
+  const month = date.getMonth()
+  const year = date.getFullYear()
+  const dayOfWeek = date.getDay()
+  
+  // Handle most specific patterns first to avoid conflicts
+  // Create a placeholder system to avoid double replacements
+  let result = formatStr
+  
+  // Replace with placeholders first
+  result = result.replace('yyyy-MM-dd', '{{DATE_ISO}}')
+  result = result.replace('EEEE, MMMM d', '{{DATE_FULL}}')
+  result = result.replace('MMM d', '{{DATE_SHORT}}')
+  result = result.replace('yyyy', '{{YEAR}}')
+  result = result.replace('EEEE', '{{DAY_NAME}}')
+  result = result.replace('MMMM', '{{MONTH_NAME}}')
+  result = result.replace('MMM', '{{MONTH_SHORT}}')
+  result = result.replace('d', '{{DAY}}')
+  
+  // Replace placeholders with actual values
+  result = result.replace('{{DATE_ISO}}', `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`)
+  result = result.replace('{{DATE_FULL}}', `${days[dayOfWeek]}, ${months[month]} ${day}`)
+  result = result.replace('{{DATE_SHORT}}', `${monthsShort[month]} ${day}`)
+  result = result.replace('{{YEAR}}', year.toString())
+  result = result.replace('{{DAY_NAME}}', days[dayOfWeek])
+  result = result.replace('{{MONTH_NAME}}', months[month])
+  result = result.replace('{{MONTH_SHORT}}', monthsShort[month])
+  result = result.replace('{{DAY}}', day.toString())
+  
+  return result
+}

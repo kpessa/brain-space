@@ -56,6 +56,26 @@ export interface BrainDumpNode extends Node {
     dueDate?: string // ISO date string for task due date
     dueDateMode?: 'none' | 'specific' | 'relative' // Due date input mode
     autoUrgencyFromDueDate?: boolean // Auto-calculate urgency from due date
+    timeboxStartTime?: string // ISO timestamp for when task is scheduled
+    timeboxDuration?: number // Duration in minutes
+    timeboxDate?: string // Date for the timebox (YYYY-MM-DD format)
+    isTimedTask?: boolean // Flag to indicate this is a scheduled task
+    // Task completion tracking
+    taskStatus?: 'pending' | 'in-progress' | 'completed' | 'deferred'
+    completedAt?: string // ISO timestamp
+    attempts?: Array<{
+      id: string
+      timestamp: string
+      duration?: number
+      notes?: string
+      outcome: 'success' | 'partial' | 'failed' | 'blocked'
+      nextAction?: string
+    }>
+    totalAttempts?: number
+    // Subtask support
+    subtasks?: string[] // Array of child task node IDs
+    parentTaskId?: string // ID of parent task (if this is a subtask)
+    subtaskProgress?: { completed: number; total: number } // Track subtask completion
   }
 }
 

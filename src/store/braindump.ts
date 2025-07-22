@@ -43,13 +43,13 @@ interface BrainDumpState {
   setCurrentEntry: (entry: BrainDumpEntry | null) => void
 
   // Node operations
-  addNode: (node: BrainDumpNode) => void
+  addNode: (node: BrainDumpNode) => Promise<void>
   updateNode: (nodeId: string, data: Partial<BrainDumpNode['data']>) => Promise<void>
   deleteNode: (nodeId: string) => void
   toggleNodeCollapse: (nodeId: string) => Promise<void>
 
   // Edge operations
-  addEdge: (edge: BrainDumpEdge) => void
+  addEdge: (edge: BrainDumpEdge) => Promise<void>
   deleteEdge: (edgeId: string) => void
 
   // Processing
@@ -468,10 +468,22 @@ export const useBrainDumpStore = create<BrainDumpState>((set, get) => ({
     }
   },
 
-  addNode: node => {
-    const { currentEntry } = get()
-    if (!currentEntry) return
+  addNode: async node => {
+    const { currentEntry, updateEntry } = get()
+    if (!currentEntry) {
+      logger.error('STORE', 'Cannot add node - no current entry')
+      return
+    }
 
+    logger.info('STORE', 'Adding node', {
+      nodeId: node.id,
+      nodeType: node.type,
+      nodeLabel: node.data?.label,
+      currentEntryId: currentEntry.id,
+      currentNodesCount: currentEntry.nodes.length,
+    })
+
+    // Update local state immediately
     set(state => {
       const updatedEntry = {
         ...currentEntry,
@@ -483,6 +495,16 @@ export const useBrainDumpStore = create<BrainDumpState>((set, get) => ({
         entries: state.entries.map(e => (e.id === currentEntry.id ? updatedEntry : e)),
       }
     })
+    
+    // Persist to database
+    try {
+      await updateEntry(currentEntry.id, {
+        nodes: [...currentEntry.nodes, node],
+      })
+      logger.info('STORE', 'Node persisted successfully', { nodeId: node.id })
+    } catch (error) {
+      logger.error('STORE', 'Failed to persist node', { nodeId: node.id, error })
+    }
   },
 
   updateNode: async (nodeId, data) => {
@@ -545,10 +567,22 @@ export const useBrainDumpStore = create<BrainDumpState>((set, get) => ({
     await get().updateNode(nodeId, { isCollapsed: !node.data.isCollapsed })
   },
 
-  addEdge: edge => {
-    const { currentEntry } = get()
-    if (!currentEntry) return
+  addEdge: async edge => {
+    const { currentEntry, updateEntry } = get()
+    if (!currentEntry) {
+      logger.error('STORE', 'Cannot add edge - no current entry')
+      return
+    }
 
+    logger.info('STORE', 'Adding edge', {
+      edgeId: edge.id,
+      source: edge.source,
+      target: edge.target,
+      currentEntryId: currentEntry.id,
+      currentEdgesCount: currentEntry.edges.length,
+    })
+
+    // Update local state immediately
     set(state => {
       const updatedEntry = {
         ...currentEntry,
@@ -560,6 +594,16 @@ export const useBrainDumpStore = create<BrainDumpState>((set, get) => ({
         entries: state.entries.map(e => (e.id === currentEntry.id ? updatedEntry : e)),
       }
     })
+    
+    // Persist to database
+    try {
+      await updateEntry(currentEntry.id, {
+        edges: [...currentEntry.edges, edge],
+      })
+      logger.info('STORE', 'Edge persisted successfully', { edgeId: edge.id })
+    } catch (error) {
+      logger.error('STORE', 'Failed to persist edge', { edgeId: edge.id, error })
+    }
   },
 
   deleteEdge: edgeId => {

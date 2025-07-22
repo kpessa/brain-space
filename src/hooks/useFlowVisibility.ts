@@ -13,20 +13,21 @@ export function useFlowVisibility(nodes: Node[], edges: Edge[]) {
     const collapsedNodes = new Set<string>()
     const hiddenNodes = new Set<string>()
 
-    // For topic-focused dumps, always use currentEntry's nodes/edges
-    // For regular dumps, prefer local state if available
-    const currentNodes =
-      currentEntry.type === 'topic-focused'
-        ? currentEntry.nodes || []
-        : nodes.length > 0
-          ? nodes
-          : currentEntry.nodes || []
-    const currentEdges =
-      currentEntry.type === 'topic-focused'
-        ? currentEntry.edges || []
-        : edges.length > 0
-          ? edges
-          : currentEntry.edges || []
+    // Always prefer local state if available, fall back to currentEntry
+    // This ensures newly added nodes are visible immediately
+    const currentNodes = nodes.length > 0 ? nodes : currentEntry.nodes || []
+    const currentEdges = edges.length > 0 ? edges : currentEntry.edges || []
+    
+    logger.debug('FLOW_VISIBILITY', 'Node/Edge sources', {
+      entryId: currentEntry.id,
+      entryType: currentEntry.type,
+      nodesFromState: nodes.length,
+      nodesFromEntry: currentEntry.nodes?.length || 0,
+      usingNodesFrom: nodes.length > 0 ? 'state' : 'entry',
+      edgesFromState: edges.length,
+      edgesFromEntry: currentEntry.edges?.length || 0,
+      usingEdgesFrom: edges.length > 0 ? 'state' : 'entry',
+    })
 
     if (currentEntry.type === 'topic-focused') {
       logger.debug('FLOW', 'getVisibleNodesAndEdges for topic dump', {
