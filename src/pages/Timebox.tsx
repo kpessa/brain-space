@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useTimeboxStore, type TimeboxTask } from '@/store/useTimeboxStore'
 import { useBrainDumpStore } from '@/store/braindump'
 import type { BrainDumpNode } from '@/types/braindump'
@@ -124,6 +124,15 @@ export default function Timebox() {
   
   const { entries, updateNode } = useBrainDumpStore()
   
+  // Ensure selectedDate is always a valid string
+  useEffect(() => {
+    if (!selectedDate || typeof selectedDate !== 'string') {
+      const today = new Date()
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+      setSelectedDate(todayStr)
+    }
+  }, [selectedDate, setSelectedDate])
+  
   // Context menu state
   const [contextMenu, setContextMenu] = useState<{
     x: number
@@ -141,6 +150,12 @@ export default function Timebox() {
   // Show completed state
   const [showCompleted, setShowCompleted] = useState(() => {
     const saved = localStorage.getItem('timebox-show-completed')
+    return saved !== 'false' // Default to true
+  })
+  
+  // Show in-progress state
+  const [showInProgress, setShowInProgress] = useState(() => {
+    const saved = localStorage.getItem('timebox-show-in-progress')
     return saved !== 'false' // Default to true
   })
   
@@ -172,15 +187,17 @@ export default function Timebox() {
   }, {} as Record<string, typeof thoughtNodes>)
   
   // Extract all tasks from brain dumps and convert to TimeboxTask
-  // Temporarily show all nodes that aren't category nodes to debug
   const allTasks: TimeboxTask[] = entries.flatMap(entry => 
     entry.nodes
       .filter(node => {
-        // Show thought nodes that aren't already timed and aren't subtasks
-        // We'll refine this once we understand the data better
+        // Show thought nodes that:
+        // 1. Are not subtasks
+        // 2. Are either not timed OR are timed for a different date
+        const isScheduledForToday = node.data.isTimedTask && node.data.timeboxDate === selectedDate
+        
         return (node.type === 'thought' || node.data.category === 'tasks') && 
-               !node.data.isTimedTask &&
-               !node.data.parentTaskId // Don't show subtasks in the main list
+               !isScheduledForToday &&  // Show if not scheduled for today
+               !node.data.parentTaskId   // Don't show subtasks in the main list
       })
       .map(node => ({
         id: node.id,
@@ -198,9 +215,11 @@ export default function Timebox() {
   )
   
   // Apply filtering and sorting to tasks
-  const filteredTasks = showCompleted 
-    ? allTasks 
-    : allTasks.filter(task => task.status !== 'completed')
+  const filteredTasks = allTasks.filter(task => {
+    if (!showCompleted && task.status === 'completed') return false
+    if (!showInProgress && task.status === 'in-progress') return false
+    return true
+  })
   const sortedTasks = sortTasks(filteredTasks, sortBy)
   
   // Save preferences when they change
@@ -213,14 +232,15 @@ export default function Timebox() {
   }, [showCompleted])
   
   useEffect(() => {
+    localStorage.setItem('timebox-show-in-progress', showInProgress.toString())
+  }, [showInProgress])
+  
+  useEffect(() => {
     initializeTimeSlots()
-  }, [initializeTimeSlots])
+  }, [selectedDate]) // Only re-initialize when date changes
   
   // Load scheduled tasks into time slots
   useEffect(() => {
-    // First, initialize empty time slots
-    initializeTimeSlots()
-    
     // Find all tasks scheduled for the selected date
     const scheduledTasks = entries.flatMap(entry =>
       entry.nodes
@@ -254,13 +274,40 @@ export default function Timebox() {
         addTaskToSlot(task, slotId)
       }
     })
-  }, [selectedDate, entries, initializeTimeSlots, addTaskToSlot]) // Re-run when date or entries change
+  }, [selectedDate, entries, addTaskToSlot]) // Re-run when date or entries change
   
-  const handleDateChange = (days: number) => {
-    const currentDate = new Date(selectedDate)
-    const newDate = days > 0 ? addDays(currentDate, days) : subDays(currentDate, Math.abs(days))
-    setSelectedDate(format(newDate, 'yyyy-MM-dd'))
-  }
+  const handleDateChange = useCallback((days: number) => {
+    // Get current date from the store
+    let currentDate = selectedDate
+    
+    // Ensure we have a valid date string
+    if (!currentDate || typeof currentDate !== 'string') {
+      const today = new Date()
+      currentDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+    }
+    
+    const parts = currentDate.split('-')
+    if (parts.length !== 3) {
+      const today = new Date()
+      currentDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+      parts.length = 0
+      parts.push(...currentDate.split('-'))
+    }
+    
+    const year = parseInt(parts[0], 10)
+    const month = parseInt(parts[1], 10) - 1 // JavaScript months are 0-indexed
+    const day = parseInt(parts[2], 10)
+    
+    const dateObj = new Date(year, month, day)
+    dateObj.setDate(dateObj.getDate() + days)
+    
+    const newYear = dateObj.getFullYear()
+    const newMonth = String(dateObj.getMonth() + 1).padStart(2, '0')
+    const newDay = String(dateObj.getDate()).padStart(2, '0')
+    
+    const newDateStr = `${newYear}-${newMonth}-${newDay}`
+    setSelectedDate(newDateStr)
+  }, [selectedDate, setSelectedDate])
   
   const handleDragStart = (e: React.DragEvent, task: TimeboxTask) => {
     e.dataTransfer.effectAllowed = 'move'
@@ -531,18 +578,32 @@ export default function Timebox() {
               </select>
             </div>
             
-            {/* Show completed checkbox */}
-            <div className="mt-2 flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="show-completed"
-                checked={showCompleted}
-                onChange={(e) => setShowCompleted(e.target.checked)}
-                className="rounded border-gray-300 text-brain-600 focus:ring-brain-500"
-              />
-              <label htmlFor="show-completed" className="text-sm text-gray-600 dark:text-gray-400">
-                Show completed tasks
-              </label>
+            {/* Filter checkboxes */}
+            <div className="mt-2 space-y-1">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="show-completed"
+                  checked={showCompleted}
+                  onChange={(e) => setShowCompleted(e.target.checked)}
+                  className="rounded border-gray-300 text-brain-600 focus:ring-brain-500"
+                />
+                <label htmlFor="show-completed" className="text-sm text-gray-600 dark:text-gray-400">
+                  Show completed tasks
+                </label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="show-in-progress"
+                  checked={showInProgress}
+                  onChange={(e) => setShowInProgress(e.target.checked)}
+                  className="rounded border-gray-300 text-brain-600 focus:ring-brain-500"
+                />
+                <label htmlFor="show-in-progress" className="text-sm text-gray-600 dark:text-gray-400">
+                  Show in-progress tasks
+                </label>
+              </div>
             </div>
           </div>
           
@@ -663,8 +724,20 @@ export default function Timebox() {
                   <Calendar className="w-4 h-4 text-gray-500" />
                   <span className="font-medium">
                     {(() => {
+                      // Ensure selectedDate is a valid string
+                      if (!selectedDate || typeof selectedDate !== 'string') {
+                        const today = new Date()
+                        return format(today, 'EEEE, MMMM d')
+                      }
+                      
                       // Parse the date in local time zone to avoid UTC conversion issues
-                      const [year, month, day] = selectedDate.split('-').map(Number)
+                      const parts = selectedDate.split('-')
+                      if (parts.length !== 3) {
+                        const today = new Date()
+                        return format(today, 'EEEE, MMMM d')
+                      }
+                      
+                      const [year, month, day] = parts.map(Number)
                       const localDate = new Date(year, month - 1, day)
                       return format(localDate, 'EEEE, MMMM d')
                     })()}

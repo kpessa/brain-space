@@ -112,7 +112,17 @@ export const useTimeboxStore = create<TimeboxState>((set, get) => ({
   draggedTask: null,
   hoveredSlotId: null,
   
-  setSelectedDate: (date) => set({ selectedDate: date }),
+  setSelectedDate: (date) => {
+    // Ensure date is always a string
+    if (typeof date === 'string') {
+      set({ selectedDate: date })
+    } else {
+      // Fallback to today if invalid date provided
+      const today = new Date()
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+      set({ selectedDate: todayStr })
+    }
+  },
   
   setDraggedTask: (task) => set({ draggedTask: task }),
   
