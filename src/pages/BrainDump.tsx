@@ -33,6 +33,8 @@ import {
   sortBrainDumps,
   toggleGroupCollapse,
 } from '../lib/brainDumpGrouping'
+import { useOrientation } from '../hooks/useOrientation'
+import { cn } from '../lib/utils'
 
 // Helper function (copied from store - should be extracted to utils)
 const createNodesFromThoughts = (
@@ -130,11 +132,32 @@ export default function BrainDump() {
   const [sortBy, setSortBy] = useState<'date' | 'topic' | 'alphabetical'>('date')
   const [groupBy, setGroupBy] = useState<'none' | 'topic' | 'type'>('none')
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
+  
+  // Mobile sidebar state
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  const { isMobileLandscape } = useOrientation()
 
   // Force re-render when currentEntry changes to update sidebar
   useEffect(() => {
     forceUpdate({})
   }, [currentEntry?.nodes?.length, currentEntry?.updatedAt])
+  
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024) // lg breakpoint
+      if (window.innerWidth >= 1024 && !isMobileLandscape) {
+        setSidebarOpen(true) // Keep sidebar open on desktop (but not mobile landscape)
+      } else if (isMobileLandscape) {
+        setSidebarOpen(false) // Auto-close in mobile landscape
+      }
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [isMobileLandscape])
 
   const handleImport = () => {
     const input = document.createElement('input')
@@ -264,9 +287,35 @@ export default function BrainDump() {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 h-[calc(100%-120px)]">
-          {/* Sidebar with entries list - hidden on mobile when viewing */}
+          {/* Mobile menu button */}
+          {(isMobile || isMobileLandscape) && (
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className={cn(
+                "fixed z-50 p-2 bg-white/10 backdrop-blur-sm rounded-lg shadow-lg lg:hidden",
+                isMobileLandscape ? "top-20 left-2" : "top-24 left-4"
+              )}
+            >
+              {sidebarOpen ? <X className="w-5 h-5 text-white" /> : <Menu className="w-5 h-5 text-white" />}
+            </button>
+          )}
+          
+          {/* Overlay for mobile */}
+          {(isMobile || isMobileLandscape) && sidebarOpen && (
+            <div
+              className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+              onClick={() => setSidebarOpen(false)}
+            />
+          )}
+          
+          {/* Sidebar with entries list */}
           <div
-            className={`lg:col-span-1 space-y-4 ${!showInput && currentEntry ? 'hidden lg:block' : ''}`}
+            className={cn(
+              "fixed lg:relative inset-y-0 left-0 z-40 lg:w-auto lg:col-span-1 bg-white lg:bg-transparent p-4 lg:p-0 lg:space-y-4 transform transition-transform duration-300 ease-in-out h-full overflow-y-auto",
+              "w-80 mobile-landscape:w-64", // Narrower in landscape
+              (isMobile || isMobileLandscape) && !sidebarOpen ? '-translate-x-full' : 'translate-x-0',
+              "lg:translate-x-0"
+            )}
           >
             <Card className="h-full overflow-hidden">
               <CardHeader>
@@ -395,8 +444,11 @@ export default function BrainDump() {
             </Card>
           </div>
 
-          {/* Main content area - always take 3 columns on large screens */}
-          <div className="lg:col-span-3">
+          {/* Main content area - always take full width on mobile, 3 columns on large screens */}
+          <div className={cn(
+            "col-span-1 lg:col-span-3",
+            isMobileLandscape && "pl-12" // Extra padding for mobile menu button
+          )}>
             {showInput ? (
               <BrainDumpInput
                 onProcess={handleProcess}

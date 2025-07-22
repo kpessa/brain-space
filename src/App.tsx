@@ -65,7 +65,7 @@ function AppContent() {
     <ErrorBoundary
       context="Router"
       isolate={true}
-      resetKeys={[user?.id]}
+      resetKeys={user?.id ? [user.id] : []}
       fallback={
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brain-600 via-space-600 to-brain-700">
           <div className="text-center text-white">

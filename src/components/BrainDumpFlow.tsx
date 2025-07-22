@@ -29,6 +29,9 @@ import {
   Download,
   Grid3X3,
   GitBranch,
+  MoreVertical,
+  Trash2,
+  MousePointer2,
 } from 'lucide-react'
 import type { BrainDumpNode } from '../types/braindump'
 import { useFullscreen } from '../hooks/useFullscreen'
@@ -41,6 +44,7 @@ import { TopicBrainDumpDialog } from './TopicBrainDumpDialog'
 import { EdgeClickMenu } from './EdgeClickMenu'
 import { debounce } from '../lib/debounce'
 import { calculateHorizontalLayout, getNewNodePosition } from '../lib/mindMapLayout'
+import { cn } from '../lib/utils'
 // Custom node components
 import { CategoryNode } from './nodes/CategoryNode'
 import { ThoughtNode } from './nodes/ThoughtNode'
@@ -101,6 +105,7 @@ function BrainDumpFlowInner() {
   const [lassoMode, setLassoMode] = useState<'off' | 'partial' | 'full'>('off')
   const [showExportDialog, setShowExportDialog] = useState(false)
   const [viewMode, setViewMode] = useState<'graph' | 'matrix'>('graph')
+  const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [topicDumpDialog, setTopicDumpDialog] = useState<{
     isOpen: boolean
     node: BrainDumpNode | null
@@ -580,6 +585,7 @@ function BrainDumpFlowInner() {
 
       {/* Toolbar */}
       <div className="absolute top-4 left-4 z-10 flex gap-2 bg-white rounded-lg shadow-lg p-2">
+        {/* Primary actions - always visible */}
         <Button
           variant="outline"
           size="sm"
@@ -594,87 +600,214 @@ function BrainDumpFlowInner() {
         <Button
           variant="outline"
           size="sm"
-          onClick={handleAutoLayout}
-          disabled={!currentEntry || nodes.length === 0}
-          className="flex items-center gap-1"
-        >
-          <Target className="w-4 h-4" />
-          {isMobile ? '' : 'Auto Layout'}
-        </Button>
-
-        <div className="flex items-center gap-1 border-l pl-2 ml-1">
-          <Button
-            variant={lassoMode === 'partial' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setLassoMode(lassoMode === 'partial' ? 'off' : 'partial')}
-            disabled={!currentEntry}
-            className="flex items-center gap-1"
-            title="Partial lasso select - select nodes touched by lasso"
-          >
-            <Lasso className="w-4 h-4" />
-            {!isMobile && lassoMode === 'partial' && 'Partial'}
-          </Button>
-
-          <Button
-            variant={lassoMode === 'full' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setLassoMode(lassoMode === 'full' ? 'off' : 'full')}
-            disabled={!currentEntry}
-            className="flex items-center gap-1"
-            title="Full lasso select - select nodes fully enclosed by lasso"
-          >
-            <Lasso className="w-4 h-4" />
-            {!isMobile && lassoMode === 'full' && 'Full'}
-          </Button>
-        </div>
-
-        <div className="flex items-center gap-1 border-l pl-2 ml-1">
-          <Button
-            variant={viewMode === 'graph' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setViewMode('graph')}
-            disabled={!currentEntry}
-            className="flex items-center gap-1"
-            title="Graph view"
-          >
-            <GitBranch className="w-4 h-4" />
-            {!isMobile && 'Graph'}
-          </Button>
-
-          <Button
-            variant={viewMode === 'matrix' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setViewMode('matrix')}
-            disabled={!currentEntry}
-            className="flex items-center gap-1"
-            title="Eisenhower Matrix view"
-          >
-            <Grid3X3 className="w-4 h-4" />
-            {!isMobile && 'Matrix'}
-          </Button>
-        </div>
-
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => fitView({ padding: 0.2 })}
-          disabled={!currentEntry}
-          className="flex items-center gap-1"
-          title="Fit all nodes in view. Tip: Drag edge endpoints to reconnect them!"
-        >
-          <ZoomIn className="w-4 h-4" />
-          {isMobile ? '' : 'Fit View'}
-        </Button>
-
-        <Button
-          variant="outline"
-          size="sm"
           onClick={toggleFullscreen}
           className="flex items-center gap-1"
         >
           {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
           {isMobile ? '' : isFullscreen ? 'Exit' : 'Fullscreen'}
         </Button>
+
+        {/* Desktop controls */}
+        {!isMobile && (
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleAutoLayout}
+              disabled={!currentEntry || nodes.length === 0}
+              className="flex items-center gap-1"
+            >
+              <Target className="w-4 h-4" />
+              Auto Layout
+            </Button>
+
+            <div className="flex items-center gap-1 border-l pl-2 ml-1">
+              <Button
+                variant={lassoMode === 'partial' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setLassoMode(lassoMode === 'partial' ? 'off' : 'partial')}
+                disabled={!currentEntry}
+                className="flex items-center gap-1"
+                title="Partial lasso select - select nodes touched by lasso"
+              >
+                <Lasso className="w-4 h-4" />
+                {lassoMode === 'partial' && 'Partial'}
+              </Button>
+
+              <Button
+                variant={lassoMode === 'full' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setLassoMode(lassoMode === 'full' ? 'off' : 'full')}
+                disabled={!currentEntry}
+                className="flex items-center gap-1"
+                title="Full lasso select - select nodes fully enclosed by lasso"
+              >
+                <Lasso className="w-4 h-4" />
+                {lassoMode === 'full' && 'Full'}
+              </Button>
+            </div>
+
+            <div className="flex items-center gap-1 border-l pl-2 ml-1">
+              <Button
+                variant={viewMode === 'graph' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('graph')}
+                disabled={!currentEntry}
+                className="flex items-center gap-1"
+                title="Graph view"
+              >
+                <GitBranch className="w-4 h-4" />
+                Graph
+              </Button>
+
+              <Button
+                variant={viewMode === 'matrix' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('matrix')}
+                disabled={!currentEntry}
+                className="flex items-center gap-1"
+                title="Eisenhower Matrix view"
+              >
+                <Grid3X3 className="w-4 h-4" />
+                Matrix
+              </Button>
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fitView({ padding: 0.2 })}
+              disabled={!currentEntry}
+              className="flex items-center gap-1"
+              title="Fit all nodes in view"
+            >
+              <ZoomIn className="w-4 h-4" />
+              Fit View
+            </Button>
+          </>
+        )}
+
+        {/* Mobile menu */}
+        {isMobile && (
+          <div className="relative mobile-menu-container">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              className="flex items-center gap-1"
+            >
+              <MoreVertical className="w-4 h-4" />
+            </Button>
+
+            {showMobileMenu && (
+              <div className="absolute top-full mt-2 right-0 bg-white dark:bg-gray-800 rounded-lg shadow-xl p-2 min-w-[200px] z-50">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    handleAutoLayout()
+                    setShowMobileMenu(false)
+                  }}
+                  disabled={!currentEntry || nodes.length === 0}
+                  className="w-full justify-start mb-1"
+                >
+                  <Target className="w-4 h-4 mr-2" />
+                  Auto Layout
+                </Button>
+
+                <div className="border-t my-2" />
+
+                <Button
+                  variant={lassoMode !== 'off' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => {
+                    setLassoMode(lassoMode === 'off' ? 'partial' : lassoMode === 'partial' ? 'full' : 'off')
+                    setShowMobileMenu(false)
+                  }}
+                  disabled={!currentEntry}
+                  className="w-full justify-start mb-1"
+                >
+                  <Lasso className="w-4 h-4 mr-2" />
+                  Lasso Mode {lassoMode !== 'off' && `(${lassoMode})`}
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    fitView({ padding: 0.2 })
+                    setShowMobileMenu(false)
+                  }}
+                  disabled={!currentEntry}
+                  className="w-full justify-start mb-1"
+                >
+                  <ZoomIn className="w-4 h-4 mr-2" />
+                  Fit View
+                </Button>
+
+                <div className="border-t my-2" />
+
+                <Button
+                  variant={viewMode === 'graph' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => {
+                    setViewMode('graph')
+                    setShowMobileMenu(false)
+                  }}
+                  disabled={!currentEntry}
+                  className="w-full justify-start mb-1"
+                >
+                  <GitBranch className="w-4 h-4 mr-2" />
+                  Graph View
+                </Button>
+
+                <Button
+                  variant={viewMode === 'matrix' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => {
+                    setViewMode('matrix')
+                    setShowMobileMenu(false)
+                  }}
+                  disabled={!currentEntry}
+                  className="w-full justify-start mb-1"
+                >
+                  <Grid3X3 className="w-4 h-4 mr-2" />
+                  Matrix View
+                </Button>
+
+                <div className="border-t my-2" />
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setShowExportDialog(true)
+                    setShowMobileMenu(false)
+                  }}
+                  disabled={!currentEntry}
+                  className="w-full justify-start mb-1"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Export
+                </Button>
+
+                <Button
+                  variant={dialogManager.deleteMode ? 'destructive' : 'ghost'}
+                  size="sm"
+                  onClick={() => {
+                    dialogManager.toggleDeleteMode()
+                    setShowMobileMenu(false)
+                  }}
+                  disabled={!currentEntry}
+                  className="w-full justify-start"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  {dialogManager.deleteMode ? 'Exit Delete Mode' : 'Delete Mode'}
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Lasso Mode Indicator */}
@@ -689,7 +822,10 @@ function BrainDumpFlowInner() {
       )}
 
       {/* Save Status */}
-      <div className="absolute top-4 right-4 z-10 flex items-center gap-2 bg-white rounded-lg shadow-lg p-2">
+      <div className={cn(
+        "absolute z-10 flex items-center gap-2 bg-white rounded-lg shadow-lg p-2",
+        isMobile ? "bottom-4 left-4 right-4 justify-between" : "top-4 right-4"
+      )}>
         <Button
           variant="outline"
           size="sm"
@@ -715,21 +851,23 @@ function BrainDumpFlowInner() {
           </span>
         )}
 
-        <div className="border-l pl-2 ml-1">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowExportDialog(true)}
-            disabled={!currentEntry || nodes.length === 0}
-            className="flex items-center gap-1"
-            title="Export brain dump"
-          >
-            <Download className="w-4 h-4" />
-            {!isMobile && 'Export'}
-          </Button>
-        </div>
+        {!isMobile && (
+          <div className="border-l pl-2 ml-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowExportDialog(true)}
+              disabled={!currentEntry || nodes.length === 0}
+              className="flex items-center gap-1"
+              title="Export brain dump"
+            >
+              <Download className="w-4 h-4" />
+              Export
+            </Button>
+          </div>
+        )}
 
-        {lastSaved && (
+        {lastSaved && !isMobile && (
           <span className="text-xs text-gray-500">{lastSaved.toLocaleTimeString()}</span>
         )}
 

@@ -1,12 +1,17 @@
+import { useState } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
-import { Home, BookOpen, Trophy, Sparkles, Brain, LogOut, Clock } from 'lucide-react'
+import { Home, BookOpen, Trophy, Sparkles, Brain, LogOut, Clock, Menu } from 'lucide-react'
 import { cn } from '../lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from './Button'
+import BottomNavigation from './BottomNavigation'
+import { useOrientation } from '../hooks/useOrientation'
 
 export default function Layout() {
   const location = useLocation()
   const { user, signOut } = useAuth()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const { isMobileLandscape } = useOrientation()
 
   const navItems = [
     { path: '/', icon: Home, label: 'Home' },
@@ -18,15 +23,19 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <nav className="bg-brain-700 shadow-lg sticky top-0 z-50">
+      <nav className={cn(
+        "bg-brain-700 shadow-lg sticky top-0 z-50 pt-safe",
+        isMobileLandscape && "hidden" // Hide top navbar in mobile landscape
+      )}>
         <div className="px-4 lg:px-6 xl:px-8 2xl:px-12 3xl:px-16 4xl:px-20">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-16 md:h-16">
             <Link to="/" className="flex items-center gap-2 text-white font-bold text-xl">
               <Sparkles className="w-6 h-6" />
               Hero's Journal
             </Link>
 
-            <div className="flex items-center gap-6">
+            {/* Desktop Navigation */}
+            <div className="hidden sm:flex items-center gap-6">
               {navItems.map(item => {
                 const Icon = item.icon
                 const isActive =
@@ -46,7 +55,7 @@ export default function Layout() {
                     )}
                   >
                     <Icon className="w-5 h-5" />
-                    <span className="hidden sm:inline">{item.label}</span>
+                    <span>{item.label}</span>
                   </Link>
                 )
               })}
@@ -56,10 +65,24 @@ export default function Layout() {
                   onClick={() => signOut()}
                   variant="ghost"
                   size="sm"
-                  className="text-white/70 hover:text-white hover:bg-white/10"
+                  className="text-white/70 hover:text-white hover:bg-white/10 px-3"
                 >
                   <LogOut className="w-4 h-4 mr-2" />
-                  <span className="hidden sm:inline">Sign Out</span>
+                  Sign Out
+                </Button>
+              )}
+            </div>
+
+            {/* Mobile Menu Button */}
+            <div className="flex sm:hidden">
+              {user && (
+                <Button
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  variant="ghost"
+                  size="sm"
+                  className="text-white hover:bg-white/10 p-2"
+                >
+                  <Menu className="w-6 h-6" />
                 </Button>
               )}
             </div>
@@ -67,9 +90,33 @@ export default function Layout() {
         </div>
       </nav>
 
-      <main className="flex-1">
+      {/* Mobile Dropdown Menu */}
+      {mobileMenuOpen && user && (
+        <div className="sm:hidden absolute top-16 right-0 w-48 bg-white dark:bg-gray-900 shadow-lg rounded-bl-lg z-50">
+          <Button
+            onClick={() => {
+              signOut()
+              setMobileMenuOpen(false)
+            }}
+            variant="ghost"
+            className="w-full justify-start text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-none rounded-bl-lg"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Sign Out
+          </Button>
+        </div>
+      )}
+
+      <main className={cn(
+        "flex-1",
+        "pb-16 sm:pb-0", // Bottom padding for portrait mobile
+        isMobileLandscape && "pl-16 pb-0 pt-safe" // Left padding and top safe area for landscape mobile
+      )}>
         <Outlet />
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <BottomNavigation />
     </div>
   )
 }

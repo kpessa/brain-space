@@ -33,13 +33,15 @@ export interface Achievement {
   category: AchievementCategory
 }
 
-export enum AchievementCategory {
-  STREAK = 'streak',
-  ENTRIES = 'entries',
-  GRATITUDE = 'gratitude',
-  QUESTS = 'quests',
-  SPECIAL = 'special',
-}
+export const AchievementCategory = {
+  STREAK: 'streak',
+  ENTRIES: 'entries',
+  GRATITUDE: 'gratitude',
+  QUESTS: 'quests',
+  SPECIAL: 'special',
+} as const
+
+export type AchievementCategory = typeof AchievementCategory[keyof typeof AchievementCategory]
 
 export interface Level {
   level: number
@@ -95,14 +97,16 @@ export interface QuestTemplate {
   xpReward: number
 }
 
-export enum QuestCategory {
-  PERSONAL_GROWTH = 'personal_growth',
-  RELATIONSHIPS = 'relationships',
-  CAREER = 'career',
-  HEALTH = 'health',
-  CREATIVITY = 'creativity',
-  ADVENTURE = 'adventure',
-}
+export const QuestCategory = {
+  PERSONAL_GROWTH: 'personal_growth',
+  RELATIONSHIPS: 'relationships',
+  CAREER: 'career',
+  HEALTH: 'health',
+  CREATIVITY: 'creativity',
+  ADVENTURE: 'adventure',
+} as const
+
+export type QuestCategory = typeof QuestCategory[keyof typeof QuestCategory]
 
 export interface DailyStats {
   date: string

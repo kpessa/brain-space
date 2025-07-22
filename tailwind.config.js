@@ -7,8 +7,15 @@ export default {
   theme: {
     extend: {
       screens: {
+        'xs': '475px',
         '3xl': '1920px',
         '4xl': '2560px',
+        // Orientation-based breakpoints
+        'landscape': { 'raw': '(orientation: landscape)' },
+        'portrait': { 'raw': '(orientation: portrait)' },
+        // Device-specific breakpoints for landscape
+        'mobile-landscape': { 'raw': '(max-width: 932px) and (orientation: landscape)' },
+        'tablet-landscape': { 'raw': '(min-width: 933px) and (max-width: 1366px) and (orientation: landscape)' },
       },
       colors: {
         border: 'hsl(var(--border))',
@@ -125,6 +132,22 @@ export default {
   plugins: [
     require('@tailwindcss/forms'),
     require('@tailwindcss/typography'),
+    function ({ addUtilities }) {
+      addUtilities({
+        '.pt-safe': {
+          paddingTop: 'env(safe-area-inset-top)',
+        },
+        '.pb-safe': {
+          paddingBottom: 'env(safe-area-inset-bottom)',
+        },
+        '.pl-safe': {
+          paddingLeft: 'env(safe-area-inset-left)',
+        },
+        '.pr-safe': {
+          paddingRight: 'env(safe-area-inset-right)',
+        },
+      })
+    },
   ],
 }
 

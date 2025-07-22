@@ -4,7 +4,7 @@ import { useBrainDumpStore } from '@/store/braindump'
 import type { BrainDumpNode } from '@/types/braindump'
 import { getQuadrant, getQuadrantInfo, logToLinear } from '@/lib/priorityUtils'
 import { cn } from '@/lib/utils'
-import { Calendar, Clock, ChevronLeft, ChevronRight, ArrowUpDown } from 'lucide-react'
+import { Calendar, Clock, ChevronLeft, ChevronRight, ArrowUpDown, Menu, X } from 'lucide-react'
 import { format, addDays, subDays } from '@/lib/dateUtils'
 import { 
   generateRecurringTaskInstances, 
@@ -16,6 +16,7 @@ import { TimeboxContextMenu } from '@/components/TimeboxContextMenu'
 import { TimeboxSlotContextMenu } from '@/components/TimeboxSlotContextMenu'
 import { AttemptDialog } from '@/components/AttemptDialog'
 import { RecurrenceDialog } from '@/components/RecurrenceDialog'
+import { useOrientation } from '@/hooks/useOrientation'
 
 type SortOption = 'priority' | 'eisenhower' | 'importance' | 'urgency' | 'dueDate' | 'alphabetical'
 
@@ -166,6 +167,11 @@ export default function Timebox() {
     const saved = localStorage.getItem('timebox-show-completed')
     return saved !== 'false' // Default to true
   })
+  
+  // Mobile sidebar state
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  const { isMobileLandscape } = useOrientation()
 
   // Show in-progress state
   const [showInProgress, setShowInProgress] = useState(() => {
@@ -264,6 +270,22 @@ export default function Timebox() {
   useEffect(() => {
     localStorage.setItem('timebox-show-in-progress', showInProgress.toString())
   }, [showInProgress])
+  
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768) // md breakpoint
+      if (window.innerWidth >= 768 && !isMobileLandscape) {
+        setSidebarOpen(true) // Keep sidebar open on desktop (but not mobile landscape)
+      } else if (isMobileLandscape) {
+        setSidebarOpen(false) // Auto-close in mobile landscape
+      }
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [isMobileLandscape])
 
   // Load scheduled tasks into time slots
   useEffect(() => {
@@ -821,9 +843,35 @@ export default function Timebox() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="flex h-screen">
+      <div className="flex h-screen relative">
+        {/* Mobile menu button */}
+        {(isMobile || isMobileLandscape) && (
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className={cn(
+              "fixed z-50 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg md:hidden",
+              isMobileLandscape ? "top-20 left-2" : "top-24 left-4"
+            )}
+          >
+            {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        )}
+        
+        {/* Overlay for mobile */}
+        {(isMobile || isMobileLandscape) && sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+        
         {/* Sidebar with unscheduled tasks */}
-        <div className="w-80 bg-white dark:bg-gray-800 shadow-lg overflow-y-auto">
+        <div className={cn(
+          "fixed md:relative inset-y-0 left-0 z-40 bg-white dark:bg-gray-800 shadow-lg overflow-y-auto transform transition-transform duration-300 ease-in-out",
+          "w-80 mobile-landscape:w-64", // Narrower in landscape
+          (isMobile || isMobileLandscape) && !sidebarOpen && "-translate-x-full",
+          "md:translate-x-0"
+        )}>
           <div className="p-4 border-b dark:border-gray-700">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
               Unscheduled Tasks
@@ -987,7 +1035,10 @@ export default function Timebox() {
         </div>
 
         {/* Main timebox grid */}
-        <div className="flex-1 overflow-y-auto">
+        <div className={cn(
+          "flex-1 overflow-y-auto w-full",
+          isMobileLandscape && "pl-12" // Extra padding for mobile menu button
+        )}>
           {/* Date navigation */}
           <div className="sticky top-0 bg-white dark:bg-gray-800 shadow-sm z-10">
             <div className="flex items-center justify-between p-4">
