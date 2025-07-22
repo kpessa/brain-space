@@ -589,7 +589,10 @@ function BrainDumpFlowInner() {
       )}
 
       {/* Toolbar */}
-      <div className="absolute top-4 left-4 z-10 flex gap-2 bg-white rounded-lg shadow-lg p-2">
+      <div 
+        className="absolute left-4 z-10 flex gap-2 bg-white rounded-lg shadow-lg p-2"
+        style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}
+      >
         {/* Primary actions - always visible */}
         <Button
           variant="outline"
@@ -817,7 +820,10 @@ function BrainDumpFlowInner() {
 
       {/* Lasso Mode Indicator */}
       {lassoMode !== 'off' && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-purple-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
+        <div 
+          className="absolute left-1/2 -translate-x-1/2 z-10 bg-purple-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2"
+          style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}
+        >
           <Lasso className="w-4 h-4" />
           <span className="font-medium">
             {lassoMode === 'partial' ? 'Partial' : 'Full'} Lasso Mode
@@ -827,10 +833,15 @@ function BrainDumpFlowInner() {
       )}
 
       {/* Save Status */}
-      <div className={cn(
-        "absolute z-10 flex items-center gap-2 bg-white rounded-lg shadow-lg p-2",
-        isMobile ? "bottom-4 left-4 right-4 justify-between" : "top-4 right-4"
-      )}>
+      <div 
+        className={cn(
+          "absolute z-10 flex items-center gap-2 bg-white rounded-lg shadow-lg p-2",
+          isMobile ? "bottom-20 left-4 right-4 justify-between" : "right-4"
+        )}
+        style={{ 
+          top: !isMobile ? 'calc(1rem + env(safe-area-inset-top))' : undefined 
+        }}
+      >
         <Button
           variant="outline"
           size="sm"
