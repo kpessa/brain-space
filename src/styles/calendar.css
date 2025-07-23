@@ -413,6 +413,52 @@
   backdrop-filter: blur(2px);
 }
 
+/* Mobile touch scrolling optimizations */
+.rbc-calendar,
+.eight-week-view,
+.calendar-container {
+  -webkit-overflow-scrolling: touch;
+  overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Enhance touch targets on mobile */
+@media (max-width: 1024px) {
+  .rbc-event {
+    min-height: 24px;
+    padding: 4px 6px;
+    font-size: 0.75rem;
+  }
+  
+  .rbc-date-cell {
+    min-height: 44px; /* iOS recommended touch target */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-end;
+    padding: 4px;
+  }
+  
+  .eight-week-view .day-cell {
+    min-h-[80px];
+    touch-action: manipulation;
+  }
+  
+  .eight-week-view .event-item {
+    min-height: 20px;
+    padding: 2px 4px;
+    font-size: 0.7rem;
+  }
+  
+  /* Improve scrolling performance */
+  .rbc-time-view,
+  .rbc-month-view,
+  .eight-week-view {
+    transform: translateZ(0); /* Force hardware acceleration */
+    will-change: scroll-position;
+  }
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .rbc-toolbar {

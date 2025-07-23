@@ -1,20 +1,22 @@
-import React from 'react'
-import moment from 'moment'
+import React, { useMemo, useState, useRef, useCallback } from 'react'
+import dayjs from 'dayjs'
 import { Navigate } from 'react-big-calendar'
+import { MonthHeader } from './calendar/MonthHeader'
+import { WeekRow } from './calendar/WeekRow'
 
 // Custom 8-week view: 1 week before + current week + 7 weeks ahead
 export const EightWeekView = {
   // Generate the date range for the 8-week view
   range: (date: Date) => {
-    const start = moment(date).startOf('week').subtract(1, 'week')
-    const end = moment(date).startOf('week').add(7, 'weeks').endOf('week')
+    const start = dayjs(date).startOf('week').subtract(1, 'week')
+    const end = dayjs(date).startOf('week').add(7, 'weeks').endOf('week')
 
     const range: Date[] = []
-    const current = start.clone()
+    let current = start
 
     while (current.isSameOrBefore(end, 'day')) {
       range.push(current.toDate())
-      current.add(1, 'day')
+      current = current.add(1, 'day')
     }
 
     return range
@@ -24,9 +26,9 @@ export const EightWeekView = {
   navigate: (date: Date, action: Navigate) => {
     switch (action) {
       case Navigate.PREVIOUS:
-        return moment(date).subtract(8, 'weeks').toDate()
+        return dayjs(date).subtract(8, 'weeks').toDate()
       case Navigate.NEXT:
-        return moment(date).add(8, 'weeks').toDate()
+        return dayjs(date).add(8, 'weeks').toDate()
       case Navigate.TODAY:
         return new Date()
       default:
@@ -36,8 +38,8 @@ export const EightWeekView = {
 
   // Title for the view
   title: (date: Date) => {
-    const start = moment(date).startOf('week').subtract(1, 'week')
-    const end = moment(date).startOf('week').add(7, 'weeks').endOf('week')
+    const start = dayjs(date).startOf('week').subtract(1, 'week')
+    const end = dayjs(date).startOf('week').add(7, 'weeks').endOf('week')
 
     if (start.year() === end.year()) {
       if (start.month() === end.month()) {
@@ -59,6 +61,7 @@ interface EightWeekViewComponentProps {
   onSelectSlot: (slotInfo: any) => void
   localizer: any
   eventPropGetter?: (event: any) => any
+  onNavigate?: (newDate: Date) => void
 }
 
 export const EightWeekViewComponent: React.FC<EightWeekViewComponentProps> = ({
@@ -68,25 +71,20 @@ export const EightWeekViewComponent: React.FC<EightWeekViewComponentProps> = ({
   onSelectSlot,
   localizer,
   eventPropGetter,
+  onNavigate,
 }) => {
   const range = EightWeekView.range(date)
   const weeks: Date[][] = []
 
-  // Debug log the date range
-  console.log(`[CALENDAR DEBUG] 8-week view range:`, {
-    centerDate: moment(date).format('YYYY-MM-DD'),
-    rangeStart: moment(range[0]).format('YYYY-MM-DD'),
-    rangeEnd: moment(range[range.length - 1]).format('YYYY-MM-DD'),
-    totalEvents: events.length,
-  })
+  // Calculate 8-week view range
 
   // Group days into weeks
   for (let i = 0; i < range.length; i += 7) {
     weeks.push(range.slice(i, i + 7))
   }
 
-  const currentWeekStart = moment(date).startOf('week')
-  const currentMonth = moment(date).month()
+  const currentWeekStart = dayjs(date).startOf('week')
+  const currentMonth = dayjs(date).month()
 
   // Group weeks by month for better organization
   const weeksByMonth: {
@@ -94,7 +92,7 @@ export const EightWeekViewComponent: React.FC<EightWeekViewComponentProps> = ({
   } = {}
 
   weeks.forEach(week => {
-    const weekStart = moment(week[0])
+    const weekStart = dayjs(week[0])
     const monthKey = weekStart.format('YYYY-MM')
     const monthName = weekStart.format('MMMM')
     const year = weekStart.year()
@@ -114,90 +112,92 @@ export const EightWeekViewComponent: React.FC<EightWeekViewComponentProps> = ({
   const handleSlotClick = (day: Date) => {
     const slotInfo = {
       start: day,
-      end: moment(day).add(1, 'hour').toDate(),
+      end: dayjs(day).add(1, 'hour').toDate(),
       action: 'select',
       slots: [day],
     }
     onSelectSlot(slotInfo)
   }
 
-  const getEventsForDay = (day: Date) => {
-    return events.filter(event => {
-      const eventStart = moment(event.start).startOf('day')
-      const eventEnd = moment(event.end).startOf('day')
-      const dayMoment = moment(day).startOf('day')
-
-      // Check if the day falls within the event's date range
-      return dayMoment.isSameOrAfter(eventStart) && dayMoment.isSameOrBefore(eventEnd)
-    })
-  }
-
-  const isAllDayEvent = (event: any) => {
-    // Check multiple ways to detect all-day events
-    // 1. Original Google Calendar structure (from originalEvent)
-    if (event.resource?.originalEvent) {
-      const original = event.resource.originalEvent
-      const hasDateOnly = original.start?.date && !original.start?.dateTime
-
-      // Log detection for debugging
-      if (event.title && event.title.toLowerCase().includes('birthday')) {
-        console.log(`[CALENDAR DEBUG] Birthday event detection:`, {
-          title: event.title,
-          hasDateOnly,
-          originalStart: original.start,
-          originalEnd: original.end,
-          detectedAsAllDay: hasDateOnly,
-        })
+  // Memoize expensive event processing
+  const { eventsByDate, isAllDayEvent } = useMemo(() => {
+    const eventsByDate: { [dateKey: string]: { allDay: any[], timed: any[] } } = {}
+    
+    const isAllDayEvent = (event: any) => {
+      // Check multiple ways to detect all-day events
+      // 1. Original Google Calendar structure (from originalEvent)
+      if (event.resource?.originalEvent) {
+        const original = event.resource.originalEvent
+        const hasDateOnly = original.start?.date && !original.start?.dateTime
+        if (hasDateOnly) return true
       }
 
-      if (hasDateOnly) return true
+      // 2. Check if start and end times are exactly at midnight and span full days
+      const startDate = dayjs(event.start)
+      const endDate = dayjs(event.end)
+      const isStartMidnight = startDate.hour() === 0 && startDate.minute() === 0
+      const isEndMidnight = endDate.hour() === 0 && endDate.minute() === 0
+      const spansDays = !startDate.isSame(endDate, 'day')
+
+      // 3. Check if it's a single day event with no time component
+      const isSameDay = startDate.isSame(endDate, 'day')
+      const hasNoTime =
+        isStartMidnight && (isEndMidnight || (isSameDay && endDate.diff(startDate, 'hours') === 24))
+
+      return hasNoTime || (isStartMidnight && isEndMidnight && spansDays)
     }
 
-    // 2. Check if start and end times are exactly at midnight and span full days
-    const startDate = moment(event.start)
-    const endDate = moment(event.end)
-    const isStartMidnight = startDate.hours() === 0 && startDate.minutes() === 0
-    const isEndMidnight = endDate.hours() === 0 && endDate.minutes() === 0
-    const spansDays = !startDate.isSame(endDate, 'day')
+    // Pre-process all events and organize by date
+    events.forEach(event => {
+      const eventStart = dayjs(event.start).startOf('day')
+      const eventEnd = dayjs(event.end).startOf('day')
+      const isAllDay = isAllDayEvent(event)
 
-    // 3. Check if it's a single day event with no time component
-    const isSameDay = startDate.isSame(endDate, 'day')
-    const hasNoTime =
-      isStartMidnight && (isEndMidnight || (isSameDay && endDate.diff(startDate, 'hours') === 24))
+      // Add event to all days it spans
+      let currentDay = eventStart
+      while (currentDay.isSameOrBefore(eventEnd)) {
+        const dateKey = currentDay.format('YYYY-MM-DD')
+        
+        if (!eventsByDate[dateKey]) {
+          eventsByDate[dateKey] = { allDay: [], timed: [] }
+        }
 
-    const result = hasNoTime || (isStartMidnight && isEndMidnight && spansDays)
+        if (isAllDay) {
+          eventsByDate[dateKey].allDay.push(event)
+        } else {
+          eventsByDate[dateKey].timed.push(event)
+        }
 
-    // Additional debug logging for events that might be all-day
-    if (isStartMidnight && event.title) {
-      console.log(`[CALENDAR DEBUG] Midnight event analysis:`, {
-        title: event.title,
-        isStartMidnight,
-        isEndMidnight,
-        spansDays,
-        isSameDay,
-        hasNoTime,
-        finalResult: result,
-        startFormatted: startDate.format('YYYY-MM-DD HH:mm'),
-        endFormatted: endDate.format('YYYY-MM-DD HH:mm'),
-      })
-    }
+        currentDay = currentDay.add(1, 'day')
+      }
+    })
 
-    return result
+    return { eventsByDate, isAllDayEvent }
+  }, [events])
+
+  const getEventsForDay = (day: Date) => {
+    const dateKey = dayjs(day).format('YYYY-MM-DD')
+    const dayEvents = eventsByDate[dateKey]
+    return dayEvents ? [...dayEvents.allDay, ...dayEvents.timed] : []
   }
 
   const getTimedEventsForDay = (day: Date) => {
-    return getEventsForDay(day).filter(event => !isAllDayEvent(event))
+    const dateKey = dayjs(day).format('YYYY-MM-DD')
+    const dayEvents = eventsByDate[dateKey]
+    return dayEvents ? dayEvents.timed : []
   }
 
   const getAllDayEventsForDay = (day: Date) => {
-    return getEventsForDay(day).filter(event => isAllDayEvent(event))
+    const dateKey = dayjs(day).format('YYYY-MM-DD')
+    const dayEvents = eventsByDate[dateKey]
+    return dayEvents ? dayEvents.allDay : []
   }
 
   const getEventSpanInfo = (event: any, day: Date, week: Date[]) => {
-    const eventStart = moment(event.start).startOf('day')
-    const eventEnd = moment(event.end).startOf('day')
-    const dayMoment = moment(day).startOf('day')
-    const dayIndex = week.findIndex(weekDay => moment(weekDay).isSame(dayMoment, 'day'))
+    const eventStart = dayjs(event.start).startOf('day')
+    const eventEnd = dayjs(event.end).startOf('day')
+    const dayMoment = dayjs(day).startOf('day')
+    const dayIndex = week.findIndex(weekDay => dayjs(weekDay).isSame(dayMoment, 'day'))
 
     if (dayIndex === -1) return { isFirstDayInWeek: false, spanDays: 1, isMultiDay: false }
 
@@ -206,7 +206,7 @@ export const EightWeekViewComponent: React.FC<EightWeekViewComponentProps> = ({
     // Find the first day of this event within this week
     let firstDayIndex = -1
     for (let i = 0; i < week.length; i++) {
-      const weekDayMoment = moment(week[i]).startOf('day')
+      const weekDayMoment = dayjs(week[i]).startOf('day')
       if (weekDayMoment.isSameOrAfter(eventStart) && weekDayMoment.isSameOrBefore(eventEnd)) {
         firstDayIndex = i
         break
@@ -219,7 +219,7 @@ export const EightWeekViewComponent: React.FC<EightWeekViewComponentProps> = ({
     let spanDays = 1
     if (isFirstDayInWeek) {
       for (let i = dayIndex + 1; i < week.length; i++) {
-        const nextDay = moment(week[i]).startOf('day')
+        const nextDay = dayjs(week[i]).startOf('day')
         if (nextDay.isSameOrBefore(eventEnd)) {
           spanDays++
         } else {
@@ -237,352 +237,105 @@ export const EightWeekViewComponent: React.FC<EightWeekViewComponentProps> = ({
     }
   }
 
+  // Touch/pan navigation state
+  const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null)
+  const [touchEnd, setTouchEnd] = useState<{ x: number; y: number } | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  // Handle touch start
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    const touch = e.touches[0]
+    setTouchStart({ x: touch.clientX, y: touch.clientY })
+    setTouchEnd(null)
+  }, [])
+
+  // Handle touch move
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    const touch = e.touches[0]
+    setTouchEnd({ x: touch.clientX, y: touch.clientY })
+  }, [])
+
+  // Handle touch end - detect swipe
+  const handleTouchEnd = useCallback(() => {
+    if (!touchStart || !touchEnd || !onNavigate) return
+
+    const deltaX = touchStart.x - touchEnd.x
+    const deltaY = touchStart.y - touchEnd.y
+    
+    // Minimum swipe distance (in pixels)
+    const minSwipeDistance = 50
+    
+    // Check if this is a horizontal swipe (not vertical scroll)
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
+      if (deltaX > 0) {
+        // Swipe left - go to next 8 weeks
+        const nextDate = EightWeekView.navigate(date, Navigate.NEXT)
+        onNavigate(nextDate)
+      } else {
+        // Swipe right - go to previous 8 weeks
+        const prevDate = EightWeekView.navigate(date, Navigate.PREVIOUS)
+        onNavigate(prevDate)
+      }
+    }
+    
+    setTouchStart(null)
+    setTouchEnd(null)
+  }, [touchStart, touchEnd, date, onNavigate])
+
   return (
-    <div className="eight-week-view">
-      <div className="week-headers grid grid-cols-7 gap-0.5 mb-2 sticky top-0 bg-white z-10 py-1">
+    <div 
+      ref={containerRef}
+      className="eight-week-view h-full overflow-auto touch-pan-y"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      style={{ 
+        touchAction: 'pan-y',
+        WebkitOverflowScrolling: 'touch'
+      }}
+    >
+      <div className="week-headers grid grid-cols-7 gap-0.5 mb-2 sticky top-0 bg-white/95 backdrop-blur-sm z-20 py-1 border-b border-gray-100">
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
           <div
             key={day}
-            className="text-center text-sm font-semibold text-gray-600 p-2 bg-gray-50 rounded"
+            className="text-center text-xs font-medium text-gray-600 py-1 px-1"
           >
             {day}
           </div>
         ))}
       </div>
 
-      <div className="months-container space-y-2">
+      <div className="months-container space-y-4 pb-safe">
         {Object.entries(weeksByMonth)
           .sort(([a], [b]) => a.localeCompare(b))
           .map(([monthKey, monthData]) => (
             <div key={monthKey} className="month-section">
               {/* Month Header - Inline and subtle */}
-              <div className="month-header flex items-center gap-2 mb-2">
-                <div className="flex-grow h-px bg-gray-300"></div>
-                <h3
-                  className={`text-sm font-medium px-3 ${
-                    monthData.isCurrentMonth ? 'text-brain-600' : 'text-gray-500'
-                  }`}
-                >
-                  {monthData.monthName} {monthData.year}
-                </h3>
-                <div className="flex-grow h-px bg-gray-300"></div>
-              </div>
+              <MonthHeader
+                monthName={monthData.monthName}
+                year={monthData.year}
+                isCurrentMonth={monthData.isCurrentMonth}
+              />
 
               {/* Weeks in this month */}
               <div className="weeks-container space-y-1">
                 {monthData.weeks.map((week, weekIndex) => {
-                  const isCurrentWeek = week.some(day =>
-                    moment(day).startOf('week').isSame(currentWeekStart, 'week')
-                  )
-
-                  // Pre-calculate events for the entire week to handle spanning
-                  const weekEvents: { [dayIndex: number]: any[] } = {}
-                  const allDaySpanningEvents: { event: any; startDay: number; spanDays: number }[] = []
-                  const timedSpanningEvents: { event: any; startDay: number; spanDays: number }[] = []
-
-                  week.forEach((day, dayIndex) => {
-                    const dayEvents = getEventsForDay(day)
-                    weekEvents[dayIndex] = []
-
-                    dayEvents.forEach(event => {
-                      const spanInfo = getEventSpanInfo(event, day, week)
-                      // Only add multi-day events to spanning events, and only from their first day in the week
-                      if (spanInfo.isMultiDay && spanInfo.isFirstDayInWeek) {
-                        const spanningEvent = {
-                          event,
-                          startDay: dayIndex,
-                          spanDays: spanInfo.spanDays,
-                        }
-
-                        const isAllDay = isAllDayEvent(event)
-
-                        // Debug logging for multi-day events
-                        if (spanInfo.isMultiDay && dayIndex === 0) {
-                          // Only log once per week
-                          console.log(`[CALENDAR DEBUG] Multi-day event "${event.title}":`, {
-                            isAllDay,
-                            startTime: moment(event.start).format('YYYY-MM-DD HH:mm'),
-                            endTime: moment(event.end).format('YYYY-MM-DD HH:mm'),
-                            originalStart: event.resource?.originalEvent?.start,
-                            originalEnd: event.resource?.originalEvent?.end,
-                            spanDays: spanInfo.spanDays,
-                            category: isAllDay ? 'ALL-DAY' : 'TIMED',
-                            eventId: event.id,
-                          })
-                        }
-
-                        if (isAllDay) {
-                          allDaySpanningEvents.push(spanningEvent)
-                        } else {
-                          timedSpanningEvents.push(spanningEvent)
-                        }
-                      }
-                    })
-                  })
-
-                  // Check if this week has any spanning events
-                  const hasSpanningEvents = allDaySpanningEvents.length > 0 || timedSpanningEvents.length > 0
-
                   return (
-                    <div
+                    <WeekRow
                       key={`${monthKey}-${weekIndex}`}
-                      className={`week-row ${
-                        isCurrentWeek
-                          ? 'current-week bg-brain-50 p-1 rounded-lg border-2 border-brain-300'
-                          : ''
-                      }`}
-                    >
-                      {/* Spanning events area - flexible height */}
-                      {hasSpanningEvents && (
-                        <div className="spanning-events-section mb-1">
-                          {/* All-day spanning events */}
-                          {allDaySpanningEvents.slice(0, 3).map((spanEvent, spanIndex) => {
-                            const eventStyle = eventPropGetter
-                              ? eventPropGetter(spanEvent.event)
-                              : {}
-                            const leftPercent = (spanEvent.startDay / 7) * 100
-                            const widthPercent = (spanEvent.spanDays / 7) * 100
-
-                            return (
-                              <div
-                                key={`${spanEvent.event.id || spanIndex}-allday-span`}
-                                className="relative mb-1"
-                                style={{ height: '18px' }}
-                              >
-                                <div
-                                  className="absolute text-xs px-2 py-0.5 rounded cursor-pointer transition-all hover:scale-105 font-medium"
-                                  style={{
-                                    left: `calc(${leftPercent}% + 2px)`,
-                                    width: `calc(${widthPercent}% - 4px)`,
-                                    backgroundColor: eventStyle.style?.backgroundColor || '#9ca3af',
-                                    color: 'white',
-                                    opacity: 0.9,
-                                    minHeight: '16px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
-                                    border: '1px solid rgba(255, 255, 255, 0.3)',
-                                  }}
-                                  onClick={e => {
-                                    e.stopPropagation()
-                                    onSelectEvent(spanEvent.event)
-                                  }}
-                                  title={`${spanEvent.event.title} (${spanEvent.spanDays} days, All-day) - ${spanEvent.event.resource?.calendarName || 'Calendar'}`}
-                                >
-                                  <span className="truncate">{spanEvent.event.title}</span>
-                                </div>
-                              </div>
-                            )
-                          })}
-
-                          {/* Timed spanning events */}
-                          {timedSpanningEvents.slice(0, 2).map((spanEvent, spanIndex) => {
-                            const eventStyle = eventPropGetter
-                              ? eventPropGetter(spanEvent.event)
-                              : {}
-                            const leftPercent = (spanEvent.startDay / 7) * 100
-                            const widthPercent = (spanEvent.spanDays / 7) * 100
-
-                            return (
-                              <div
-                                key={`${spanEvent.event.id || spanIndex}-timed-span`}
-                                className="relative mb-1"
-                                style={{ height: '20px' }}
-                              >
-                                <div
-                                  className="absolute text-xs px-2 py-1 rounded cursor-pointer transition-all hover:scale-105 font-medium"
-                                  style={{
-                                    left: `calc(${leftPercent}% + 2px)`,
-                                    width: `calc(${widthPercent}% - 4px)`,
-                                    backgroundColor: eventStyle.style?.backgroundColor || '#3174ad',
-                                    color: 'white',
-                                    minHeight: '18px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)',
-                                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                                  }}
-                                  onClick={e => {
-                                    e.stopPropagation()
-                                    onSelectEvent(spanEvent.event)
-                                  }}
-                                  title={`${spanEvent.event.title} (${spanEvent.spanDays} days) - ${spanEvent.event.resource?.calendarName || 'Calendar'}`}
-                                >
-                                  <span className="truncate">
-                                    {moment(spanEvent.event.start).format('h:mm')}{' '}
-                                    {spanEvent.event.title}
-                                  </span>
-                                </div>
-                              </div>
-                            )
-                          })}
-
-                          {/* Overflow indicator for spanning events */}
-                          {(allDaySpanningEvents.length > 3 || timedSpanningEvents.length > 2) && (
-                            <div className="text-xs text-gray-600 font-medium bg-white px-2 py-0.5 rounded text-center mb-1">
-                              +{Math.max(0, allDaySpanningEvents.length - 3) + Math.max(0, timedSpanningEvents.length - 2)} more spanning events
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      <div className="grid grid-cols-7 gap-0.5">
-                        {week.map((day, dayIndex) => {
-                          const isToday = moment(day).isSame(moment(), 'day')
-                          const dayMonth = moment(day).month()
-                          const isDifferentMonth = dayMonth !== moment(date).month()
-                          const isPreviousMonth =
-                            dayMonth < currentMonth || (dayMonth === 11 && currentMonth === 0)
-                          const isNextMonth =
-                            dayMonth > currentMonth || (dayMonth === 0 && currentMonth === 11)
-
-                          // Get single-day all-day events for this day
-                          const singleDayAllDayEvents = getAllDayEventsForDay(day).filter(event => {
-                            const spanInfo = getEventSpanInfo(event, day, week)
-                            return !spanInfo.isMultiDay
-                          })
-
-                          // Debug log single-day all-day events
-                          const allDayEventsForThisDay = getAllDayEventsForDay(day)
-                          if (dayIndex === 0 && weekIndex === 0) {
-                            console.log(
-                              `[CALENDAR DEBUG] Day ${moment(day).format('YYYY-MM-DD')}:`,
-                              {
-                                allEventsForDay: getEventsForDay(day).length,
-                                allDayEvents: allDayEventsForThisDay.length,
-                                singleDayAllDayEvents: singleDayAllDayEvents.length,
-                                events: allDayEventsForThisDay.map(e => ({
-                                  title: e.title,
-                                  isAllDay: isAllDayEvent(e),
-                                  isMultiDay: getEventSpanInfo(e, day, week).isMultiDay,
-                                  start: moment(e.start).format('YYYY-MM-DD HH:mm'),
-                                  end: moment(e.end).format('YYYY-MM-DD HH:mm'),
-                                  originalEvent: e.resource?.originalEvent?.start,
-                                })),
-                              }
-                            )
-                          }
-
-                          return (
-                            <div
-                              key={dayIndex}
-                              className={`day-cell min-h-[120px] border rounded cursor-pointer transition-all flex flex-col relative ${
-                                isToday
-                                  ? 'today-cell bg-brain-100 border-brain-400 border-2'
-                                  : isDifferentMonth
-                                    ? isPreviousMonth
-                                      ? 'text-gray-400 bg-gray-50 border-gray-200 opacity-60'
-                                      : 'text-gray-500 bg-blue-50 border-blue-200 opacity-75'
-                                    : 'border-gray-200 hover:bg-gray-50 hover:border-gray-300'
-                              }`}
-                              onClick={() => handleSlotClick(day)}
-                            >
-                              {/* Date number - positioned in top right with proper constraints */}
-                              <div className="absolute top-1 right-1 z-10 flex justify-end">
-                                <div
-                                  className={`text-sm leading-none ${
-                                    isToday
-                                      ? 'font-bold text-brain-700 bg-brain-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0'
-                                      : isDifferentMonth
-                                        ? isPreviousMonth
-                                          ? 'text-gray-400'
-                                          : 'text-gray-500'
-                                        : 'text-gray-700 font-medium'
-                                  }`}
-                                >
-                                  {moment(day).format('D')}
-                                </div>
-                              </div>
-
-                              {/* Flexible content area */}
-                              <div className="flex-1 flex flex-col p-1 pt-8 pr-8 relative">
-                                {/* Single-day all-day events section */}
-                                <div className="all-day-events-section mb-1">
-                                  {singleDayAllDayEvents.slice(0, 2).map((event, eventIndex) => {
-                                    const eventStyle = eventPropGetter ? eventPropGetter(event) : {}
-
-                                    return (
-                                      <div
-                                        key={`allday-${event.id || eventIndex}`}
-                                        className={`all-day-event text-xs px-1 py-0.5 rounded cursor-pointer truncate transition-all hover:scale-105 mb-0.5 font-medium ${
-                                          isDifferentMonth ? 'opacity-70' : ''
-                                        }`}
-                                        style={{
-                                          backgroundColor:
-                                            eventStyle.style?.backgroundColor || '#9ca3af',
-                                          color: 'white',
-                                        }}
-                                        onClick={e => {
-                                          e.stopPropagation()
-                                          onSelectEvent(event)
-                                        }}
-                                        title={`${event.title} (All-day) - ${event.resource?.calendarName || 'Calendar'}`}
-                                      >
-                                        {event.title}
-                                      </div>
-                                    )
-                                  })}
-                                </div>
-                                  
-                                {/* Timed events section */}
-                                <div className="timed-events-section">
-                                  {getTimedEventsForDay(day)
-                                    .filter(event => {
-                                      const spanInfo = getEventSpanInfo(event, day, week)
-                                      return !spanInfo.isMultiDay
-                                    })
-                                    .slice(0, 3)
-                                    .map((event, eventIndex) => {
-                                    const eventStyle = eventPropGetter ? eventPropGetter(event) : {}
-
-                                    return (
-                                      <div
-                                        key={`timed-${event.id || eventIndex}`}
-                                        className={`timed-event text-xs p-1 rounded cursor-pointer truncate transition-all hover:scale-105 mb-1 ${
-                                          isDifferentMonth ? 'opacity-70' : ''
-                                        }`}
-                                        style={{
-                                          backgroundColor:
-                                            eventStyle.style?.backgroundColor || '#3174ad',
-                                          color: 'white',
-                                        }}
-                                        onClick={e => {
-                                          e.stopPropagation()
-                                          onSelectEvent(event)
-                                        }}
-                                        title={`${event.title} (${moment(event.start).format('h:mm A')}) - ${event.resource?.calendarName || 'Calendar'}`}
-                                      >
-                                        {moment(event.start).format('h:mm')} {event.title}
-                                      </div>
-                                    )
-                                  })}
-
-                                {/* Show "more" indicator */}
-                                {(() => {
-                                  const timedEvents = getTimedEventsForDay(day).filter(event => {
-                                    const spanInfo = getEventSpanInfo(event, day, week)
-                                    return !spanInfo.isMultiDay
-                                  })
-                                  const remaining = Math.max(
-                                    0,
-                                    timedEvents.length - 3 + (singleDayAllDayEvents.length - 2)
-                                  )
-
-                                  return (
-                                    remaining > 0 && (
-                                      <div className="text-xs text-gray-500 text-center mt-1">
-                                        +{remaining} more
-                                      </div>
-                                    )
-                                  )
-                                })()}
-                                </div>
-                              </div>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </div>
+                      week={week}
+                      currentDate={date}
+                      currentWeekStart={currentWeekStart}
+                      events={events}
+                      eventPropGetter={eventPropGetter}
+                      onSelectEvent={onSelectEvent}
+                      onSelectSlot={onSelectSlot}
+                      getEventsForDay={getEventsForDay}
+                      isAllDayEvent={isAllDayEvent}
+                      getTimedEventsForDay={getTimedEventsForDay}
+                      getAllDayEventsForDay={getAllDayEventsForDay}
+                      getEventSpanInfo={getEventSpanInfo}
+                    />
                   )
                 })}
               </div>
@@ -590,23 +343,23 @@ export const EightWeekViewComponent: React.FC<EightWeekViewComponentProps> = ({
           ))}
       </div>
 
-      <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-        <div className="flex justify-center items-center flex-wrap gap-4 text-sm text-gray-600">
-          <div className="flex items-center space-x-1">
-            <div className="w-4 h-4 bg-brain-50 border-2 border-brain-300 rounded"></div>
-            <span>Current Week</span>
+      <div className="mt-6 p-4 bg-gray-100/50 rounded-xl border border-gray-200/50 mb-safe">
+        <div className="flex justify-center items-center flex-wrap gap-3 sm:gap-4 text-xs sm:text-sm text-gray-600">
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 sm:w-4 sm:h-4 bg-brain-50 border-2 border-brain-300 rounded"></div>
+            <span className="font-medium">Current Week</span>
           </div>
-          <div className="flex items-center space-x-1">
-            <div className="w-4 h-4 bg-brain-500 rounded-full"></div>
-            <span>Today</span>
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 sm:w-4 sm:h-4 bg-brain-500 rounded-full"></div>
+            <span className="font-medium">Today</span>
           </div>
-          <div className="flex items-center space-x-1">
-            <div className="w-4 h-4 bg-gray-50 border border-gray-200 rounded opacity-60"></div>
-            <span>Previous Month</span>
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gray-50 border border-gray-200 rounded opacity-60"></div>
+            <span className="font-medium">Previous Month</span>
           </div>
-          <div className="flex items-center space-x-1">
-            <div className="w-4 h-4 bg-blue-50 border border-blue-200 rounded opacity-75"></div>
-            <span>Future Month</span>
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 sm:w-4 sm:h-4 bg-blue-50 border border-blue-200 rounded opacity-75"></div>
+            <span className="font-medium">Future Month</span>
           </div>
         </div>
       </div>

@@ -49,6 +49,7 @@ export class GoogleCalendarService {
   private static instance: GoogleCalendarService
   private tokenClient: any
   private accessToken: string | null = null
+  private tokenExpiresAt: Date | null = null
   private isInitialized = false
 
   private constructor() {}
@@ -124,8 +125,10 @@ export class GoogleCalendarService {
       scope: import.meta.env.VITE_GOOGLE_CALENDAR_SCOPES,
       callback: (response: any) => {
         if (response.access_token) {
-          console.log('Got access token:', response.access_token)
+          // OAuth authentication successful
           this.accessToken = response.access_token
+          // Google OAuth tokens typically expire in 1 hour
+          this.tokenExpiresAt = new Date(Date.now() + (response.expires_in || 3600) * 1000)
 
           // Set the token in GAPI client
           window.gapi.client.setToken({
@@ -181,16 +184,20 @@ export class GoogleCalendarService {
       await this.initialize()
     }
 
-    // If we already have a token, return
-    if (this.accessToken) {
-      console.log('Already authenticated with token')
+    // If we already have a valid token, return
+    if (this.accessToken && this.isTokenValid()) {
       return Promise.resolve()
+    }
+
+    // Clear invalid token
+    if (this.accessToken && !this.isTokenValid()) {
+      this.accessToken = null
+      this.tokenExpiresAt = null
     }
 
     // Check for stored token first
     const hasStoredToken = await this.checkStoredToken()
-    if (hasStoredToken && this.accessToken) {
-      console.log('Using stored token')
+    if (hasStoredToken && this.accessToken && this.isTokenValid()) {
       return Promise.resolve()
     }
 
@@ -199,7 +206,11 @@ export class GoogleCalendarService {
       this.authResolve = resolve
       this.authReject = reject
 
-      console.log('Requesting new access token...')
+      if (!this.tokenClient) {
+        reject(new Error('Token client not initialized'))
+        return
+      }
+      
       this.tokenClient.requestAccessToken()
 
       // Add timeout
@@ -220,6 +231,8 @@ export class GoogleCalendarService {
       } = await supabase.auth.getUser()
       if (user?.user_metadata?.google_calendar_token) {
         this.accessToken = user.user_metadata.google_calendar_token
+        // For stored tokens, we don't have expiration info, so set to null to assume valid
+        this.tokenExpiresAt = null
         window.gapi.client.setToken({ access_token: this.accessToken })
         return true
       }
@@ -230,12 +243,20 @@ export class GoogleCalendarService {
   }
 
   isAuthenticated(): boolean {
-    return this.accessToken !== null
+    return this.accessToken !== null && this.isTokenValid()
+  }
+
+  private isTokenValid(): boolean {
+    if (!this.tokenExpiresAt) {
+      return true // Assume valid if we don't have expiration info
+    }
+    return new Date() < this.tokenExpiresAt
   }
 
   async disconnect(): Promise<void> {
     const token = this.accessToken
     this.accessToken = null
+    this.tokenExpiresAt = null
 
     // Clear stored token from Supabase
     try {
@@ -272,8 +293,7 @@ export class GoogleCalendarService {
   async listCalendars(): Promise<Calendar[]> {
     await this.authenticate()
 
-    console.log('listCalendars - Access token:', this.accessToken)
-    console.log('listCalendars - Token exists:', !!this.accessToken)
+    // Fetching calendar list
 
     if (!this.accessToken) {
       throw new Error('Not authenticated')
@@ -281,7 +301,6 @@ export class GoogleCalendarService {
 
     try {
       // Use direct fetch with proper authorization header
-      console.log('Making request with token:', `${this.accessToken.substring(0, 20)}...`)
       const response = await fetch(
         `https://www.googleapis.com/calendar/v3/users/me/calendarList?key=${import.meta.env.VITE_GOOGLE_API_KEY}`,
         {
@@ -298,8 +317,9 @@ export class GoogleCalendarService {
 
         // If unauthorized, try to re-authenticate
         if (response.status === 401) {
-          console.log('Token expired, re-authenticating...')
+          // Token expired, re-authenticating...
           this.accessToken = null
+          this.tokenExpiresAt = null
           await this.authenticate()
 
           // Retry with new token
@@ -429,7 +449,7 @@ export class GoogleCalendarService {
     if (this.accessToken) {
       window.google.accounts.oauth2.revoke(this.accessToken, () => {
         this.accessToken = null
-        console.log('Access revoked')
+        // Access revoked
       })
     }
   }
