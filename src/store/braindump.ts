@@ -362,7 +362,7 @@ export const useBrainDumpStore = create<BrainDumpState>((set, get) => ({
       entryId: entry.id,
       nodesCount: entry.nodes.length,
     })
-    
+
     // Sync all task nodes to todos
     if (isSupabaseConfigured() && userId && userId !== 'demo-user') {
       await syncBrainDumpToTodos(entry.nodes, entry.edges, entry.id, userId)
@@ -518,7 +518,7 @@ export const useBrainDumpStore = create<BrainDumpState>((set, get) => ({
         nodes: [...currentEntry.nodes, node],
       })
       logger.info('STORE', 'Node persisted successfully', { nodeId: node.id })
-      
+
       // Sync to todo system if it's a task node
       if (currentEntry.userId && currentEntry.userId !== 'demo-user') {
         await syncNodeToTodo(node, currentEntry.id, currentEntry.userId)
@@ -551,7 +551,7 @@ export const useBrainDumpStore = create<BrainDumpState>((set, get) => ({
 
     // Save to database
     await updateEntry(currentEntry.id, { nodes: updatedNodes })
-    
+
     // Sync to todo system if it's a task node
     if (currentEntry.userId && currentEntry.userId !== 'demo-user') {
       const updatedNode = updatedNodes.find(n => n.id === nodeId)
@@ -591,7 +591,7 @@ export const useBrainDumpStore = create<BrainDumpState>((set, get) => ({
         edges: updatedEdges,
       })
       logger.info('STORE', 'Node deleted successfully', { nodeId })
-      
+
       // Sync deletion to todo system
       if (currentEntry.userId && currentEntry.userId !== 'demo-user') {
         await syncNodeDeletion(nodeId, currentEntry.id)

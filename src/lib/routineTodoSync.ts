@@ -12,7 +12,7 @@ import { logger } from '@/services/logger'
 // Convert routine MIT to todo input
 export function routineMITToTodoInput(entry: RoutineEntry): CreateTodoInput | null {
   if (!entry.mit || !entry.mit.trim()) return null
-  
+
   return {
     title: entry.mit,
     description: `Most Important Task for Day ${entry.dayNumber} of 66-day routine`,
@@ -35,7 +35,7 @@ export function routineRitualsToTodoInputs(entry: RoutineEntry): CreateTodoInput
   if (!entry.morningRitualPlan || !Array.isArray(entry.morningRitualPlan)) {
     return []
   }
-  
+
   return entry.morningRitualPlan
     .filter(ritual => ritual.trim())
     .map((ritual, index) => ({
@@ -60,7 +60,7 @@ export function routineRitualsToTodoInputs(entry: RoutineEntry): CreateTodoInput
 // Convert improvement goal to todo input
 export function routineImprovementToTodoInput(entry: RoutineEntry): CreateTodoInput | null {
   if (!entry.onePercentImprovement || !entry.onePercentImprovement.trim()) return null
-  
+
   return {
     title: `1% Improvement: ${entry.onePercentImprovement}`,
     description: `Daily improvement goal for Day ${entry.dayNumber}`,
@@ -85,7 +85,7 @@ export async function syncRoutineMITToTodo(
 ): Promise<string | null> {
   const todoInput = routineMITToTodoInput(entry)
   if (!todoInput) return null
-  
+
   try {
     // Check if todo already exists
     const { data: existingLink } = await supabase
@@ -94,26 +94,26 @@ export async function syncRoutineMITToTodo(
       .eq('routine_entry_id', entry.id)
       .eq('todo_type', 'mit')
       .single()
-    
+
     if (existingLink) {
       // Update existing todo
       const updates: UpdateTodoInput = {
         title: entry.mit!,
         status: entry.morningCompleted ? 'completed' : 'pending',
       }
-      
+
       await useTodoStore.getState().updateTodo(existingLink.todo_id, updates)
-      
+
       logger.info('ROUTINE_SYNC', 'Updated existing MIT todo', {
         todoId: existingLink.todo_id,
         routineId: entry.id,
       })
-      
+
       return existingLink.todo_id
     } else {
       // Create new todo
       const todo = await useTodoStore.getState().createTodo(userId, todoInput)
-      
+
       if (todo) {
         // Create link
         await supabase.from('routine_todos').insert({
@@ -121,13 +121,13 @@ export async function syncRoutineMITToTodo(
           todo_id: todo.id,
           todo_type: 'mit',
         })
-        
+
         logger.info('ROUTINE_SYNC', 'Created new MIT todo', {
           todoId: todo.id,
           routineId: entry.id,
           mit: entry.mit,
         })
-        
+
         return todo.id
       }
     }
@@ -137,7 +137,7 @@ export async function syncRoutineMITToTodo(
       error,
     })
   }
-  
+
   return null
 }
 
@@ -147,11 +147,11 @@ export async function syncRoutineRitualsToTodos(
   userId: string
 ): Promise<void> {
   const ritualInputs = routineRitualsToTodoInputs(entry)
-  
+
   for (const ritualInput of ritualInputs) {
     try {
       const ritualIndex = ritualInput.sourceMetadata?.ritualIndex ?? 0
-      
+
       // Check if todo already exists
       const { data: existingLink } = await supabase
         .from('routine_todos')
@@ -160,19 +160,19 @@ export async function syncRoutineRitualsToTodos(
         .eq('todo_type', 'ritual_item')
         .like('todo_id', `%:ritual:${ritualIndex}`)
         .single()
-      
+
       if (existingLink) {
         // Update existing todo
         const updates: UpdateTodoInput = {
           title: ritualInput.title,
           status: ritualInput.status,
         }
-        
+
         await useTodoStore.getState().updateTodo(existingLink.todo_id, updates)
       } else {
         // Create new todo
         const todo = await useTodoStore.getState().createTodo(userId, ritualInput)
-        
+
         if (todo) {
           await supabase.from('routine_todos').insert({
             routine_entry_id: entry.id,
@@ -198,7 +198,7 @@ export async function syncRoutineImprovementToTodo(
 ): Promise<string | null> {
   const todoInput = routineImprovementToTodoInput(entry)
   if (!todoInput) return null
-  
+
   try {
     // Check if todo already exists
     const { data: existingLink } = await supabase
@@ -207,28 +207,28 @@ export async function syncRoutineImprovementToTodo(
       .eq('routine_entry_id', entry.id)
       .eq('todo_type', 'improvement')
       .single()
-    
+
     if (existingLink) {
       // Update existing todo
       const updates: UpdateTodoInput = {
         title: todoInput.title,
         status: entry.morningCompleted ? 'completed' : 'pending',
       }
-      
+
       await useTodoStore.getState().updateTodo(existingLink.todo_id, updates)
-      
+
       return existingLink.todo_id
     } else {
       // Create new todo
       const todo = await useTodoStore.getState().createTodo(userId, todoInput)
-      
+
       if (todo) {
         await supabase.from('routine_todos').insert({
           routine_entry_id: entry.id,
           todo_id: todo.id,
           todo_type: 'improvement',
         })
-        
+
         return todo.id
       }
     }
@@ -238,31 +238,28 @@ export async function syncRoutineImprovementToTodo(
       error,
     })
   }
-  
+
   return null
 }
 
 // Sync all routine items to todos
-export async function syncRoutineEntryToTodos(
-  entry: RoutineEntry,
-  userId: string
-): Promise<void> {
+export async function syncRoutineEntryToTodos(entry: RoutineEntry, userId: string): Promise<void> {
   try {
     // Sync MIT
     if (entry.mit) {
       await syncRoutineMITToTodo(entry, userId)
     }
-    
+
     // Sync rituals
     if (entry.morningRitualPlan?.length) {
       await syncRoutineRitualsToTodos(entry, userId)
     }
-    
+
     // Sync improvement goal
     if (entry.onePercentImprovement) {
       await syncRoutineImprovementToTodo(entry, userId)
     }
-    
+
     logger.info('ROUTINE_SYNC', 'Completed routine sync', {
       routineId: entry.id,
       dayNumber: entry.dayNumber,
@@ -283,12 +280,12 @@ export async function syncRoutineDeletion(entryId: string): Promise<void> {
       .from('routine_todos')
       .select('todo_id')
       .eq('routine_entry_id', entryId)
-    
+
     if (links) {
       for (const link of links) {
         await useTodoStore.getState().deleteTodo(link.todo_id)
       }
-      
+
       logger.info('ROUTINE_SYNC', 'Deleted todos for routine entry', {
         routineId: entryId,
         todoCount: links.length,

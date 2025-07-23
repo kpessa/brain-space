@@ -9,16 +9,14 @@ import { useRoutineAutoSave } from '../../hooks/useRoutineAutoSave'
 export function EveningRoutine() {
   const { progress, currentEntry, completeEvening, isSyncing } = useRoutineStore()
   const autoSave = useRoutineAutoSave('evening')
-  
+
   const [sleepTime, setSleepTime] = useState(currentEntry?.sleepIntention || '22:00')
   const [wakeTime, setWakeTime] = useState(currentEntry?.wakeIntention || '06:00')
   const [magicalMoment, setMagicalMoment] = useState(currentEntry?.magicalMoment || '')
-  const [rituals, setRituals] = useState<string[]>(
-    currentEntry?.morningRitualPlan || []
-  )
+  const [rituals, setRituals] = useState<string[]>(currentEntry?.morningRitualPlan || [])
   const [newRitual, setNewRitual] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
-  
+
   // Update form when currentEntry changes
   useEffect(() => {
     if (currentEntry) {
@@ -28,7 +26,7 @@ export function EveningRoutine() {
       setRituals(currentEntry.morningRitualPlan || [])
     }
   }, [currentEntry])
-  
+
   // Auto-save when form data changes
   useEffect(() => {
     if (!currentEntry?.eveningCompleted) {
@@ -86,9 +84,15 @@ export function EveningRoutine() {
               ✓ You've completed your evening routine for Day {progress?.currentDay}
             </p>
             <div className="space-y-2 text-sm">
-              <p><strong>Sleep intention:</strong> {currentEntry.sleepIntention}</p>
-              <p><strong>Wake intention:</strong> {currentEntry.wakeIntention}</p>
-              <p><strong>Magical moment:</strong> {currentEntry.magicalMoment}</p>
+              <p>
+                <strong>Sleep intention:</strong> {currentEntry.sleepIntention}
+              </p>
+              <p>
+                <strong>Wake intention:</strong> {currentEntry.wakeIntention}
+              </p>
+              <p>
+                <strong>Magical moment:</strong> {currentEntry.magicalMoment}
+              </p>
               <div>
                 <strong>Tomorrow's ritual:</strong>
                 <ul className="list-disc list-inside mt-1">
@@ -114,9 +118,7 @@ export function EveningRoutine() {
             {progress?.currentDay === 0 && ' (Night 0)'}
           </CardTitle>
         </div>
-        <CardDescription>
-          Reflect on today and prepare for tomorrow's success
-        </CardDescription>
+        <CardDescription>Reflect on today and prepare for tomorrow's success</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Sleep Intentions */}
@@ -130,7 +132,7 @@ export function EveningRoutine() {
               <input
                 type="time"
                 value={sleepTime}
-                onChange={(e) => setSleepTime(e.target.value)}
+                onChange={e => setSleepTime(e.target.value)}
                 className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-base"
               />
             </div>
@@ -139,7 +141,7 @@ export function EveningRoutine() {
               <input
                 type="time"
                 value={wakeTime}
-                onChange={(e) => setWakeTime(e.target.value)}
+                onChange={e => setWakeTime(e.target.value)}
                 className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-base"
               />
             </div>
@@ -157,7 +159,7 @@ export function EveningRoutine() {
           </label>
           <textarea
             value={magicalMoment}
-            onChange={(e) => setMagicalMoment(e.target.value)}
+            onChange={e => setMagicalMoment(e.target.value)}
             placeholder="Describe something that made you smile, a small victory, or a moment of gratitude..."
             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 h-24 text-base"
           />
@@ -165,9 +167,7 @@ export function EveningRoutine() {
 
         {/* Morning Ritual Planning */}
         <div>
-          <h3 className="font-semibold mb-3">
-            📝 Design Tomorrow's Morning Ritual
-          </h3>
+          <h3 className="font-semibold mb-3">📝 Design Tomorrow's Morning Ritual</h3>
           <p className="text-sm text-gray-600 mb-3">
             List 3-5 simple actions to start your day. Keep them SMALL and achievable!
           </p>
@@ -194,8 +194,8 @@ export function EveningRoutine() {
               <input
                 type="text"
                 value={newRitual}
-                onChange={(e) => setNewRitual(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleAddRitual()}
+                onChange={e => setNewRitual(e.target.value)}
+                onKeyPress={e => e.key === 'Enter' && handleAddRitual()}
                 placeholder="Add a simple morning action..."
                 className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-base"
               />
@@ -221,7 +221,7 @@ export function EveningRoutine() {
               </button>
               {showSuggestions && (
                 <div className="grid grid-cols-2 gap-2">
-                  {MORNING_RITUAL_SUGGESTIONS.map((suggestion) => (
+                  {MORNING_RITUAL_SUGGESTIONS.map(suggestion => (
                     <button
                       key={suggestion}
                       onClick={() => handleAddSuggestion(suggestion)}

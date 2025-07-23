@@ -15,13 +15,12 @@ import ViewJournalEntry from './pages/ViewJournalEntry'
 import Progress from './pages/Progress'
 import BrainDump from './pages/BrainDump'
 import { AuthCallback } from './components/AuthCallback'
-import { AuthDiagnostic } from './pages/AuthDiagnostic'
-import DatabaseSetup from './pages/DatabaseSetup'
-import RecalculateProgress from './pages/RecalculateProgress'
 import Timebox from './pages/Timebox'
 import { Matrix } from './pages/Matrix'
 import Routines from './pages/Routines'
-import TodoMigration from './pages/TodoMigration'
+import { GoogleCalendarTest } from './components/GoogleCalendarTest'
+import { CalendarView } from './pages/CalendarView'
+import { CalendarSettings } from './pages/CalendarSettings'
 import UnifiedTodos from './pages/UnifiedTodos'
 import TodoDashboard from './pages/TodoDashboard'
 
@@ -96,19 +95,18 @@ function AppContent() {
               <Route path="journal/view/:id" element={<ViewJournalEntry />} />
               <Route path="braindump" element={<BrainDump />} />
               <Route path="progress" element={<Progress />} />
-              <Route path="database-setup" element={<DatabaseSetup />} />
-              <Route path="recalculate-progress" element={<RecalculateProgress />} />
               <Route path="timebox" element={<Timebox />} />
               <Route path="matrix" element={<Matrix />} />
               <Route path="routines" element={<Routines />} />
-              <Route path="todo-migration" element={<TodoMigration />} />
+              <Route path="google-calendar-test" element={<GoogleCalendarTest />} />
+              <Route path="calendar" element={<CalendarView />} />
+              <Route path="calendar-settings" element={<CalendarSettings />} />
               <Route path="todos" element={<UnifiedTodos />} />
               <Route path="todo-dashboard" element={<TodoDashboard />} />
             </Route>
           ) : (
             <>
               <Route path="/auth" element={<Login />} />
-              <Route path="/auth-diagnostic" element={<AuthDiagnostic />} />
               <Route path="*" element={<Navigate to="/auth" replace />} />
             </>
           )}

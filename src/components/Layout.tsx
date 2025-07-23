@@ -1,6 +1,18 @@
 import { useState } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
-import { Home, BookOpen, Trophy, Sparkles, Brain, LogOut, Clock, Menu, Grid, SunMoon } from 'lucide-react'
+import {
+  Home,
+  BookOpen,
+  Trophy,
+  Sparkles,
+  Brain,
+  LogOut,
+  Clock,
+  Menu,
+  Grid,
+  SunMoon,
+  Calendar,
+} from 'lucide-react'
 import { cn } from '../lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from './Button'
@@ -20,6 +32,7 @@ export default function Layout() {
     { path: '/routines', icon: SunMoon, label: 'Routines' },
     { path: '/braindump', icon: Brain, label: 'Brain Dump' },
     { path: '/timebox', icon: Clock, label: 'Timebox' },
+    { path: '/calendar', icon: Calendar, label: 'Calendar' },
     { path: '/matrix', icon: Grid, label: 'Matrix' },
     { path: '/progress', icon: Trophy, label: 'Progress' },
   ]

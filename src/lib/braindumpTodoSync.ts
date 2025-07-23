@@ -12,7 +12,7 @@ import { logger } from '@/services/logger'
 // Check if a node should be synced as a todo
 export function shouldSyncAsTodo(node: BrainDumpNode): boolean {
   if (node.type !== 'thought') return false
-  
+
   const data = node.data
   return !!(
     data.taskStatus ||
@@ -25,12 +25,9 @@ export function shouldSyncAsTodo(node: BrainDumpNode): boolean {
 }
 
 // Convert a BrainDump node to todo input
-export function nodeToTodoInput(
-  node: BrainDumpNode,
-  braindumpId: string
-): CreateTodoInput {
+export function nodeToTodoInput(node: BrainDumpNode, braindumpId: string): CreateTodoInput {
   const data = node.data
-  
+
   return {
     title: data.label,
     description: data.originalText,
@@ -54,9 +51,7 @@ export function nodeToTodoInput(
 }
 
 // Convert node status to todo status
-function convertNodeStatusToTodoStatus(
-  nodeStatus?: string
-): CreateTodoInput['status'] {
+function convertNodeStatusToTodoStatus(nodeStatus?: string): CreateTodoInput['status'] {
   switch (nodeStatus) {
     case 'completed':
       return 'completed'
@@ -76,7 +71,7 @@ export async function syncNodeToTodo(
   userId: string
 ): Promise<string | null> {
   if (!shouldSyncAsTodo(node)) return null
-  
+
   try {
     // Check if todo already exists for this node
     const { data: existingLink } = await supabase
@@ -85,7 +80,7 @@ export async function syncNodeToTodo(
       .eq('braindump_id', braindumpId)
       .eq('node_id', node.id)
       .single()
-    
+
     if (existingLink) {
       // Update existing todo
       const updates: UpdateTodoInput = {
@@ -99,24 +94,24 @@ export async function syncNodeToTodo(
         scheduledTime: node.data.timeboxStartTime,
         scheduledDuration: node.data.timeboxDuration,
       }
-      
+
       if (node.data.completedAt) {
         updates.completedAt = node.data.completedAt
       }
-      
+
       await useTodoStore.getState().updateTodo(existingLink.todo_id, updates)
-      
+
       logger.info('SYNC', 'Updated existing todo', {
         todoId: existingLink.todo_id,
         nodeId: node.id,
       })
-      
+
       return existingLink.todo_id
     } else {
       // Create new todo
       const todoInput = nodeToTodoInput(node, braindumpId)
       const todo = await useTodoStore.getState().createTodo(userId, todoInput)
-      
+
       if (todo) {
         // Create link
         await supabase.from('braindump_todos').insert({
@@ -124,14 +119,14 @@ export async function syncNodeToTodo(
           node_id: node.id,
           todo_id: todo.id,
         })
-        
+
         // Handle completion time if already completed
         if (node.data.completedAt && node.data.taskStatus === 'completed') {
           await useTodoStore.getState().updateTodo(todo.id, {
             completedAt: node.data.completedAt,
           })
         }
-        
+
         // Handle attempts
         if (node.data.attempts?.length) {
           for (const attempt of node.data.attempts) {
@@ -145,26 +140,22 @@ export async function syncNodeToTodo(
             })
           }
         }
-        
+
         // Handle recurrence
         if (node.data.recurrencePattern) {
-          await useTodoStore.getState().makeRecurring(
-            todo.id,
-            node.data.recurrencePattern.type,
-            {
-              frequency: node.data.recurrencePattern.frequency,
-              daysOfWeek: node.data.recurrencePattern.daysOfWeek,
-              dayOfMonth: node.data.recurrencePattern.dayOfMonth,
-              customCron: node.data.recurrencePattern.customCron,
-            }
-          )
+          await useTodoStore.getState().makeRecurring(todo.id, node.data.recurrencePattern.type, {
+            frequency: node.data.recurrencePattern.frequency,
+            daysOfWeek: node.data.recurrencePattern.daysOfWeek,
+            dayOfMonth: node.data.recurrencePattern.dayOfMonth,
+            customCron: node.data.recurrencePattern.customCron,
+          })
         }
-        
+
         logger.info('SYNC', 'Created new todo', {
           todoId: todo.id,
           nodeId: node.id,
         })
-        
+
         return todo.id
       }
     }
@@ -174,15 +165,12 @@ export async function syncNodeToTodo(
       error,
     })
   }
-  
+
   return null
 }
 
 // Sync node deletion
-export async function syncNodeDeletion(
-  nodeId: string,
-  braindumpId: string
-): Promise<void> {
+export async function syncNodeDeletion(nodeId: string, braindumpId: string): Promise<void> {
   try {
     // Find and delete associated todo
     const { data: link } = await supabase
@@ -191,7 +179,7 @@ export async function syncNodeDeletion(
       .eq('braindump_id', braindumpId)
       .eq('node_id', nodeId)
       .single()
-    
+
     if (link) {
       await useTodoStore.getState().deleteTodo(link.todo_id)
       logger.info('SYNC', 'Deleted todo for removed node', {
@@ -218,24 +206,22 @@ export async function syncNodeRelationships(
       .from('braindump_todos')
       .select('node_id, todo_id')
       .eq('braindump_id', braindumpId)
-    
+
     if (!links) return
-    
+
     // Create a map of node IDs to todo IDs
-    const nodeToTodoMap = new Map(
-      links.map(link => [link.node_id, link.todo_id])
-    )
-    
+    const nodeToTodoMap = new Map(links.map(link => [link.node_id, link.todo_id]))
+
     // Update parent-child relationships
     for (const edge of edges) {
       const parentTodoId = nodeToTodoMap.get(edge.source)
       const childTodoId = nodeToTodoMap.get(edge.target)
-      
+
       if (parentTodoId && childTodoId) {
         await useTodoStore.getState().moveToParent(childTodoId, parentTodoId)
       }
     }
-    
+
     logger.info('SYNC', 'Synced node relationships', {
       braindumpId,
       relationshipCount: edges.length,
@@ -260,10 +246,10 @@ export async function syncBrainDumpToTodos(
     for (const node of nodes) {
       await syncNodeToTodo(node, braindumpId, userId)
     }
-    
+
     // Sync relationships
     await syncNodeRelationships(edges, braindumpId)
-    
+
     logger.info('SYNC', 'Completed brain dump sync', {
       braindumpId,
       nodeCount: nodes.length,

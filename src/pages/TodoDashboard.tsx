@@ -4,10 +4,10 @@ import { useTodoStore } from '@/store/todos'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/Card'
 import { Button } from '@/components/Button'
 import { cn } from '@/lib/utils'
-import { 
-  CheckCircle2, 
-  Circle, 
-  Clock, 
+import {
+  CheckCircle2,
+  Circle,
+  Clock,
   AlertCircle,
   Calendar,
   Target,
@@ -16,13 +16,17 @@ import {
   Moon,
   Plus,
   Filter,
-  LayoutGrid
+  LayoutGrid,
 } from 'lucide-react'
 import type { Todo, TodoFilter, EisenhowerQuadrant } from '@/types/todo'
 import { getQuadrantInfo } from '@/types/todo'
 
 // Todo Item Component
-function TodoItem({ todo, onToggle, onUpdate }: { 
+function TodoItem({
+  todo,
+  onToggle,
+  onUpdate,
+}: {
   todo: Todo
   onToggle: (id: string) => void
   onUpdate: (id: string, updates: any) => void
@@ -32,23 +36,25 @@ function TodoItem({ todo, onToggle, onUpdate }: {
     journal: <BookOpen className="w-4 h-4" />,
     routine: <Moon className="w-4 h-4" />,
     manual: <Plus className="w-4 h-4" />,
-    recurring: <Clock className="w-4 h-4" />
+    recurring: <Clock className="w-4 h-4" />,
   }[todo.sourceType]
 
   return (
-    <div className={cn(
-      "flex items-start gap-3 p-4 rounded-lg border transition-colors",
-      todo.status === 'completed' 
-        ? "bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 opacity-75"
-        : "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
-    )}>
+    <div
+      className={cn(
+        'flex items-start gap-3 p-4 rounded-lg border transition-colors',
+        todo.status === 'completed'
+          ? 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 opacity-75'
+          : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+      )}
+    >
       <button
         onClick={() => onToggle(todo.id)}
         className={cn(
-          "mt-0.5 transition-colors",
+          'mt-0.5 transition-colors',
           todo.status === 'completed'
-            ? "text-green-600 dark:text-green-400"
-            : "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+            ? 'text-green-600 dark:text-green-400'
+            : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
         )}
       >
         {todo.status === 'completed' ? (
@@ -57,28 +63,24 @@ function TodoItem({ todo, onToggle, onUpdate }: {
           <Circle className="w-5 h-5" />
         )}
       </button>
-      
+
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className={cn(
-            "font-medium",
-            todo.status === 'completed' && "line-through text-gray-500 dark:text-gray-400"
-          )}>
+          <span
+            className={cn(
+              'font-medium',
+              todo.status === 'completed' && 'line-through text-gray-500 dark:text-gray-400'
+            )}
+          >
             {todo.title}
           </span>
-          {sourceIcon && (
-            <span className="text-gray-400 dark:text-gray-500">
-              {sourceIcon}
-            </span>
-          )}
+          {sourceIcon && <span className="text-gray-400 dark:text-gray-500">{sourceIcon}</span>}
         </div>
-        
+
         {todo.description && (
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            {todo.description}
-          </p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{todo.description}</p>
         )}
-        
+
         <div className="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
           {todo.dueDate && (
             <span className="flex items-center gap-1">
@@ -93,10 +95,12 @@ function TodoItem({ todo, onToggle, onUpdate }: {
             </span>
           )}
           {todo.eisenhowerQuadrant && (
-            <span className={cn(
-              "px-2 py-0.5 rounded-full text-xs",
-              getQuadrantInfo(todo.eisenhowerQuadrant).color
-            )}>
+            <span
+              className={cn(
+                'px-2 py-0.5 rounded-full text-xs',
+                getQuadrantInfo(todo.eisenhowerQuadrant).color
+              )}
+            >
               {getQuadrantInfo(todo.eisenhowerQuadrant).label}
             </span>
           )}
@@ -107,7 +111,10 @@ function TodoItem({ todo, onToggle, onUpdate }: {
 }
 
 // Filter Bar Component
-function FilterBar({ filter, onFilterChange }: {
+function FilterBar({
+  filter,
+  onFilterChange,
+}: {
   filter: TodoFilter
   onFilterChange: (filter: Partial<TodoFilter>) => void
 }) {
@@ -116,43 +123,45 @@ function FilterBar({ filter, onFilterChange }: {
       <Button
         variant={filter.status?.includes('pending') ? 'primary' : 'outline'}
         size="sm"
-        onClick={() => onFilterChange({ 
-          status: filter.status?.includes('pending') 
-            ? filter.status.filter(s => s !== 'pending')
-            : [...(filter.status || []), 'pending']
-        })}
+        onClick={() =>
+          onFilterChange({
+            status: filter.status?.includes('pending')
+              ? filter.status.filter(s => s !== 'pending')
+              : [...(filter.status || []), 'pending'],
+          })
+        }
       >
         Pending
       </Button>
       <Button
         variant={filter.status?.includes('in_progress') ? 'primary' : 'outline'}
         size="sm"
-        onClick={() => onFilterChange({ 
-          status: filter.status?.includes('in_progress')
-            ? filter.status.filter(s => s !== 'in_progress')
-            : [...(filter.status || []), 'in_progress']
-        })}
+        onClick={() =>
+          onFilterChange({
+            status: filter.status?.includes('in_progress')
+              ? filter.status.filter(s => s !== 'in_progress')
+              : [...(filter.status || []), 'in_progress'],
+          })
+        }
       >
         In Progress
       </Button>
       <Button
         variant={filter.status?.includes('completed') ? 'primary' : 'outline'}
         size="sm"
-        onClick={() => onFilterChange({ 
-          status: filter.status?.includes('completed')
-            ? filter.status.filter(s => s !== 'completed')
-            : [...(filter.status || []), 'completed']
-        })}
+        onClick={() =>
+          onFilterChange({
+            status: filter.status?.includes('completed')
+              ? filter.status.filter(s => s !== 'completed')
+              : [...(filter.status || []), 'completed'],
+          })
+        }
       >
         Completed
       </Button>
-      
+
       <div className="ml-auto flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onFilterChange({ searchQuery: '' })}
-        >
+        <Button variant="outline" size="sm" onClick={() => onFilterChange({ searchQuery: '' })}>
           <Filter className="w-4 h-4 mr-1" />
           Clear Filters
         </Button>
@@ -175,9 +184,9 @@ export default function TodoDashboard() {
     updateTodo,
     setFilter,
     clearFilter,
-    getTodoStats
+    getTodoStats,
   } = useTodoStore()
-  
+
   const [stats, setStats] = useState<any>(null)
   const [viewMode, setViewMode] = useState<'list' | 'quadrant'>('list')
 
@@ -191,7 +200,7 @@ export default function TodoDashboard() {
   const handleToggle = async (todoId: string) => {
     const todo = todos.find(t => t.id === todoId)
     if (!todo) return
-    
+
     if (todo.status === 'completed') {
       await uncompleteTodo(todoId)
     } else {
@@ -214,9 +223,7 @@ export default function TodoDashboard() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
       <div className="max-w-6xl mx-auto">
         <header className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-            Todo Dashboard
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Todo Dashboard</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-2">
             All your tasks from BrainDump, Journal, and Routines in one place
           </p>
@@ -236,7 +243,7 @@ export default function TodoDashboard() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -248,7 +255,7 @@ export default function TodoDashboard() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -260,7 +267,7 @@ export default function TodoDashboard() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -317,9 +324,9 @@ export default function TodoDashboard() {
             ) : viewMode === 'list' ? (
               <div className="space-y-2">
                 {todos.map(todo => (
-                  <TodoItem 
-                    key={todo.id} 
-                    todo={todo} 
+                  <TodoItem
+                    key={todo.id}
+                    todo={todo}
                     onToggle={handleToggle}
                     onUpdate={updateTodo}
                   />
@@ -327,40 +334,42 @@ export default function TodoDashboard() {
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-4">
-                {(['do-first', 'schedule', 'delegate', 'eliminate'] as EisenhowerQuadrant[]).map(quadrant => {
-                  const quadrantInfo = getQuadrantInfo(quadrant)
-                  const quadrantTodos = todos.filter(t => t.eisenhowerQuadrant === quadrant)
-                  
-                  return (
-                    <div key={quadrant} className={cn(
-                      "p-4 rounded-lg border-2",
-                      quadrantInfo.color
-                    )}>
-                      <h3 className="font-semibold mb-2 flex items-center gap-2">
-                        <span>{quadrantInfo.icon}</span>
-                        {quadrantInfo.label}
-                      </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                        {quadrantInfo.description}
-                      </p>
-                      <div className="space-y-2">
-                        {quadrantTodos.map(todo => (
-                          <TodoItem 
-                            key={todo.id} 
-                            todo={todo} 
-                            onToggle={handleToggle}
-                            onUpdate={updateTodo}
-                          />
-                        ))}
-                        {quadrantTodos.length === 0 && (
-                          <p className="text-sm text-gray-500 dark:text-gray-400 italic">
-                            No tasks in this quadrant
-                          </p>
-                        )}
+                {(['do-first', 'schedule', 'delegate', 'eliminate'] as EisenhowerQuadrant[]).map(
+                  quadrant => {
+                    const quadrantInfo = getQuadrantInfo(quadrant)
+                    const quadrantTodos = todos.filter(t => t.eisenhowerQuadrant === quadrant)
+
+                    return (
+                      <div
+                        key={quadrant}
+                        className={cn('p-4 rounded-lg border-2', quadrantInfo.color)}
+                      >
+                        <h3 className="font-semibold mb-2 flex items-center gap-2">
+                          <span>{quadrantInfo.icon}</span>
+                          {quadrantInfo.label}
+                        </h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                          {quadrantInfo.description}
+                        </p>
+                        <div className="space-y-2">
+                          {quadrantTodos.map(todo => (
+                            <TodoItem
+                              key={todo.id}
+                              todo={todo}
+                              onToggle={handleToggle}
+                              onUpdate={updateTodo}
+                            />
+                          ))}
+                          {quadrantTodos.length === 0 && (
+                            <p className="text-sm text-gray-500 dark:text-gray-400 italic">
+                              No tasks in this quadrant
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )
-                })}
+                    )
+                  }
+                )}
               </div>
             )}
           </CardContent>

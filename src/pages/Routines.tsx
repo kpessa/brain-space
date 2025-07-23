@@ -91,8 +91,8 @@ export default function Routines() {
           <header className="mb-8 text-center">
             <h1 className="text-4xl font-bold text-white mb-4">Morning & Evening Routines</h1>
             <p className="text-white/80 max-w-2xl mx-auto">
-              Transform your days with intentional morning and evening routines. 
-              This 66-day journey helps you wake up earlier and start each day with purpose.
+              Transform your days with intentional morning and evening routines. This 66-day journey
+              helps you wake up earlier and start each day with purpose.
             </p>
           </header>
 
@@ -113,21 +113,22 @@ export default function Routines() {
                 <ul className="space-y-2 text-sm">
                   <li className="flex items-start gap-2">
                     <Moon className="w-4 h-4 text-purple-500 mt-0.5" />
-                    <span><strong>Evening:</strong> Set sleep intentions, acknowledge wins, plan tomorrow's ritual</span>
+                    <span>
+                      <strong>Evening:</strong> Set sleep intentions, acknowledge wins, plan
+                      tomorrow's ritual
+                    </span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Sun className="w-4 h-4 text-yellow-500 mt-0.5" />
-                    <span><strong>Morning:</strong> Complete your ritual, define priorities, commit to growth</span>
+                    <span>
+                      <strong>Morning:</strong> Complete your ritual, define priorities, commit to
+                      growth
+                    </span>
                   </li>
                 </ul>
               </div>
 
-              <Button
-                variant="primary"
-                size="lg"
-                className="w-full"
-                onClick={() => advanceDay()}
-              >
+              <Button variant="primary" size="lg" className="w-full" onClick={() => advanceDay()}>
                 Start Night 0 (Your First Evening)
                 <ChevronRight className="w-5 h-5 ml-2" />
               </Button>
@@ -151,7 +152,7 @@ export default function Routines() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => progress.isActive ? pauseJourney() : resumeJourney()}
+                onClick={() => (progress.isActive ? pauseJourney() : resumeJourney())}
                 className="bg-white/10 text-white hover:bg-white/20"
               >
                 {progress.isActive ? (
@@ -169,7 +170,7 @@ export default function Routines() {
             </div>
           </div>
           <p className="text-white/80">
-            Day {progress.currentDay} of 66 
+            Day {progress.currentDay} of 66
             {!progress.isActive && <span className="ml-2 text-yellow-400">(Paused)</span>}
           </p>
         </header>
@@ -200,7 +201,9 @@ export default function Routines() {
               {milestoneProgress && nextMilestone && (
                 <div className="text-sm">
                   <p className="text-gray-600">Next milestone:</p>
-                  <p className="font-semibold">{nextMilestone.title} (Day {nextMilestone.day})</p>
+                  <p className="font-semibold">
+                    {nextMilestone.title} (Day {nextMilestone.day})
+                  </p>
                 </div>
               )}
 
