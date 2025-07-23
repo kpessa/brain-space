@@ -25,6 +25,9 @@ import RecalculateProgress from './pages/RecalculateProgress'
 import Timebox from './pages/Timebox'
 import { Matrix } from './pages/Matrix'
 import Routines from './pages/Routines'
+import { GoogleCalendarTest } from './components/GoogleCalendarTest'
+import { CalendarView } from './pages/CalendarView'
+import { CalendarSettings } from './pages/CalendarSettings'
 
 function AppContent() {
   const { user, loading } = useAuth()
@@ -104,6 +107,9 @@ function AppContent() {
               <Route path="timebox" element={<Timebox />} />
               <Route path="matrix" element={<Matrix />} />
               <Route path="routines" element={<Routines />} />
+              <Route path="google-calendar-test" element={<GoogleCalendarTest />} />
+              <Route path="calendar" element={<CalendarView />} />
+              <Route path="calendar-settings" element={<CalendarSettings />} />
             </Route>
           ) : (
             <>

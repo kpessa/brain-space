@@ -1,0 +1,435 @@
+/* Custom styles for react-big-calendar to match Brain Space design */
+
+/* Override default calendar styles */
+.rbc-calendar {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: white;
+  color: #1f2937;
+}
+
+/* Header styling */
+.rbc-header {
+  background-color: #f3f4f6;
+  padding: 10px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* Today's date highlight */
+.rbc-today {
+  background-color: rgba(147, 51, 234, 0.1) !important; /* brain-600 with opacity */
+  border: 2px solid #9333ea !important; /* brain-600 border */
+  position: relative;
+}
+
+.rbc-today::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%);
+  pointer-events: none;
+  border-radius: 4px;
+}
+
+/* Today date number styling */
+.rbc-today .rbc-date-cell a,
+.rbc-today .rbc-date-cell {
+  background-color: #9333ea !important; /* brain-600 */
+  color: white !important;
+  font-weight: bold !important;
+  border-radius: 50% !important;
+  width: 28px !important;
+  height: 28px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-left: auto !important;
+  margin-right: 8px !important;
+  margin-top: 4px !important;
+  box-shadow: 0 2px 4px rgba(147, 51, 234, 0.3) !important;
+}
+
+/* Selected date */
+.rbc-selected {
+  background-color: rgba(147, 51, 234, 0.1) !important;
+}
+
+/* Event styling */
+.rbc-event {
+  background-color: #9333ea; /* brain-600 */
+  border: none;
+  border-radius: 4px;
+  color: white;
+  padding: 2px 5px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.rbc-event:hover {
+  opacity: 0.9;
+}
+
+.rbc-event:focus {
+  outline: 2px solid #9333ea;
+  outline-offset: 1px;
+}
+
+/* Selected event */
+.rbc-selected {
+  background-color: #7c3aed !important; /* brain-700 */
+}
+
+/* Toolbar styling */
+.rbc-toolbar {
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.rbc-toolbar button {
+  color: #4b5563;
+  background-color: white;
+  border: 1px solid #d1d5db;
+  padding: 0.375rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.rbc-toolbar button:hover {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.rbc-toolbar button.rbc-active {
+  background-color: #9333ea;
+  color: white;
+  border-color: #9333ea;
+}
+
+.rbc-toolbar button.rbc-active:hover {
+  background-color: #7c3aed;
+  border-color: #7c3aed;
+}
+
+/* Month view cells */
+.rbc-month-view {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.rbc-date-cell {
+  padding: 5px;
+  text-align: right;
+  font-size: 0.875rem;
+}
+
+.rbc-off-range {
+  color: #d1d5db;
+}
+
+.rbc-off-range-bg {
+  background-color: #f9fafb;
+}
+
+/* Week and Day view */
+.rbc-time-view {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.rbc-time-header {
+  background-color: #f9fafb;
+}
+
+.rbc-time-content {
+  border-top: 1px solid #e5e7eb;
+}
+
+.rbc-timeslot-group {
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.rbc-time-slot {
+  border-top: 1px solid #f9fafb;
+}
+
+.rbc-current-time-indicator {
+  background-color: #ef4444;
+  height: 2px;
+}
+
+/* Agenda view */
+.rbc-agenda-view {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.rbc-agenda-table {
+  width: 100%;
+  border: none;
+}
+
+.rbc-agenda-table tbody > tr > td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.rbc-agenda-table .rbc-agenda-time-cell {
+  white-space: nowrap;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.rbc-agenda-table tbody > tr > td + td {
+  border-left: 1px solid #f3f4f6;
+}
+
+.rbc-agenda-event-cell {
+  font-size: 0.875rem;
+}
+
+/* More events popup */
+.rbc-overlay {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  padding: 0.5rem;
+}
+
+.rbc-overlay-header {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* Show more link */
+.rbc-show-more {
+  color: #9333ea;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 2px;
+}
+
+.rbc-show-more:hover {
+  color: #7c3aed;
+  text-decoration: underline;
+}
+
+/* Row styling */
+.rbc-row {
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.rbc-month-row {
+  overflow: visible;
+  min-height: 100px;
+}
+
+/* Custom 8-week view styles */
+.eight-week-view {
+  height: 100%;
+  overflow-y: auto;
+  padding-bottom: 2rem;
+}
+
+.eight-week-view .month-section {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.eight-week-view .month-header {
+  position: relative;
+  z-index: 2;
+}
+
+.eight-week-view .current-week {
+  border: 2px solid #9333ea;
+  background-color: rgba(147, 51, 234, 0.05);
+  box-shadow: 0 2px 8px rgba(147, 51, 234, 0.1);
+}
+
+.eight-week-view .today-cell {
+  background-color: rgba(147, 51, 234, 0.1) !important;
+  border-color: #9333ea !important;
+  border-width: 2px !important;
+  box-shadow: 0 2px 8px rgba(147, 51, 234, 0.15) !important;
+}
+
+.eight-week-view .day-cell {
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.eight-week-view .day-cell:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.eight-week-view .day-cell.opacity-60:hover {
+  background-color: rgba(156, 163, 175, 0.1) !important;
+}
+
+.eight-week-view .day-cell.opacity-75:hover {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+}
+
+.eight-week-view .event-item {
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.eight-week-view .event-item:hover {
+  opacity: 0.9;
+  transform: scale(1.02);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.eight-week-view .week-headers {
+  background: white;
+  border-bottom: 2px solid #f3f4f6;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Multi-day event styling */
+.eight-week-view .week-row {
+  position: relative;
+}
+
+.eight-week-view .events-container {
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+/* Spanning events */
+.eight-week-view .absolute.inset-0 {
+  z-index: 2;
+}
+
+.eight-week-view .absolute.inset-0 > div {
+  transition: all 0.2s ease;
+}
+
+.eight-week-view .absolute.inset-0 > div:hover {
+  opacity: 0.9 !important;
+  filter: saturate(0.85) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
+
+/* Continuation indicators */
+.eight-week-view .event-item:has-text('→'),
+.eight-week-view .event-item:has-text('←') {
+  font-weight: 500;
+}
+
+/* Adjust day cell padding for better event spacing */
+.eight-week-view .day-cell {
+  padding: 1px;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+}
+
+.eight-week-view .event-space-top {
+  position: relative;
+  width: 100%;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 2px;
+  background-color: rgba(243, 244, 246, 0.2);
+  min-height: 50px;
+}
+
+.eight-week-view .day-cell .date-number {
+  z-index: 5;
+  position: relative;
+}
+
+/* All-day events styling */
+.eight-week-view .all-day-events-section {
+  min-height: 16px;
+  z-index: 10;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 4px;
+  margin-bottom: 4px;
+  border-bottom: 1px dashed #e5e7eb;
+}
+
+.eight-week-view .all-day-events-section:empty {
+  min-height: 0;
+  padding-bottom: 0;
+  margin-bottom: 0;
+  border-bottom: none;
+}
+
+.eight-week-view .all-day-event {
+  opacity: 0.75; /* Make colors more muted */
+  display: block !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  font-weight: 500;
+  filter: saturate(0.7); /* Reduce color saturation */
+}
+
+.eight-week-view .all-day-event:hover {
+  opacity: 0.9;
+  filter: saturate(0.85);
+}
+
+/* Timed events styling */
+.eight-week-view .timed-events-container {
+  z-index: 1;
+  padding-top: 2px;
+}
+
+.eight-week-view .timed-event {
+  background: rgba(49, 116, 173, 0.9);
+}
+
+/* Enhance spanning events */
+.eight-week-view .absolute.inset-0 > div[style*="zIndex: 20"],
+.eight-week-view .absolute.inset-0 > div[style*="zIndex: 19"] {
+  backdrop-filter: blur(2px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .rbc-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .rbc-toolbar-label {
+    text-align: center;
+    margin: 0.5rem 0;
+  }
+  
+  .eight-week-view .day-cell {
+    min-height: 80px;
+  }
+  
+  .eight-week-view .weeks-container {
+    gap: 0.5rem;
+  }
+}
