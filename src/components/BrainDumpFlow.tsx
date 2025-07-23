@@ -33,6 +33,7 @@ import {
   Trash2,
   MousePointer2,
   ArrowLeft,
+  ChevronLeft,
 } from 'lucide-react'
 import type { BrainDumpNode } from '../types/braindump'
 import { useFullscreen } from '../hooks/useFullscreen'
@@ -422,10 +423,29 @@ function BrainDumpFlowInner() {
           success: true,
         })
 
-        // Update the original node to show it has a topic dump
-        await updateNode(topicDumpDialog.node.id, {
-          hasTopicBrainDump: true,
-          topicBrainDumpId: result.id,
+        // Convert the original node to a ghost node
+        const ghostNode: BrainDumpNode = {
+          ...topicDumpDialog.node,
+          type: 'ghost',
+          data: {
+            ...topicDumpDialog.node.data,
+            referencedNodeId: topicDumpDialog.node.id,
+            label: `→ ${topicDumpDialog.node.data.label}`,
+            hasTopicBrainDump: true,
+            topicBrainDumpId: result.id,
+            isGhost: true,
+          },
+        }
+        
+        // Update nodes - replace original with ghost
+        const updatedNodes = nodes.map(n => 
+          n.id === topicDumpDialog.node.id ? ghostNode : n
+        )
+        setNodes(updatedNodes)
+        
+        // Persist the changes
+        await updateEntry(currentEntry.id, {
+          nodes: updatedNodes as BrainDumpNode[],
         })
 
         setTopicDumpDialog({ isOpen: false, node: null })
@@ -907,6 +927,43 @@ function BrainDumpFlowInner() {
             {lassoMode === 'partial' ? 'Partial' : 'Full'} Lasso Mode
           </span>
           <span className="text-sm opacity-75">(Press ESC to exit)</span>
+        </div>
+      )}
+
+      {/* Back Navigation for Topic Brain Dumps */}
+      {currentEntry?.type === 'topic-focused' && currentEntry?.parentBrainDumpId && (
+        <div
+          className={cn(
+            'absolute z-10 flex items-center gap-2',
+            isMobile ? 'top-4 left-4' : 'left-4'
+          )}
+          style={{
+            top: !isMobile ? 'calc(1rem + env(safe-area-inset-top))' : undefined,
+          }}
+        >
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const parentEntry = entries.find(e => e.id === currentEntry.parentBrainDumpId)
+              if (parentEntry) {
+                setCurrentEntry(parentEntry)
+                logger.info('NAVIGATION', 'Navigated back to parent brain dump', {
+                  parentId: parentEntry.id,
+                  parentTitle: parentEntry.title,
+                })
+              }
+            }}
+            className="flex items-center gap-2 bg-white shadow-lg"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Back to Parent
+          </Button>
+          <div className="bg-white rounded-lg shadow-lg px-3 py-1">
+            <p className="text-sm text-gray-600">
+              Topic: <span className="font-medium">{currentEntry.topicFocus}</span>
+            </p>
+          </div>
         </div>
       )}
 

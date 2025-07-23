@@ -27,10 +27,29 @@ export const GhostNode = memo(({ data, isConnectable, selected }: NodeProps<Brai
   const colors = categoryColors[originalCategory || 'misc'] || categoryColors.misc
 
   const handleDoubleClick = useCallback(() => {
-    if (originalNode) {
-      // If the original node has a topic brain dump, navigate to it
+    // Check if this ghost node itself has a topic brain dump reference
+    if (data.hasTopicBrainDump && data.topicBrainDumpId) {
+      logger.info('GHOST_NODE', 'Double-click on ghost node with topic dump', {
+        nodeId: data.referencedNodeId,
+        topicBrainDumpId: data.topicBrainDumpId,
+      })
+
+      const topicEntry = entries.find(e => e.id === data.topicBrainDumpId)
+      if (topicEntry) {
+        setCurrentEntry(topicEntry)
+        logger.info('GHOST_NODE', 'Navigated to topic brain dump', {
+          entryId: topicEntry.id,
+          title: topicEntry.title,
+        })
+      } else {
+        logger.warn('GHOST_NODE', 'Topic brain dump not found', {
+          topicBrainDumpId: data.topicBrainDumpId,
+        })
+      }
+    } else if (originalNode) {
+      // Fallback to check original node
       if (originalNode.data.hasTopicBrainDump && originalNode.data.topicBrainDumpId) {
-        logger.info('GHOST_NODE', 'Double-click on ghost node with topic dump', {
+        logger.info('GHOST_NODE', 'Double-click on ghost node with topic dump from original', {
           nodeId: originalNode.id,
           topicBrainDumpId: originalNode.data.topicBrainDumpId,
         })
@@ -53,7 +72,7 @@ export const GhostNode = memo(({ data, isConnectable, selected }: NodeProps<Brai
         })
       }
     }
-  }, [originalNode, entries, setCurrentEntry])
+  }, [data, originalNode, entries, setCurrentEntry])
 
   return (
     <div
