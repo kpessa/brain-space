@@ -14,13 +14,9 @@ import EditJournalEntry from './pages/EditJournalEntry'
 import ViewJournalEntry from './pages/ViewJournalEntry'
 import Progress from './pages/Progress'
 import BrainDump from './pages/BrainDump'
-import AuthTest from './pages/AuthTest'
-import { TestAuth } from './pages/TestAuth'
 import { AuthCallback } from './components/AuthCallback'
 import { AuthDiagnostic } from './pages/AuthDiagnostic'
 import DatabaseSetup from './pages/DatabaseSetup'
-import TestJournalFix from './pages/TestJournalFix'
-import DebugJournal from './pages/DebugJournal'
 import RecalculateProgress from './pages/RecalculateProgress'
 import Timebox from './pages/Timebox'
 import { Matrix } from './pages/Matrix'
@@ -101,8 +97,6 @@ function AppContent() {
               <Route path="braindump" element={<BrainDump />} />
               <Route path="progress" element={<Progress />} />
               <Route path="database-setup" element={<DatabaseSetup />} />
-              <Route path="test-journal-fix" element={<TestJournalFix />} />
-              <Route path="debug-journal" element={<DebugJournal />} />
               <Route path="recalculate-progress" element={<RecalculateProgress />} />
               <Route path="timebox" element={<Timebox />} />
               <Route path="matrix" element={<Matrix />} />
@@ -114,8 +108,6 @@ function AppContent() {
           ) : (
             <>
               <Route path="/auth" element={<Login />} />
-              <Route path="/auth-test" element={<AuthTest />} />
-              <Route path="/test-auth" element={<TestAuth />} />
               <Route path="/auth-diagnostic" element={<AuthDiagnostic />} />
               <Route path="*" element={<Navigate to="/auth" replace />} />
             </>
