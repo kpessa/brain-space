@@ -110,7 +110,7 @@ function BrainDumpFlowInner() {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [pendingChanges, setPendingChanges] = useState(0)
   // quickDeleteEdges removed - using EdgeClickMenu instead
-  const [draggedNode, setDraggedNode] = useState<Node | null>(null)
+  const [draggedNode, setDraggedNode] = useState<BrainDumpNode | null>(null)
   const [lassoMode, setLassoMode] = useState<'off' | 'partial' | 'full'>('off')
   const [showExportDialog, setShowExportDialog] = useState(false)
   const [viewMode, setViewMode] = useState<'graph' | 'matrix'>('graph')
@@ -144,7 +144,7 @@ function BrainDumpFlowInner() {
         try {
           setSaveStatus('saving')
           await updateEntry(entryId, {
-            nodes: nodesRef.current || [],
+            nodes: nodesRef.current as BrainDumpNode[] || [],
             edges: edgesRef.current || [],
           })
           setSaveStatus('saved')
@@ -175,7 +175,7 @@ function BrainDumpFlowInner() {
     debouncedSave,
     setSaveStatus,
     setLastSaved,
-    setDraggedNode,
+    setDraggedNode: setDraggedNode as (node: Node | null) => void,
     // quickDeleteEdges removed
     // setDeleteEdgeDialog removed - using EdgeClickMenu instead
     setNodeInputDialog: dialogManager.setNodeInputDialog,
@@ -232,10 +232,10 @@ function BrainDumpFlowInner() {
 
     try {
       setSaveStatus('saving')
-      const updatedNodes = calculateHorizontalLayout(nodes, edges)
+      const updatedNodes = calculateHorizontalLayout(nodes as BrainDumpNode[], edges)
       setNodes(updatedNodes)
 
-      await updateEntry(currentEntry.id, { nodes: updatedNodes as BrainDumpNode[] })
+      await updateEntry(currentEntry.id, { nodes: updatedNodes })
       setSaveStatus('saved')
       setLastSaved(new Date())
       setTimeout(() => setSaveStatus('idle'), 2000)
@@ -257,7 +257,7 @@ function BrainDumpFlowInner() {
     try {
       setSaveStatus('saving')
       await updateEntry(currentEntry.id, {
-        nodes: nodesRef.current || [],
+        nodes: nodesRef.current as BrainDumpNode[] || [],
         edges: edgesRef.current || [],
       })
       setSaveStatus('saved')
@@ -356,7 +356,7 @@ function BrainDumpFlowInner() {
   // Topic dump handlers
   const handleCreateTopicDump = useCallback(
     (nodeId: string) => {
-      const node = nodes.find(n => n.id === nodeId)
+      const node = nodes.find(n => n.id === nodeId) as BrainDumpNode
       if (node) {
         setTopicDumpDialog({ isOpen: true, node })
       }
@@ -397,7 +397,7 @@ function BrainDumpFlowInner() {
 
         // Gather all nodes in this branch
         const nodeIds = Array.from(gatherChildNodes(topicDumpDialog.node.id))
-        const branchNodes = nodes.filter(n => nodeIds.includes(n.id))
+        const branchNodes = (nodes as BrainDumpNode[]).filter(n => nodeIds.includes(n.id))
         const branchEdges = edges.filter(
           e => nodeIds.includes(e.source) && nodeIds.includes(e.target)
         )
@@ -438,12 +438,12 @@ function BrainDumpFlowInner() {
         }
 
         // Update nodes - replace original with ghost
-        const updatedNodes = nodes.map(n => (n.id === topicDumpDialog.node.id ? ghostNode : n))
+        const updatedNodes = (nodes as BrainDumpNode[]).map(n => (n.id === topicDumpDialog.node!.id ? ghostNode : n))
         setNodes(updatedNodes)
 
         // Persist the changes
         await updateEntry(currentEntry.id, {
-          nodes: updatedNodes as BrainDumpNode[],
+          nodes: updatedNodes,
         })
 
         setTopicDumpDialog({ isOpen: false, node: null })
@@ -558,13 +558,13 @@ function BrainDumpFlowInner() {
             }}
           />
           <MiniMap
-            nodeStrokeColor={(n: Node) => {
+            nodeStrokeColor={(n: BrainDumpNode) => {
               if (n.type === 'category') return '#3b82f6'
               if (n.type === 'thought') return '#10b981'
               if (n.type === 'root') return '#8b5cf6'
               return '#6b7280'
             }}
-            nodeColor={(n: Node) => {
+            nodeColor={(n: BrainDumpNode) => {
               if (n.type === 'category') return '#dbeafe'
               if (n.type === 'thought') return '#d1fae5'
               if (n.type === 'root') return '#e9d5ff'
@@ -1079,7 +1079,7 @@ function BrainDumpFlowInner() {
             setSaveStatus('saving')
             try {
               await updateEntry(currentEntry.id, {
-                nodes: updatedNodes as BrainDumpNode[],
+                nodes: updatedNodes,
               })
               setSaveStatus('saved')
               setLastSaved(new Date())
@@ -1113,7 +1113,7 @@ function BrainDumpFlowInner() {
             setSaveStatus('saving')
             try {
               await updateEntry(currentEntry.id, {
-                nodes: updatedNodes as BrainDumpNode[],
+                nodes: updatedNodes,
                 edges: updatedEdges,
               })
               setSaveStatus('saved')
@@ -1174,7 +1174,7 @@ function BrainDumpFlowInner() {
 
                 if (currentEntry) {
                   await updateEntry(currentEntry.id, {
-                    nodes: updatedNodes as BrainDumpNode[],
+                    nodes: updatedNodes,
                     edges: updatedEdges,
                   })
                 }
@@ -1236,7 +1236,7 @@ function BrainDumpFlowInner() {
             setSaveStatus('saving')
             try {
               await updateEntry(currentEntry.id, {
-                nodes: updatedNodes as BrainDumpNode[],
+                nodes: updatedNodes,
               })
               setSaveStatus('saved')
               setLastSaved(new Date())
@@ -1310,7 +1310,7 @@ function BrainDumpFlowInner() {
             setNodes(updatedNodes)
 
             if (currentEntry) {
-              updateEntry(currentEntry.id, { nodes: updatedNodes as BrainDumpNode[] })
+              updateEntry(currentEntry.id, { nodes: updatedNodes })
             }
           }
           dialogManager.setSynonymMatchDialog({
@@ -1423,7 +1423,7 @@ function BrainDumpFlowInner() {
                   setSaveStatus('saving')
                   try {
                     await updateEntry(currentEntry.id, {
-                      nodes: updatedNodes as BrainDumpNode[],
+                      nodes: updatedNodes,
                     })
                     setSaveStatus('saved')
                     setLastSaved(new Date())
