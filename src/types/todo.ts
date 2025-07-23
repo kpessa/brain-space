@@ -16,43 +16,43 @@ export type EisenhowerQuadrant = 'do-first' | 'schedule' | 'delegate' | 'elimina
 export interface Todo {
   id: string
   userId: string
-  
+
   // Core fields
   title: string
   description?: string
   type: TodoType
   status: TodoStatus
-  
+
   // Priority fields (0-10 scale)
   priorityImportance?: number
   priorityUrgency?: number
-  
+
   // Scheduling fields
   dueDate?: string // ISO date string
   scheduledDate?: string // ISO date string
   scheduledTime?: string // HH:MM format
   scheduledDuration?: number // minutes
-  
+
   // Hierarchy
   parentId?: string
   position?: number
-  
+
   // Source tracking
   sourceType: TodoSourceType
   sourceId?: string
   sourceMetadata?: Record<string, any>
-  
+
   // Completion tracking
   completedAt?: string // ISO timestamp
   completionNotes?: string
-  
+
   // Metadata
   createdAt: string
   updatedAt: string
-  
+
   // Computed field
   eisenhowerQuadrant?: EisenhowerQuadrant
-  
+
   // Relations (populated by queries)
   recurrence?: TodoRecurrence
   completions?: TodoCompletion[]
@@ -74,21 +74,21 @@ export interface RecurrencePatternConfig {
 export interface TodoRecurrence {
   id: string
   todoId: string
-  
+
   patternType: RecurrencePatternType
   patternConfig: RecurrencePatternConfig
-  
+
   startDate: string
   endDate?: string
-  
+
   nextOccurrenceDate?: string
   lastGeneratedDate?: string
-  
+
   // Habit tracking
   isHabit: boolean
   currentStreak: number
   longestStreak: number
-  
+
   createdAt: string
   updatedAt: string
 }
@@ -97,16 +97,16 @@ export interface TodoRecurrence {
 export interface TodoCompletion {
   id: string
   todoId: string
-  
+
   completionDate: string // YYYY-MM-DD
   completedAt: string // ISO timestamp
-  
+
   quality?: CompletionQuality
   durationMinutes?: number
   notes?: string
-  
+
   streakCount?: number
-  
+
   createdAt: string
 }
 
@@ -114,29 +114,29 @@ export interface TodoCompletion {
 export interface TodoAttempt {
   id: string
   todoId: string
-  
+
   attemptDate: string // YYYY-MM-DD
   startedAt: string // ISO timestamp
-  
+
   outcome: AttemptOutcome
   durationMinutes?: number
   notes?: string
   nextAction?: string
-  
+
   createdAt: string
 }
 
 // Todo Relationship
 export interface TodoRelationship {
   id: string
-  
+
   parentTodoId: string
   childTodoId: string
-  
+
   relationshipType: RelationshipType
   logicType?: LogicType
   isOptional?: boolean
-  
+
   createdAt: string
 }
 
@@ -144,10 +144,10 @@ export interface TodoRelationship {
 export interface TodoTag {
   id: string
   todoId: string
-  
+
   tagName: string
   tagCategory?: TagCategory
-  
+
   createdAt: string
 }
 
@@ -242,10 +242,10 @@ export interface TodoStats {
   overdueCount: number
   todayCount: number
   weekCount: number
-  
+
   byType: Record<TodoType, number>
   byQuadrant: Record<EisenhowerQuadrant, number>
-  
+
   habitsActive: number
   averageCompletionTime: number // hours
   streakData: {
@@ -259,7 +259,7 @@ export function getQuadrantFromPriority(importance?: number, urgency?: number): 
   if (importance === undefined || urgency === undefined) {
     return 'eliminate'
   }
-  
+
   if (importance >= 5 && urgency >= 5) return 'do-first'
   if (importance >= 5 && urgency < 5) return 'schedule'
   if (importance < 5 && urgency >= 5) return 'delegate'
@@ -272,28 +272,28 @@ export function getQuadrantInfo(quadrant: EisenhowerQuadrant) {
       label: 'Do First',
       description: 'Important & Urgent',
       icon: '🔥',
-      color: 'bg-red-50 border-red-200 text-red-900'
+      color: 'bg-red-50 border-red-200 text-red-900',
     },
-    'schedule': {
+    schedule: {
       label: 'Schedule',
       description: 'Important, Not Urgent',
       icon: '📅',
-      color: 'bg-blue-50 border-blue-200 text-blue-900'
+      color: 'bg-blue-50 border-blue-200 text-blue-900',
     },
-    'delegate': {
+    delegate: {
       label: 'Delegate',
       description: 'Urgent, Not Important',
       icon: '👥',
-      color: 'bg-yellow-50 border-yellow-200 text-yellow-900'
+      color: 'bg-yellow-50 border-yellow-200 text-yellow-900',
     },
-    'eliminate': {
+    eliminate: {
       label: 'Eliminate',
       description: 'Not Important or Urgent',
       icon: '🗑️',
-      color: 'bg-gray-50 border-gray-200 text-gray-900'
-    }
+      color: 'bg-gray-50 border-gray-200 text-gray-900',
+    },
   }
-  
+
   return quadrantMap[quadrant]
 }
 

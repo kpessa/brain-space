@@ -66,10 +66,10 @@ export class GoogleCalendarService {
     try {
       // Load Google Identity Services library
       await this.loadGoogleIdentityServices()
-      
+
       // Load Google API client library
       await this.loadGoogleApiClient()
-      
+
       this.isInitialized = true
     } catch (error) {
       console.error('Failed to initialize Google Calendar service:', error)
@@ -101,7 +101,7 @@ export class GoogleCalendarService {
               apiKey: import.meta.env.VITE_GOOGLE_API_KEY,
               discoveryDocs: [import.meta.env.VITE_GOOGLE_CALENDAR_DISCOVERY_DOC],
             })
-            
+
             // Load the calendar library
             await window.gapi.client.load('calendar', 'v3')
             resolve()
@@ -126,23 +126,23 @@ export class GoogleCalendarService {
         if (response.access_token) {
           console.log('Got access token:', response.access_token)
           this.accessToken = response.access_token
-          
+
           // Set the token in GAPI client
-          window.gapi.client.setToken({ 
-            access_token: response.access_token
+          window.gapi.client.setToken({
+            access_token: response.access_token,
           })
-          
+
           // Set authorization header for all requests
-          window.gapi.client.request = ((originalRequest) => {
+          window.gapi.client.request = (originalRequest => {
             return (args: any) => {
               if (!args.headers) args.headers = {}
               args.headers['Authorization'] = `Bearer ${response.access_token}`
               return originalRequest(args)
             }
           })(window.gapi.client.request)
-          
+
           this.storeTokenInSupabase(response.access_token)
-          
+
           // Resolve the authentication promise
           if (this.authResolve) {
             this.authResolve()
@@ -163,10 +163,12 @@ export class GoogleCalendarService {
 
   private async storeTokenInSupabase(token: string): Promise<void> {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
       if (user) {
         await supabase.auth.updateUser({
-          data: { google_calendar_token: token }
+          data: { google_calendar_token: token },
         })
       }
     } catch (error) {
@@ -196,10 +198,10 @@ export class GoogleCalendarService {
     return new Promise((resolve, reject) => {
       this.authResolve = resolve
       this.authReject = reject
-      
+
       console.log('Requesting new access token...')
       this.tokenClient.requestAccessToken()
-      
+
       // Add timeout
       setTimeout(() => {
         if (this.authReject) {
@@ -213,7 +215,9 @@ export class GoogleCalendarService {
 
   private async checkStoredToken(): Promise<boolean> {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
       if (user?.user_metadata?.google_calendar_token) {
         this.accessToken = user.user_metadata.google_calendar_token
         window.gapi.client.setToken({ access_token: this.accessToken })
@@ -232,20 +236,22 @@ export class GoogleCalendarService {
   async disconnect(): Promise<void> {
     const token = this.accessToken
     this.accessToken = null
-    
+
     // Clear stored token from Supabase
     try {
-      const { data: { user } } = await supabase.auth.getUser()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
       if (user) {
         await supabase.auth.updateUser({
-          data: { google_calendar_token: null }
+          data: { google_calendar_token: null },
         })
         console.log('Cleared stored Google Calendar token')
       }
     } catch (error) {
       console.error('Failed to clear stored token:', error)
     }
-    
+
     if (token && window.google?.accounts?.oauth2) {
       try {
         // Revoke the token
@@ -256,7 +262,7 @@ export class GoogleCalendarService {
         console.error('Error revoking token:', error)
       }
     }
-    
+
     // Clear the GAPI client token
     if (window.gapi?.client) {
       window.gapi.client.setToken(null)
@@ -275,46 +281,46 @@ export class GoogleCalendarService {
 
     try {
       // Use direct fetch with proper authorization header
-      console.log('Making request with token:', this.accessToken.substring(0, 20) + '...')
+      console.log('Making request with token:', `${this.accessToken.substring(0, 20)}...`)
       const response = await fetch(
         `https://www.googleapis.com/calendar/v3/users/me/calendarList?key=${import.meta.env.VITE_GOOGLE_API_KEY}`,
         {
           headers: {
-            'Authorization': `Bearer ${this.accessToken}`,
+            Authorization: `Bearer ${this.accessToken}`,
             'Content-Type': 'application/json',
-          }
+          },
         }
       )
 
       if (!response.ok) {
         const error = await response.json()
         console.error('Calendar API error:', error)
-        
+
         // If unauthorized, try to re-authenticate
         if (response.status === 401) {
           console.log('Token expired, re-authenticating...')
           this.accessToken = null
           await this.authenticate()
-          
+
           // Retry with new token
           const retryResponse = await fetch(
             `https://www.googleapis.com/calendar/v3/users/me/calendarList?key=${import.meta.env.VITE_GOOGLE_API_KEY}`,
             {
               headers: {
-                'Authorization': `Bearer ${this.accessToken}`,
+                Authorization: `Bearer ${this.accessToken}`,
                 'Content-Type': 'application/json',
-              }
+              },
             }
           )
-          
+
           if (!retryResponse.ok) {
             throw new Error('Failed to list calendars after re-authentication')
           }
-          
+
           const retryData = await retryResponse.json()
           return retryData.items || []
         }
-        
+
         throw new Error(error.error?.message || 'Failed to list calendars')
       }
 
@@ -326,7 +332,11 @@ export class GoogleCalendarService {
     }
   }
 
-  async listEvents(calendarId: string, timeMin?: Date, timeMax?: Date): Promise<GoogleCalendarEvent[]> {
+  async listEvents(
+    calendarId: string,
+    timeMin?: Date,
+    timeMax?: Date
+  ): Promise<GoogleCalendarEvent[]> {
     await this.authenticate()
 
     try {
@@ -366,13 +376,17 @@ export class GoogleCalendarService {
     }
   }
 
-  async updateEvent(calendarId: string, eventId: string, event: GoogleCalendarEvent): Promise<GoogleCalendarEvent> {
+  async updateEvent(
+    calendarId: string,
+    eventId: string,
+    event: GoogleCalendarEvent
+  ): Promise<GoogleCalendarEvent> {
     await this.authenticate()
 
     try {
       const response = await window.gapi.client.calendar.events.update({
         calendarId: calendarId || 'primary',
-        eventId: eventId,
+        eventId,
         resource: event,
       })
       return response.result
@@ -388,7 +402,7 @@ export class GoogleCalendarService {
     try {
       await window.gapi.client.calendar.events.delete({
         calendarId: calendarId || 'primary',
-        eventId: eventId,
+        eventId,
       })
     } catch (error) {
       console.error('Failed to delete event:', error)
@@ -402,7 +416,7 @@ export class GoogleCalendarService {
     try {
       const response = await window.gapi.client.calendar.events.quickAdd({
         calendarId: calendarId || 'primary',
-        text: text,
+        text,
       })
       return response.result
     } catch (error) {

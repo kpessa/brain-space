@@ -9,7 +9,7 @@ import { useRoutineAutoSave } from '../../hooks/useRoutineAutoSave'
 export function MorningRoutine() {
   const { progress, currentEntry, completeMorning, isSyncing } = useRoutineStore()
   const autoSave = useRoutineAutoSave('morning')
-  
+
   const [actualSleepTime, setActualSleepTime] = useState(
     currentEntry?.actualSleepTime || currentEntry?.sleepIntention || '22:00'
   )
@@ -17,8 +17,8 @@ export function MorningRoutine() {
     currentEntry?.actualWakeTime || new Date().toTimeString().slice(0, 5)
   )
   const [ritualCompleted, setRitualCompleted] = useState<boolean[]>(
-    currentEntry?.ritualCompleted || 
-    new Array(currentEntry?.morningRitualPlan?.length || 0).fill(false)
+    currentEntry?.ritualCompleted ||
+      new Array(currentEntry?.morningRitualPlan?.length || 0).fill(false)
   )
   const [mit, setMit] = useState(currentEntry?.mit || '')
   const [onePercent, setOnePercent] = useState(currentEntry?.onePercentImprovement || '')
@@ -30,19 +30,22 @@ export function MorningRoutine() {
   const [showDistSuggestions, setShowDistSuggestions] = useState(false)
 
   const rituals = currentEntry?.morningRitualPlan || []
-  
+
   // Update form when currentEntry changes
   useEffect(() => {
     if (currentEntry) {
       setActualSleepTime(currentEntry.actualSleepTime || currentEntry.sleepIntention || '22:00')
       setActualWakeTime(currentEntry.actualWakeTime || new Date().toTimeString().slice(0, 5))
-      setRitualCompleted(currentEntry.ritualCompleted || new Array(currentEntry.morningRitualPlan?.length || 0).fill(false))
+      setRitualCompleted(
+        currentEntry.ritualCompleted ||
+          new Array(currentEntry.morningRitualPlan?.length || 0).fill(false)
+      )
       setMit(currentEntry.mit || '')
       setOnePercent(currentEntry.onePercentImprovement || '')
       setDistractions(currentEntry.distractionsToMinimize || [])
     }
   }, [currentEntry])
-  
+
   // Auto-save when form data changes
   useEffect(() => {
     if (!currentEntry?.morningCompleted) {
@@ -55,7 +58,16 @@ export function MorningRoutine() {
         distractionsToMinimize: distractions,
       })
     }
-  }, [actualSleepTime, actualWakeTime, ritualCompleted, mit, onePercent, distractions, autoSave, currentEntry?.morningCompleted])
+  }, [
+    actualSleepTime,
+    actualWakeTime,
+    ritualCompleted,
+    mit,
+    onePercent,
+    distractions,
+    autoSave,
+    currentEntry?.morningCompleted,
+  ])
 
   const toggleRitual = (index: number) => {
     const updated = [...ritualCompleted]
@@ -65,10 +77,13 @@ export function MorningRoutine() {
 
   const addDistraction = () => {
     if (newDistraction.trim() && newLimit.trim() && distractions.length < 2) {
-      setDistractions([...distractions, { 
-        distraction: newDistraction.trim(), 
-        limit: newLimit.trim() 
-      }])
+      setDistractions([
+        ...distractions,
+        {
+          distraction: newDistraction.trim(),
+          limit: newLimit.trim(),
+        },
+      ])
       setNewDistraction('')
       setNewLimit('')
     }
@@ -108,14 +123,22 @@ export function MorningRoutine() {
               ✓ You've completed your morning routine for Day {progress?.currentDay}
             </p>
             <div className="space-y-2 text-sm">
-              <p><strong>Wake time:</strong> {currentEntry.actualWakeTime}</p>
-              <p><strong>MIT:</strong> {currentEntry.mit}</p>
-              <p><strong>1% improvement:</strong> {currentEntry.onePercentImprovement}</p>
+              <p>
+                <strong>Wake time:</strong> {currentEntry.actualWakeTime}
+              </p>
+              <p>
+                <strong>MIT:</strong> {currentEntry.mit}
+              </p>
+              <p>
+                <strong>1% improvement:</strong> {currentEntry.onePercentImprovement}
+              </p>
               <div>
                 <strong>Distractions minimized:</strong>
                 <ul className="list-disc list-inside mt-1">
                   {currentEntry.distractionsToMinimize?.map((d, i) => (
-                    <li key={i}>{d.distraction} ({d.limit})</li>
+                    <li key={i}>
+                      {d.distraction} ({d.limit})
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -133,9 +156,7 @@ export function MorningRoutine() {
           <Sun className="w-5 h-5 text-yellow-500" />
           <CardTitle>Morning Routine - Day {progress?.currentDay}</CardTitle>
         </div>
-        <CardDescription>
-          Complete your ritual and set your intentions for the day
-        </CardDescription>
+        <CardDescription>Complete your ritual and set your intentions for the day</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Morning Ritual Checklist */}
@@ -173,7 +194,7 @@ export function MorningRoutine() {
               <input
                 type="time"
                 value={actualSleepTime}
-                onChange={(e) => setActualSleepTime(e.target.value)}
+                onChange={e => setActualSleepTime(e.target.value)}
                 className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-base"
               />
             </div>
@@ -182,7 +203,7 @@ export function MorningRoutine() {
               <input
                 type="time"
                 value={actualWakeTime}
-                onChange={(e) => setActualWakeTime(e.target.value)}
+                onChange={e => setActualWakeTime(e.target.value)}
                 className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-base"
               />
             </div>
@@ -200,7 +221,7 @@ export function MorningRoutine() {
           </label>
           <textarea
             value={mit}
-            onChange={(e) => setMit(e.target.value)}
+            onChange={e => setMit(e.target.value)}
             placeholder="The one task that, if completed, would make today a success..."
             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 h-20 text-base"
           />
@@ -218,7 +239,7 @@ export function MorningRoutine() {
           <input
             type="text"
             value={onePercent}
-            onChange={(e) => setOnePercent(e.target.value)}
+            onChange={e => setOnePercent(e.target.value)}
             placeholder="A tiny step towards a better version of yourself..."
             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-base"
           />
@@ -231,7 +252,8 @@ export function MorningRoutine() {
             Protect Your Evening
           </h3>
           <p className="text-sm text-gray-600 mb-3">
-            What are the top two distractions to minimize tonight? Set generous yet strict time limits.
+            What are the top two distractions to minimize tonight? Set generous yet strict time
+            limits.
           </p>
 
           {/* Current Distractions */}
@@ -256,14 +278,14 @@ export function MorningRoutine() {
               <input
                 type="text"
                 value={newDistraction}
-                onChange={(e) => setNewDistraction(e.target.value)}
+                onChange={e => setNewDistraction(e.target.value)}
                 placeholder="Distraction to minimize..."
                 className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-base"
               />
               <input
                 type="text"
                 value={newLimit}
-                onChange={(e) => setNewLimit(e.target.value)}
+                onChange={e => setNewLimit(e.target.value)}
                 placeholder="Time limit..."
                 className="w-32 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-base"
               />
@@ -289,7 +311,7 @@ export function MorningRoutine() {
               </button>
               {showDistSuggestions && (
                 <div className="grid grid-cols-2 gap-2">
-                  {DISTRACTION_CATEGORIES.map((distraction) => (
+                  {DISTRACTION_CATEGORIES.map(distraction => (
                     <button
                       key={distraction}
                       onClick={() => setNewDistraction(distraction)}

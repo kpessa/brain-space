@@ -1,5 +1,16 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Home, BookOpen, Brain, Clock, Trophy, Sparkles, LogOut, Grid, SunMoon, Calendar } from 'lucide-react'
+import {
+  Home,
+  BookOpen,
+  Brain,
+  Clock,
+  Trophy,
+  Sparkles,
+  LogOut,
+  Grid,
+  SunMoon,
+  Calendar,
+} from 'lucide-react'
 import { cn } from '../lib/utils'
 import { useOrientation } from '../hooks/useOrientation'
 import { useAuth } from '@/contexts/AuthContext'

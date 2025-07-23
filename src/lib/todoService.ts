@@ -23,18 +23,16 @@ export function convertBrainDumpNodeToTodo(
   // Only convert thought nodes that look like tasks
   if (
     node.type !== 'thought' ||
-    (!node.data.taskStatus && 
-     !node.data.importance && 
-     !node.data.urgency &&
-     node.data.category !== 'tasks')
+    (!node.data.taskStatus &&
+      !node.data.importance &&
+      !node.data.urgency &&
+      node.data.category !== 'tasks')
   ) {
     return null
   }
 
-  const todoType: TodoType = 
-    node.data.taskType === 'habit' ? 'habit' :
-    node.data.category === 'tasks' ? 'task' :
-    'task'
+  const todoType: TodoType =
+    node.data.taskType === 'habit' ? 'habit' : node.data.category === 'tasks' ? 'task' : 'task'
 
   return {
     title: node.data.label || 'Untitled Task',
@@ -72,10 +70,7 @@ function convertNodeStatusToTodoStatus(nodeStatus?: string): Todo['status'] {
 }
 
 // Convert a Journal daily quest to a Todo
-export function convertJournalQuestToTodo(
-  entry: JournalEntry,
-  userId: string
-): CreateTodoInput {
+export function convertJournalQuestToTodo(entry: JournalEntry, userId: string): CreateTodoInput {
   return {
     title: entry.dailyQuest || 'Daily Quest',
     description: 'Daily quest from journal entry',
@@ -174,9 +169,9 @@ export async function migrateBrainDumpToTodos(
           user_id: userId,
           ...transformTodoInputToDB(todoInput),
         }
-        
+
         // console.log('Creating todo with data:', todoData)
-        
+
         const { data: todo, error: todoError } = await supabase
           .from('todos')
           .insert(todoData)
@@ -185,18 +180,18 @@ export async function migrateBrainDumpToTodos(
 
         if (todoError || !todo) {
           // console.error('Todo creation failed:', { todoError, todoData })
-          errors.push(`Failed to create todo for node ${node.id}: ${todoError?.message || 'No data returned'}`)
+          errors.push(
+            `Failed to create todo for node ${node.id}: ${todoError?.message || 'No data returned'}`
+          )
           continue
         }
 
         // Create the link
-        const { error: linkError } = await supabase
-          .from('braindump_todos')
-          .insert({
-            braindump_id: braindumpId,
-            node_id: node.id,
-            todo_id: todo.id,
-          })
+        const { error: linkError } = await supabase.from('braindump_todos').insert({
+          braindump_id: braindumpId,
+          node_id: node.id,
+          todo_id: todo.id,
+        })
 
         if (linkError) {
           errors.push(`Failed to link todo ${todo.id} to node ${node.id}: ${linkError.message}`)
@@ -219,14 +214,15 @@ export async function migrateBrainDumpToTodos(
           await createCompletionsFromNode(todo.id, node)
         }
       } catch (err) {
-        errors.push(`Error processing node ${node.id}: ${err instanceof Error ? err.message : String(err)}`)
+        errors.push(
+          `Error processing node ${node.id}: ${err instanceof Error ? err.message : String(err)}`
+        )
         // console.error('Migration error details:', { node, error: err })
       }
     }
 
     // Establish relationships based on edges
     await establishRelationshipsFromEdges(dump.edges as any[], braindumpId)
-
   } catch (err) {
     errors.push(`General error: ${err instanceof Error ? err.message : String(err)}`)
   }
@@ -305,7 +301,10 @@ async function createCompletionsFromNode(todoId: string, node: BrainDumpNode) {
 }
 
 // Establish relationships from brain dump edges
-async function establishRelationshipsFromEdges(edges: Array<{ source: string; target: string }>, braindumpId: string) {
+async function establishRelationshipsFromEdges(
+  edges: Array<{ source: string; target: string }>,
+  braindumpId: string
+) {
   for (const edge of edges) {
     // Find todos for source and target
     const { data: sourceTodo } = await supabase
@@ -358,10 +357,7 @@ export async function runFullMigration(userId: string): Promise<{
 
   try {
     // Migrate BrainDumps
-    const { data: dumps } = await supabase
-      .from('brain_dumps')
-      .select('id')
-      .eq('user_id', userId)
+    const { data: dumps } = await supabase.from('brain_dumps').select('id').eq('user_id', userId)
 
     summary.braindumps.total = dumps?.length || 0
 
@@ -402,7 +398,9 @@ export async function runFullMigration(userId: string): Promise<{
           summary.journal.migrated++
         }
       } catch (err) {
-        summary.errors.push(`Journal ${entry.id}: ${err instanceof Error ? err.message : String(err)}`)
+        summary.errors.push(
+          `Journal ${entry.id}: ${err instanceof Error ? err.message : String(err)}`
+        )
       }
     }
 
@@ -465,12 +463,15 @@ export async function runFullMigration(userId: string): Promise<{
 
         if (migrated) summary.routines.migrated++
       } catch (err) {
-        summary.errors.push(`Routine ${entry.id}: ${err instanceof Error ? err.message : String(err)}`)
+        summary.errors.push(
+          `Routine ${entry.id}: ${err instanceof Error ? err.message : String(err)}`
+        )
       }
     }
-
   } catch (err) {
-    summary.errors.push(`General migration error: ${err instanceof Error ? err.message : String(err)}`)
+    summary.errors.push(
+      `General migration error: ${err instanceof Error ? err.message : String(err)}`
+    )
   }
 
   return { summary }

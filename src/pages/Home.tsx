@@ -97,7 +97,8 @@ export default function Home() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-gray-600 mb-4">
-                Join a 66-day journey to wake up earlier and create powerful daily routines that set you up for success.
+                Join a 66-day journey to wake up earlier and create powerful daily routines that set
+                you up for success.
               </p>
               <Link to="/routines">
                 <Button variant="primary" className="w-full">

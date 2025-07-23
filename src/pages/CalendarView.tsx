@@ -7,12 +7,13 @@ import '../styles/calendar.css'
 import { googleCalendarService } from '../services/googleCalendar'
 import { useCalendarStore } from '../store/calendarStore'
 import { EightWeekView, EightWeekViewComponent } from '../components/EightWeekView'
+import { RefreshCw } from 'lucide-react'
 
 const localizer = momentLocalizer(moment)
 
 // Add custom 8-week view to views
 const customViews = {
-  eightWeek: EightWeekViewComponent
+  eightWeek: EightWeekViewComponent,
 }
 
 interface CalendarInfo {
@@ -48,7 +49,9 @@ export const CalendarView: React.FC = () => {
   const [showEventModal, setShowEventModal] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [selectedSlot, setSelectedSlot] = useState<{ start: Date; end: Date } | null>(null)
-  
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
+
   // Cache to avoid repeated API calls
   const [eventCache, setEventCache] = useState<{ [key: string]: CalendarEvent[] }>({})
   const [cacheTimestamp, setCacheTimestamp] = useState<{ [key: string]: number }>({})
@@ -57,26 +60,26 @@ export const CalendarView: React.FC = () => {
   useEffect(() => {
     const initializeCalendars = async () => {
       const allCalendars: CalendarInfo[] = []
-      
+
       // Try Google Calendar
       try {
         await googleCalendarService.initialize()
         await googleCalendarService.authenticate()
         setIsGoogleAuthenticated(true)
-        
+
         const googleCalendars = await googleCalendarService.listCalendars()
         allCalendars.push(...googleCalendars)
       } catch (err) {
         console.log('Google Calendar not authenticated:', err)
       }
-      
+
       setCalendars(allCalendars)
-      
+
       if (allCalendars.length === 0) {
         setError('Please authenticate with Google Calendar')
       }
     }
-    
+
     initializeCalendars()
   }, [])
 
@@ -87,14 +90,20 @@ export const CalendarView: React.FC = () => {
     }
   }, [isGoogleAuthenticated, selectedCalendarIds, currentDate, currentView])
 
-  const loadEvents = async () => {
+  const loadEvents = async (forceRefresh = false) => {
     setLoading(true)
     setError(null)
-    
+
+    // Clear cache if force refresh
+    if (forceRefresh) {
+      setEventCache({})
+      setCacheTimestamp({})
+    }
+
     try {
       // Calculate extended date range for better event coverage
       let start: Date, end: Date
-      
+
       if (currentView === 'eightWeek') {
         // For 8-week view, load 1 year before and 1 year after for maximum coverage
         start = moment(currentDate).subtract(1, 'year').startOf('month').toDate()
@@ -104,26 +113,28 @@ export const CalendarView: React.FC = () => {
         start = moment(currentDate).subtract(6, 'months').startOf('month').toDate()
         end = moment(currentDate).add(6, 'months').endOf('month').toDate()
       }
-      
+
       const allEvents: CalendarEvent[] = []
-      
-      console.log(`Loading events from ${start.toLocaleDateString()} to ${end.toLocaleDateString()} for ${currentView} view`)
-      
+
+      console.log(
+        `Loading events from ${start.toLocaleDateString()} to ${end.toLocaleDateString()} for ${currentView} view`
+      )
+
       for (const calendarId of selectedCalendarIds) {
         try {
           const calendar = calendars.find(cal => cal.id === calendarId)
           // Google Calendar
           const eventList = await googleCalendarService.listEvents(calendarId, start, end)
-          
+
           const formattedEvents = eventList.map(event => {
             // For all-day events, we need to handle the dates specially
             let startDate, endDate
-            
+
             if (event.start.date && !event.start.dateTime) {
               // All-day event - parse as date only and set to midnight
               startDate = moment(event.start.date).startOf('day').toDate()
               endDate = moment(event.end.date).startOf('day').toDate()
-              
+
               // Log all-day events as they're loaded
               console.log(`[CALENDAR DEBUG] Loading all-day event:`, {
                 title: event.summary,
@@ -131,14 +142,14 @@ export const CalendarView: React.FC = () => {
                 originalStart: event.start,
                 originalEnd: event.end,
                 formattedStart: startDate.toISOString(),
-                formattedEnd: endDate.toISOString()
+                formattedEnd: endDate.toISOString(),
               })
             } else {
               // Timed event
               startDate = new Date(event.start.dateTime || event.start.date || '')
               endDate = new Date(event.end.dateTime || event.end.date || '')
             }
-            
+
             return {
               id: event.id,
               title: event.summary || 'Untitled Event',
@@ -148,31 +159,42 @@ export const CalendarView: React.FC = () => {
                 calendarId,
                 calendarName: calendar?.summary || '',
                 backgroundColor: calendar?.backgroundColor,
-                originalEvent: event
-              }
+                originalEvent: event,
+              },
             }
           })
-          
+
           allEvents.push(...formattedEvents)
         } catch (err) {
           console.error(`Failed to load events from calendar ${calendarId}:`, err)
         }
       }
-      
+
       // Sort events by start time
       allEvents.sort((a, b) => {
         const aTime = new Date(a.start)
         const bTime = new Date(b.start)
         return aTime.getTime() - bTime.getTime()
       })
-      
+
       console.log(`Successfully loaded ${allEvents.length} events total`)
       setEvents(allEvents)
+
+      // Update last refresh time
+      if (forceRefresh) {
+        setLastRefresh(new Date())
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load events')
     } finally {
       setLoading(false)
+      setIsRefreshing(false)
     }
+  }
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    await loadEvents(true)
   }
 
   const handleSelectEvent = useCallback((event: CalendarEvent) => {
@@ -204,8 +226,8 @@ export const CalendarView: React.FC = () => {
         opacity: 0.8,
         color: 'white',
         border: '0px',
-        display: 'block'
-      }
+        display: 'block',
+      },
     }
   }, [])
 
@@ -214,10 +236,7 @@ export const CalendarView: React.FC = () => {
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
           <p className="text-xl mb-4">Please authenticate with Google Calendar</p>
-          <a
-            href="/calendar-settings"
-            className="text-blue-500 hover:text-blue-700 underline"
-          >
+          <a href="/calendar-settings" className="text-blue-500 hover:text-blue-700 underline">
             Go to Calendar Settings
           </a>
         </div>
@@ -230,10 +249,7 @@ export const CalendarView: React.FC = () => {
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
           <p className="text-xl mb-4">No calendars selected</p>
-          <a
-            href="/calendar-settings"
-            className="text-blue-500 hover:text-blue-700 underline"
-          >
+          <a href="/calendar-settings" className="text-blue-500 hover:text-blue-700 underline">
             Select Calendars
           </a>
         </div>
@@ -243,7 +259,7 @@ export const CalendarView: React.FC = () => {
 
   const handleCreateEvent = async (title: string, calendarId: string) => {
     if (!selectedSlot || !title) return
-    
+
     setLoading(true)
     try {
       // Google calendar
@@ -258,7 +274,7 @@ export const CalendarView: React.FC = () => {
           timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         },
       })
-      
+
       setShowCreateModal(false)
       setSelectedSlot(null)
       await loadEvents() // Reload events
@@ -276,24 +292,44 @@ export const CalendarView: React.FC = () => {
           <div className="flex justify-between items-center mb-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-800">Calendar View</h1>
-              {loading && <p className="text-sm text-gray-500 mt-2">Loading events...</p>}
+              {loading && !isRefreshing && (
+                <p className="text-sm text-gray-500 mt-2">Loading events...</p>
+              )}
               {error && <p className="text-sm text-red-500 mt-2">{error}</p>}
+              {lastRefresh && (
+                <p className="text-xs text-gray-400 mt-1">
+                  Last refreshed: {lastRefresh.toLocaleTimeString()}
+                </p>
+              )}
             </div>
-            <a
-              href="/calendar-settings"
-              className="text-sm text-blue-500 hover:text-blue-700 underline"
-            >
-              Calendar Settings
-            </a>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleRefresh}
+                disabled={isRefreshing || loading}
+                className="flex items-center gap-2 px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                title="Refresh calendar events"
+              >
+                <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                {isRefreshing ? 'Refreshing...' : 'Refresh'}
+              </button>
+              <a
+                href="/calendar-settings"
+                className="text-sm text-blue-500 hover:text-blue-700 underline"
+              >
+                Calendar Settings
+              </a>
+            </div>
           </div>
-          
+
           {/* Custom Navigation for 8-week view */}
           {currentView === 'eightWeek' && (
             <div className="bg-gray-50 p-3 rounded-lg space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <button
-                    onClick={() => setCurrentDate(EightWeekView.navigate(currentDate, 'PREVIOUS' as any))}
+                    onClick={() =>
+                      setCurrentDate(EightWeekView.navigate(currentDate, 'PREVIOUS' as any))
+                    }
                     className="px-3 py-1 bg-white border rounded hover:bg-gray-50"
                   >
                     ← Previous 8 Weeks
@@ -305,13 +341,15 @@ export const CalendarView: React.FC = () => {
                     Today
                   </button>
                   <button
-                    onClick={() => setCurrentDate(EightWeekView.navigate(currentDate, 'NEXT' as any))}
+                    onClick={() =>
+                      setCurrentDate(EightWeekView.navigate(currentDate, 'NEXT' as any))
+                    }
                     className="px-3 py-1 bg-white border rounded hover:bg-gray-50"
                   >
                     Next 8 Weeks →
                   </button>
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   <span className="font-semibold text-gray-700">
                     {EightWeekView.title(currentDate)}
@@ -338,14 +376,14 @@ export const CalendarView: React.FC = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="text-xs text-gray-600 bg-blue-50 p-2 rounded border-l-2 border-blue-400">
-                💡 <strong>Extended Range:</strong> 8-week view loads events from 1 year before to 1 year after for comprehensive planning. 
-                Other views load 6 months before/after.
+                💡 <strong>Extended Range:</strong> 8-week view loads events from 1 year before to 1
+                year after for comprehensive planning. Other views load 6 months before/after.
               </div>
             </div>
           )}
-          
+
           {/* Add 8-week view button to standard views */}
           {currentView !== 'eightWeek' && (
             <div className="flex justify-center mb-2">
@@ -358,7 +396,7 @@ export const CalendarView: React.FC = () => {
             </div>
           )}
         </div>
-        
+
         <div className="flex-1 min-h-0">
           {currentView === 'eightWeek' ? (
             <EightWeekViewComponent
@@ -387,7 +425,7 @@ export const CalendarView: React.FC = () => {
               views={['month', 'week', 'day', 'agenda']}
               selectable
               popup
-              tooltipAccessor={(event) => `${event.title} (${event.resource?.calendarName})`}
+              tooltipAccessor={event => `${event.title} (${event.resource?.calendarName})`}
             />
           )}
         </div>
@@ -399,9 +437,15 @@ export const CalendarView: React.FC = () => {
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <h2 className="text-xl font-bold mb-4">{selectedEvent.title}</h2>
             <div className="space-y-2 text-sm">
-              <p><strong>Calendar:</strong> {selectedEvent.resource?.calendarName}</p>
-              <p><strong>Start:</strong> {selectedEvent.start.toLocaleString()}</p>
-              <p><strong>End:</strong> {selectedEvent.end.toLocaleString()}</p>
+              <p>
+                <strong>Calendar:</strong> {selectedEvent.resource?.calendarName}
+              </p>
+              <p>
+                <strong>Start:</strong> {selectedEvent.start.toLocaleString()}
+              </p>
+              <p>
+                <strong>End:</strong> {selectedEvent.end.toLocaleString()}
+              </p>
             </div>
             <div className="mt-6 flex justify-end">
               <button
@@ -424,7 +468,7 @@ export const CalendarView: React.FC = () => {
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <h2 className="text-xl font-bold mb-4">Create New Event</h2>
             <form
-              onSubmit={(e) => {
+              onSubmit={e => {
                 e.preventDefault()
                 const formData = new FormData(e.currentTarget)
                 const title = formData.get('title') as string
@@ -461,8 +505,12 @@ export const CalendarView: React.FC = () => {
                   </select>
                 </div>
                 <div className="text-sm text-gray-600">
-                  <p><strong>Start:</strong> {selectedSlot.start.toLocaleString()}</p>
-                  <p><strong>End:</strong> {selectedSlot.end.toLocaleString()}</p>
+                  <p>
+                    <strong>Start:</strong> {selectedSlot.start.toLocaleString()}
+                  </p>
+                  <p>
+                    <strong>End:</strong> {selectedSlot.end.toLocaleString()}
+                  </p>
                 </div>
               </div>
               <div className="mt-6 flex justify-end gap-2">

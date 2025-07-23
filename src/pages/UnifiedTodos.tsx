@@ -81,12 +81,15 @@ export default function UnifiedTodos() {
   }
 
   // Group todos by source
-  const todosBySource = todos.reduce((acc, todo) => {
-    const source = todo.sourceType
-    if (!acc[source]) acc[source] = []
-    acc[source].push(todo)
-    return acc
-  }, {} as Record<string, Todo[]>)
+  const todosBySource = todos.reduce(
+    (acc, todo) => {
+      const source = todo.sourceType
+      if (!acc[source]) acc[source] = []
+      acc[source].push(todo)
+      return acc
+    },
+    {} as Record<string, Todo[]>
+  )
 
   // Source icons and labels
   const sourceInfo = {
@@ -151,21 +154,13 @@ export default function UnifiedTodos() {
               )}
 
               {/* Title */}
-              <h3
-                className={cn(
-                  'font-medium',
-                  todo.status === 'completed' && 'line-through'
-                )}
-              >
+              <h3 className={cn('font-medium', todo.status === 'completed' && 'line-through')}>
                 {todo.title}
               </h3>
 
               {/* Source Icon */}
               <SourceIcon
-                className={cn(
-                  'w-4 h-4',
-                  sourceInfo[todo.sourceType]?.color
-                )}
+                className={cn('w-4 h-4', sourceInfo[todo.sourceType]?.color)}
                 title={sourceInfo[todo.sourceType]?.label}
               />
 
@@ -183,9 +178,7 @@ export default function UnifiedTodos() {
             </div>
 
             {/* Description */}
-            {todo.description && (
-              <p className="text-sm text-gray-600 mt-1">{todo.description}</p>
-            )}
+            {todo.description && <p className="text-sm text-gray-600 mt-1">{todo.description}</p>}
 
             {/* Metadata */}
             <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
@@ -226,9 +219,7 @@ export default function UnifiedTodos() {
 
         {/* Children */}
         {isExpanded && hasChildren && (
-          <div className="mt-1">
-            {children.map(child => renderTodo(child, depth + 1))}
-          </div>
+          <div className="mt-1">{children.map(child => renderTodo(child, depth + 1))}</div>
         )}
       </div>
     )
@@ -253,9 +244,7 @@ export default function UnifiedTodos() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <Sparkles className="w-8 h-8 text-brain-600" />
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                Unified Todos
-              </h1>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Unified Todos</h1>
             </div>
             <Button variant="primary" className="flex items-center gap-2">
               <Plus className="w-5 h-5" />
@@ -302,9 +291,7 @@ export default function UnifiedTodos() {
 
           {/* Source Filter */}
           <div>
-            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Source
-            </h3>
+            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Source</h3>
             <div className="flex flex-wrap gap-2">
               <Button
                 variant={!selectedSource ? 'primary' : 'outline'}
@@ -425,10 +412,7 @@ export default function UnifiedTodos() {
                 const info = sourceInfo[source as keyof typeof sourceInfo]
                 const Icon = info?.icon || Plus
                 return (
-                  <div
-                    key={source}
-                    className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
-                  >
+                  <div key={source} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     <div className="flex items-center gap-2 mb-2">
                       <Icon className={cn('w-5 h-5', info?.color)} />
                       <h3 className="font-medium">{info?.label || source}</h3>

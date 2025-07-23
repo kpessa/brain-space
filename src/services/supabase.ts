@@ -272,24 +272,24 @@ export class SupabaseService {
   // Routine methods
   async getRoutineProgress(userId: string) {
     if (!isSupabaseConfigured()) return { data: null, error: null }
-    
+
     const result = await supabase
       .from('routine_progress')
       .select('*')
       .eq('user_id', userId)
       .single()
-      
+
     // Transform response to camelCase
     if (result.data) {
       result.data = this.transformRoutineProgressFromDb(result.data)
     }
-    
+
     return result
   }
 
   async createRoutineProgress(progress: any) {
     if (!isSupabaseConfigured()) return { data: null, error: null }
-    
+
     // Convert to snake_case for database
     const dbProgress = {
       user_id: progress.userId,
@@ -303,88 +303,84 @@ export class SupabaseService {
       current_streak: progress.currentStreak,
       longest_streak: progress.longestStreak,
     }
-    
-    const result = await supabase
-      .from('routine_progress')
-      .insert(dbProgress)
-      .select()
-      .single()
-      
+
+    const result = await supabase.from('routine_progress').insert(dbProgress).select().single()
+
     // Transform response back to camelCase
     if (result.data) {
       result.data = this.transformRoutineProgressFromDb(result.data)
     }
-    
+
     return result
   }
 
   async updateRoutineProgress(userId: string, updates: any) {
     if (!isSupabaseConfigured()) return { data: null, error: null }
-    
+
     // Convert to snake_case for database
     const dbUpdates: any = {}
     if (updates.currentDay !== undefined) dbUpdates.current_day = updates.currentDay
     if (updates.startedAt !== undefined) dbUpdates.started_at = updates.startedAt
-    if (updates.lastCompletedDate !== undefined) dbUpdates.last_completed_date = updates.lastCompletedDate
-    if (updates.totalDaysCompleted !== undefined) dbUpdates.total_days_completed = updates.totalDaysCompleted
+    if (updates.lastCompletedDate !== undefined)
+      dbUpdates.last_completed_date = updates.lastCompletedDate
+    if (updates.totalDaysCompleted !== undefined)
+      dbUpdates.total_days_completed = updates.totalDaysCompleted
     if (updates.isActive !== undefined) dbUpdates.is_active = updates.isActive
-    if (updates.morningRoutinesCompleted !== undefined) dbUpdates.morning_routines_completed = updates.morningRoutinesCompleted
-    if (updates.eveningRoutinesCompleted !== undefined) dbUpdates.evening_routines_completed = updates.eveningRoutinesCompleted
+    if (updates.morningRoutinesCompleted !== undefined)
+      dbUpdates.morning_routines_completed = updates.morningRoutinesCompleted
+    if (updates.eveningRoutinesCompleted !== undefined)
+      dbUpdates.evening_routines_completed = updates.eveningRoutinesCompleted
     if (updates.currentStreak !== undefined) dbUpdates.current_streak = updates.currentStreak
     if (updates.longestStreak !== undefined) dbUpdates.longest_streak = updates.longestStreak
-    
+
     const result = await supabase
       .from('routine_progress')
       .update(dbUpdates)
       .eq('user_id', userId)
       .select()
       .single()
-      
+
     // Transform response back to camelCase
     if (result.data) {
       result.data = this.transformRoutineProgressFromDb(result.data)
     }
-    
+
     return result
   }
 
   async getRoutineEntries(userId: string) {
     if (!isSupabaseConfigured()) return { data: null, error: null }
-    
+
     const result = await supabase
       .from('routine_entries')
       .select('*')
       .eq('user_id', userId)
       .order('day_number', { ascending: false })
-      
+
     // Transform response to camelCase
     if (result.data) {
       result.data = result.data.map(entry => this.transformRoutineEntryFromDb(entry))
     }
-    
+
     return result
   }
 
   async getRoutineEntry(entryId: string) {
     if (!isSupabaseConfigured()) return { data: null, error: null }
-    
-    const result = await supabase
-      .from('routine_entries')
-      .select('*')
-      .eq('id', entryId)
-      .single()
-      
+
+    const result = await supabase.from('routine_entries').select('*').eq('id', entryId).single()
+
     // Transform response to camelCase
     if (result.data) {
       result.data = this.transformRoutineEntryFromDb(result.data)
     }
-    
+
     return result
   }
 
   async createRoutineEntry(entry: any) {
     if (!isSupabaseConfigured()) return { data: null, error: null }
-    
+
     // Convert camelCase to snake_case for database
     const dbEntry = {
       id: entry.id,
@@ -406,53 +402,54 @@ export class SupabaseService {
       created_at: entry.createdAt,
       updated_at: entry.updatedAt,
     }
-    
-    const result = await supabase
-      .from('routine_entries')
-      .insert(dbEntry)
-      .select()
-      .single()
-      
+
+    const result = await supabase.from('routine_entries').insert(dbEntry).select().single()
+
     // Transform response back to camelCase
     if (result.data) {
       result.data = this.transformRoutineEntryFromDb(result.data)
     }
-    
+
     return result
   }
 
   async updateRoutineEntry(entryId: string, updates: any) {
     if (!isSupabaseConfigured()) return { data: null, error: null }
-    
+
     // Convert camelCase to snake_case for database
     const dbUpdates: any = {}
-    
-    if (updates.eveningCompleted !== undefined) dbUpdates.evening_completed = updates.eveningCompleted
+
+    if (updates.eveningCompleted !== undefined)
+      dbUpdates.evening_completed = updates.eveningCompleted
     if (updates.sleepIntention !== undefined) dbUpdates.sleep_intention = updates.sleepIntention
     if (updates.wakeIntention !== undefined) dbUpdates.wake_intention = updates.wakeIntention
     if (updates.magicalMoment !== undefined) dbUpdates.magical_moment = updates.magicalMoment
-    if (updates.morningRitualPlan !== undefined) dbUpdates.morning_ritual_plan = updates.morningRitualPlan
-    if (updates.morningCompleted !== undefined) dbUpdates.morning_completed = updates.morningCompleted
+    if (updates.morningRitualPlan !== undefined)
+      dbUpdates.morning_ritual_plan = updates.morningRitualPlan
+    if (updates.morningCompleted !== undefined)
+      dbUpdates.morning_completed = updates.morningCompleted
     if (updates.actualSleepTime !== undefined) dbUpdates.actual_sleep_time = updates.actualSleepTime
     if (updates.actualWakeTime !== undefined) dbUpdates.actual_wake_time = updates.actualWakeTime
     if (updates.ritualCompleted !== undefined) dbUpdates.ritual_completed = updates.ritualCompleted
     if (updates.mit !== undefined) dbUpdates.mit = updates.mit
-    if (updates.onePercentImprovement !== undefined) dbUpdates.one_percent_improvement = updates.onePercentImprovement
-    if (updates.distractionsToMinimize !== undefined) dbUpdates.distractions_to_minimize = updates.distractionsToMinimize
+    if (updates.onePercentImprovement !== undefined)
+      dbUpdates.one_percent_improvement = updates.onePercentImprovement
+    if (updates.distractionsToMinimize !== undefined)
+      dbUpdates.distractions_to_minimize = updates.distractionsToMinimize
     if (updates.updatedAt !== undefined) dbUpdates.updated_at = updates.updatedAt
-    
+
     const result = await supabase
       .from('routine_entries')
       .update(dbUpdates)
       .eq('id', entryId)
       .select()
       .single()
-      
+
     // Transform response back to camelCase
     if (result.data) {
       result.data = this.transformRoutineEntryFromDb(result.data)
     }
-    
+
     return result
   }
 

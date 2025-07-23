@@ -123,7 +123,7 @@ export const useJournalStore = create<JournalState>((set, get) => ({
     if (isSupabaseConfigured() && newProgress.userId !== 'demo-user') {
       await get().syncEntry(newEntry, newProgress.userId)
       await get().syncProgress(newProgress)
-      
+
       // Sync daily quest to todo system
       await syncJournalQuestToTodo(newEntry, newProgress.userId)
     }
@@ -186,7 +186,7 @@ export const useJournalStore = create<JournalState>((set, get) => ({
       set({ isSyncing: true })
       try {
         await supabaseService.updateJournalEntry(id, updatedEntry)
-        
+
         // Sync quest changes to todo system
         if (updates.dailyQuest !== undefined) {
           await syncJournalQuestToTodo(updatedEntry, userProgress.userId)
@@ -201,11 +201,11 @@ export const useJournalStore = create<JournalState>((set, get) => ({
 
   deleteEntry: async id => {
     const { userProgress } = get()
-    
+
     set(state => ({
       entries: state.entries.filter(entry => entry.id !== id),
     }))
-    
+
     // Sync deletion to todo system
     if (isSupabaseConfigured() && userProgress.userId !== 'demo-user') {
       await syncJournalQuestDeletion(id)

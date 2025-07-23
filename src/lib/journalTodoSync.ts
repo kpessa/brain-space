@@ -39,7 +39,7 @@ export async function syncJournalQuestToTodo(
   userId: string
 ): Promise<string | null> {
   if (!shouldSyncJournalQuest(entry)) return null
-  
+
   try {
     // Check if todo already exists for this journal entry
     const { data: existingLink } = await supabase
@@ -48,27 +48,27 @@ export async function syncJournalQuestToTodo(
       .eq('journal_entry_id', entry.id)
       .eq('todo_type', 'daily_quest')
       .single()
-    
+
     if (existingLink) {
       // Update existing todo
       const updates: UpdateTodoInput = {
         title: entry.dailyQuest,
         scheduledDate: entry.date,
       }
-      
+
       await useTodoStore.getState().updateTodo(existingLink.todo_id, updates)
-      
+
       logger.info('JOURNAL_SYNC', 'Updated existing quest todo', {
         todoId: existingLink.todo_id,
         journalId: entry.id,
       })
-      
+
       return existingLink.todo_id
     } else {
       // Create new todo
       const todoInput = journalQuestToTodoInput(entry)
       const todo = await useTodoStore.getState().createTodo(userId, todoInput)
-      
+
       if (todo) {
         // Create link
         await supabase.from('journal_todos').insert({
@@ -76,13 +76,13 @@ export async function syncJournalQuestToTodo(
           todo_id: todo.id,
           todo_type: 'daily_quest',
         })
-        
+
         logger.info('JOURNAL_SYNC', 'Created new quest todo', {
           todoId: todo.id,
           journalId: entry.id,
           quest: entry.dailyQuest,
         })
-        
+
         return todo.id
       }
     }
@@ -92,7 +92,7 @@ export async function syncJournalQuestToTodo(
       error,
     })
   }
-  
+
   return null
 }
 
@@ -106,7 +106,7 @@ export async function syncJournalQuestDeletion(entryId: string): Promise<void> {
       .eq('journal_entry_id', entryId)
       .eq('todo_type', 'daily_quest')
       .single()
-    
+
     if (link) {
       await useTodoStore.getState().deleteTodo(link.todo_id)
       logger.info('JOURNAL_SYNC', 'Deleted todo for removed journal quest', {
@@ -130,14 +130,14 @@ export async function createGratitudeActionTodos(
   // This is an optional feature to create todos from gratitude items
   // that contain action words like "call", "thank", "visit", etc.
   const actionWords = ['call', 'thank', 'visit', 'send', 'help', 'meet', 'contact', 'reach out']
-  
+
   for (let i = 0; i < entry.gratitude.length; i++) {
     const gratitudeItem = entry.gratitude[i]
     if (!gratitudeItem.trim()) continue
-    
+
     const lowerItem = gratitudeItem.toLowerCase()
     const hasAction = actionWords.some(word => lowerItem.includes(word))
-    
+
     if (hasAction) {
       try {
         // Extract action from gratitude
@@ -155,16 +155,16 @@ export async function createGratitudeActionTodos(
             originalGratitude: gratitudeItem,
           },
         }
-        
+
         const todo = await useTodoStore.getState().createTodo(userId, todoInput)
-        
+
         if (todo) {
           await supabase.from('journal_todos').insert({
             journal_entry_id: entry.id,
             todo_id: todo.id,
             todo_type: 'gratitude_action',
           })
-          
+
           logger.info('JOURNAL_SYNC', 'Created gratitude action todo', {
             todoId: todo.id,
             journalId: entry.id,

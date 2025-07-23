@@ -25,7 +25,8 @@ interface CalendarEvent {
 }
 
 export const GoogleCalendarTest: React.FC = () => {
-  const { selectedCalendarIds, setSelectedCalendarIds, toggleCalendarSelection } = useCalendarStore()
+  const { selectedCalendarIds, setSelectedCalendarIds, toggleCalendarSelection } =
+    useCalendarStore()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [calendars, setCalendars] = useState<Calendar[]>([])
   const [selectedCalendar, setSelectedCalendar] = useState<string>('')
@@ -56,7 +57,7 @@ export const GoogleCalendarTest: React.FC = () => {
       const calendarList = await googleCalendarService.listCalendars()
       console.log('All available calendars:', calendarList)
       setCalendars(calendarList)
-      
+
       // If no calendars are selected yet, pre-select primary calendar
       if (selectedCalendarIds.size === 0) {
         const primaryCalendar = calendarList.find(cal => cal.primary)
@@ -71,7 +72,7 @@ export const GoogleCalendarTest: React.FC = () => {
           setSelectedCalendar(firstSelectedId)
         }
       }
-      
+
       // Log calendar details for debugging
       calendarList.forEach(cal => {
         console.log(`Calendar: "${cal.summary}"`, {
@@ -81,7 +82,7 @@ export const GoogleCalendarTest: React.FC = () => {
           description: cal.description,
           accessRole: (cal as any).accessRole,
           selected: (cal as any).selected,
-          hidden: (cal as any).hidden
+          hidden: (cal as any).hidden,
         })
       })
     } catch (err) {
@@ -94,34 +95,36 @@ export const GoogleCalendarTest: React.FC = () => {
       setError('Please select at least one calendar')
       return
     }
-    
+
     setLoading(true)
     setError(null)
     try {
       const now = new Date()
       const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
-      
+
       // Load events from all selected calendars
       const allEvents: CalendarEvent[] = []
       for (const calendarId of selectedCalendarIds) {
         try {
           const eventList = await googleCalendarService.listEvents(calendarId, now, nextWeek)
-          allEvents.push(...eventList.map(event => ({
-            ...event,
-            calendarId // Add calendar ID to track which calendar the event is from
-          })))
+          allEvents.push(
+            ...eventList.map(event => ({
+              ...event,
+              calendarId, // Add calendar ID to track which calendar the event is from
+            }))
+          )
         } catch (err) {
           console.error(`Failed to load events from calendar ${calendarId}:`, err)
         }
       }
-      
+
       // Sort events by start time
       allEvents.sort((a, b) => {
         const aTime = new Date(a.start.dateTime || a.start.date || '')
         const bTime = new Date(b.start.dateTime || b.start.date || '')
         return aTime.getTime() - bTime.getTime()
       })
-      
+
       setEvents(allEvents)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load events')
@@ -166,7 +169,9 @@ export const GoogleCalendarTest: React.FC = () => {
   }
 
   const formatEventTime = (event: CalendarEvent) => {
-    const date = event.start.dateTime ? new Date(event.start.dateTime) : new Date(event.start.date || '')
+    const date = event.start.dateTime
+      ? new Date(event.start.dateTime)
+      : new Date(event.start.date || '')
     return date.toLocaleString()
   }
 
@@ -205,15 +210,18 @@ export const GoogleCalendarTest: React.FC = () => {
               Sign Out
             </button>
           </div>
-          
+
           <div>
-            <h2 className="text-xl font-semibold mb-3">Select Calendars to Sync ({calendars.length} available)</h2>
+            <h2 className="text-xl font-semibold mb-3">
+              Select Calendars to Sync ({calendars.length} available)
+            </h2>
             <div className="space-y-2 mb-4 max-h-64 overflow-y-auto border rounded p-3">
-              {calendars.map((calendar) => {
-                const isBirthday = calendar.summary?.toLowerCase().includes('birthday') || 
-                                  calendar.summary?.toLowerCase().includes('contact') ||
-                                  calendar.id?.includes('#contacts@')
-                
+              {calendars.map(calendar => {
+                const isBirthday =
+                  calendar.summary?.toLowerCase().includes('birthday') ||
+                  calendar.summary?.toLowerCase().includes('contact') ||
+                  calendar.id?.includes('#contacts@')
+
                 return (
                   <label
                     key={calendar.id}
@@ -238,7 +246,7 @@ export const GoogleCalendarTest: React.FC = () => {
                       <div className="flex-1">
                         <div className="flex items-center space-x-2">
                           <span className="font-medium">
-                            {calendar.summary} 
+                            {calendar.summary}
                             {calendar.primary ? ' (Primary)' : ''}
                             {isBirthday ? ' 🎂' : ''}
                           </span>
@@ -260,18 +268,20 @@ export const GoogleCalendarTest: React.FC = () => {
             <div className="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-400 mb-4">
               <h4 className="font-medium text-blue-800 mb-1">💡 About Birthday Events</h4>
               <p className="text-sm text-blue-700">
-                Birthday events (🎂) come from your Google Contacts and may appear in a separate "Birthdays" 
-                calendar or merged with your primary calendar. You can uncheck the birthday calendar if you 
-                don't want to sync birthdays to Brain Space.
+                Birthday events (🎂) come from your Google Contacts and may appear in a separate
+                "Birthdays" calendar or merged with your primary calendar. You can uncheck the
+                birthday calendar if you don't want to sync birthdays to Brain Space.
               </p>
             </div>
-            
+
             <button
               onClick={loadEvents}
               disabled={loading || selectedCalendarIds.size === 0}
               className="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:bg-green-300"
             >
-              {loading ? 'Loading...' : `Load Events from ${selectedCalendarIds.size} Calendar${selectedCalendarIds.size !== 1 ? 's' : ''} (Next 7 Days)`}
+              {loading
+                ? 'Loading...'
+                : `Load Events from ${selectedCalendarIds.size} Calendar${selectedCalendarIds.size !== 1 ? 's' : ''} (Next 7 Days)`}
             </button>
           </div>
 
@@ -280,11 +290,11 @@ export const GoogleCalendarTest: React.FC = () => {
             <div className="space-y-2">
               <select
                 value={selectedCalendar}
-                onChange={(e) => setSelectedCalendar(e.target.value)}
+                onChange={e => setSelectedCalendar(e.target.value)}
                 className="w-full p-2 border rounded"
               >
                 <option value="">Select calendar for new event</option>
-                {calendars.map((calendar) => (
+                {calendars.map(calendar => (
                   <option key={calendar.id} value={calendar.id}>
                     {calendar.summary} {calendar.primary ? '(Primary)' : ''}
                   </option>
@@ -294,20 +304,20 @@ export const GoogleCalendarTest: React.FC = () => {
                 type="text"
                 placeholder="Event Title"
                 value={newEventTitle}
-                onChange={(e) => setNewEventTitle(e.target.value)}
+                onChange={e => setNewEventTitle(e.target.value)}
                 className="w-full p-2 border rounded"
               />
               <div className="flex gap-2">
                 <input
                   type="date"
                   value={newEventDate}
-                  onChange={(e) => setNewEventDate(e.target.value)}
+                  onChange={e => setNewEventDate(e.target.value)}
                   className="flex-1 p-2 border rounded"
                 />
                 <input
                   type="time"
                   value={newEventTime}
-                  onChange={(e) => setNewEventTime(e.target.value)}
+                  onChange={e => setNewEventTime(e.target.value)}
                   className="flex-1 p-2 border rounded"
                 />
               </div>
@@ -325,7 +335,7 @@ export const GoogleCalendarTest: React.FC = () => {
             <div>
               <h2 className="text-xl font-semibold mb-3">Upcoming Events</h2>
               <ul className="space-y-2">
-                {events.map((event) => {
+                {events.map(event => {
                   const calendar = calendars.find(cal => cal.id === event.calendarId)
                   return (
                     <li key={event.id} className="p-3 bg-gray-100 rounded">

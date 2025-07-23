@@ -1,6 +1,18 @@
 import { useState } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
-import { Home, BookOpen, Trophy, Sparkles, Brain, LogOut, Clock, Menu, Grid, SunMoon, Calendar } from 'lucide-react'
+import {
+  Home,
+  BookOpen,
+  Trophy,
+  Sparkles,
+  Brain,
+  LogOut,
+  Clock,
+  Menu,
+  Grid,
+  SunMoon,
+  Calendar,
+} from 'lucide-react'
 import { cn } from '../lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from './Button'

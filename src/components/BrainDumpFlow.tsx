@@ -436,13 +436,11 @@ function BrainDumpFlowInner() {
             isGhost: true,
           },
         }
-        
+
         // Update nodes - replace original with ghost
-        const updatedNodes = nodes.map(n => 
-          n.id === topicDumpDialog.node.id ? ghostNode : n
-        )
+        const updatedNodes = nodes.map(n => (n.id === topicDumpDialog.node.id ? ghostNode : n))
         setNodes(updatedNodes)
-        
+
         // Persist the changes
         await updateEntry(currentEntry.id, {
           nodes: updatedNodes as BrainDumpNode[],
