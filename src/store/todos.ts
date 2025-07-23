@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { supabase } from '@/lib/supabase'
+import type { Database } from '@/types/database'
 import type {
   Todo,
   CreateTodoInput,
@@ -15,7 +16,25 @@ import type {
   CompletionQuality,
   RecurrencePatternType,
   RecurrencePatternConfig,
+  TodoRelationship,
 } from '@/types/todo'
+
+// Database row types
+type TodoRow = Database['public']['Tables']['todos']['Row']
+type RecurrenceRow = Database['public']['Tables']['todo_recurrence']['Row']
+type CompletionRow = Database['public']['Tables']['todo_completions']['Row']
+type AttemptRow = Database['public']['Tables']['todo_attempts']['Row']
+type TagRow = Database['public']['Tables']['todo_tags']['Row']
+type RelationshipRow = Database['public']['Tables']['todo_relationships']['Row']
+
+// Database response type with relations
+type TodoWithRelations = TodoRow & {
+  recurrence?: RecurrenceRow[]
+  completions?: CompletionRow[]
+  attempts?: AttemptRow[]
+  tags?: TagRow[]
+  relationships?: RelationshipRow[]
+}
 
 interface TodoStore {
   // State
@@ -167,8 +186,8 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
       
       set({ todos, isLoading: false })
     } catch (error) {
-      console.error('Error fetching todos:', error)
-      set({ error: (error as Error).message, isLoading: false })
+      // console.error('Error fetching todos:', error)
+      set({ error: error instanceof Error ? error.message : 'An error occurred', isLoading: false })
     }
   },
   
@@ -201,7 +220,7 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
       
       // Check if data is returned
       if (!data) {
-        console.error('No data returned from todo insert operation')
+        // console.error('No data returned from todo insert operation')
         throw new Error('Failed to create todo: No data returned from database')
       }
       
@@ -219,8 +238,8 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
       
       return newTodo
     } catch (error) {
-      console.error('Error creating todo:', error)
-      set({ error: (error as Error).message })
+      // console.error('Error creating todo:', error)
+      set({ error: error instanceof Error ? error.message : 'An error occurred' })
       return null
     }
   },
@@ -257,8 +276,8 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
         ),
       }))
     } catch (error) {
-      console.error('Error updating todo:', error)
-      set({ error: (error as Error).message })
+      // console.error('Error updating todo:', error)
+      set({ error: error instanceof Error ? error.message : 'An error occurred' })
     }
   },
   
@@ -277,8 +296,8 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
         todos: state.todos.filter(todo => todo.id !== todoId),
       }))
     } catch (error) {
-      console.error('Error deleting todo:', error)
-      set({ error: (error as Error).message })
+      // console.error('Error deleting todo:', error)
+      set({ error: error instanceof Error ? error.message : 'An error occurred' })
     }
   },
   
@@ -290,8 +309,8 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
         updates.map(({ id, changes }) => get().updateTodo(id, changes))
       )
     } catch (error) {
-      console.error('Error batch updating todos:', error)
-      set({ error: (error as Error).message })
+      // console.error('Error batch updating todos:', error)
+      set({ error: error instanceof Error ? error.message : 'An error occurred' })
     }
   },
   
@@ -310,8 +329,8 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
         todos: state.todos.filter(todo => !todoIds.includes(todo.id)),
       }))
     } catch (error) {
-      console.error('Error batch deleting todos:', error)
-      set({ error: (error as Error).message })
+      // console.error('Error batch deleting todos:', error)
+      set({ error: error instanceof Error ? error.message : 'An error occurred' })
     }
   },
   
@@ -409,11 +428,13 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
       if (error) throw error
       
       // Refresh todo to get recurrence data
-      const { user_id } = get().getTodoById(todoId)!
-      await get().fetchTodos(user_id)
+      const todo = get().getTodoById(todoId)
+      if (todo) {
+        await get().fetchTodos(todo.userId)
+      }
     } catch (error) {
-      console.error('Error making todo recurring:', error)
-      set({ error: (error as Error).message })
+      // console.error('Error making todo recurring:', error)
+      set({ error: error instanceof Error ? error.message : 'An error occurred' })
     }
   },
   
@@ -442,8 +463,8 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
         ),
       }))
     } catch (error) {
-      console.error('Error updating recurrence:', error)
-      set({ error: (error as Error).message })
+      // console.error('Error updating recurrence:', error)
+      set({ error: error instanceof Error ? error.message : 'An error occurred' })
     }
   },
   
@@ -466,8 +487,8 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
         ),
       }))
     } catch (error) {
-      console.error('Error removing recurrence:', error)
-      set({ error: (error as Error).message })
+      // console.error('Error removing recurrence:', error)
+      set({ error: error instanceof Error ? error.message : 'An error occurred' })
     }
   },
   
@@ -489,11 +510,11 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
       const todo = get().getTodoById(todoId)
       if (todo?.recurrence?.isHabit) {
         // This would need a more complex implementation to calculate streaks
-        console.log('Update habit streak')
+        // console.log('Update habit streak')
       }
     } catch (error) {
-      console.error('Error completing recurring instance:', error)
-      set({ error: (error as Error).message })
+      // console.error('Error completing recurring instance:', error)
+      set({ error: error instanceof Error ? error.message : 'An error occurred' })
     }
   },
   
@@ -521,8 +542,8 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
         await get().updateTodoStatus(todoId, 'in_progress')
       }
     } catch (error) {
-      console.error('Error recording attempt:', error)
-      set({ error: (error as Error).message })
+      // console.error('Error recording attempt:', error)
+      set({ error: error instanceof Error ? error.message : 'An error occurred' })
     }
   },
   
@@ -539,8 +560,8 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
       
       if (error) throw error
     } catch (error) {
-      console.error('Error adding tag:', error)
-      set({ error: (error as Error).message })
+      // console.error('Error adding tag:', error)
+      set({ error: error instanceof Error ? error.message : 'An error occurred' })
     }
   },
   
@@ -555,8 +576,8 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
       
       if (error) throw error
     } catch (error) {
-      console.error('Error removing tag:', error)
-      set({ error: (error as Error).message })
+      // console.error('Error removing tag:', error)
+      set({ error: error instanceof Error ? error.message : 'An error occurred' })
     }
   },
   
@@ -633,8 +654,8 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
       
       return stats
     } catch (error) {
-      console.error('Error getting todo stats:', error)
-      set({ error: (error as Error).message })
+      // console.error('Error getting todo stats:', error)
+      set({ error: error instanceof Error ? error.message : 'An error occurred' })
       throw error
     }
   },
@@ -652,8 +673,8 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
       
       if (error) throw error
     } catch (error) {
-      console.error('Error linking to braindump:', error)
-      set({ error: (error as Error).message })
+      // console.error('Error linking to braindump:', error)
+      set({ error: error instanceof Error ? error.message : 'An error occurred' })
     }
   },
   
@@ -670,8 +691,8 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
       
       if (error) throw error
     } catch (error) {
-      console.error('Error linking to journal:', error)
-      set({ error: (error as Error).message })
+      // console.error('Error linking to journal:', error)
+      set({ error: error instanceof Error ? error.message : 'An error occurred' })
     }
   },
   
@@ -688,14 +709,14 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
       
       if (error) throw error
     } catch (error) {
-      console.error('Error linking to routine:', error)
-      set({ error: (error as Error).message })
+      // console.error('Error linking to routine:', error)
+      set({ error: error instanceof Error ? error.message : 'An error occurred' })
     }
   },
 }))
 
 // Helper functions for data transformation
-function transformTodoFromDB(dbTodo: any): Todo {
+function transformTodoFromDB(dbTodo: TodoWithRelations): Todo {
   if (!dbTodo) {
     throw new Error('transformTodoFromDB: dbTodo is null or undefined')
   }
@@ -733,7 +754,7 @@ function transformTodoFromDB(dbTodo: any): Todo {
   }
 }
 
-function transformRecurrenceFromDB(dbRecurrence: any): TodoRecurrence {
+function transformRecurrenceFromDB(dbRecurrence: RecurrenceRow): TodoRecurrence {
   return {
     id: dbRecurrence.id,
     todoId: dbRecurrence.todo_id,
@@ -751,7 +772,7 @@ function transformRecurrenceFromDB(dbRecurrence: any): TodoRecurrence {
   }
 }
 
-function transformCompletionFromDB(dbCompletion: any): TodoCompletion {
+function transformCompletionFromDB(dbCompletion: CompletionRow): TodoCompletion {
   return {
     id: dbCompletion.id,
     todoId: dbCompletion.todo_id,
@@ -765,7 +786,7 @@ function transformCompletionFromDB(dbCompletion: any): TodoCompletion {
   }
 }
 
-function transformAttemptFromDB(dbAttempt: any): TodoAttempt {
+function transformAttemptFromDB(dbAttempt: AttemptRow): TodoAttempt {
   return {
     id: dbAttempt.id,
     todoId: dbAttempt.todo_id,
@@ -779,7 +800,7 @@ function transformAttemptFromDB(dbAttempt: any): TodoAttempt {
   }
 }
 
-function transformTagFromDB(dbTag: any): TodoTag {
+function transformTagFromDB(dbTag: TagRow): TodoTag {
   return {
     id: dbTag.id,
     todoId: dbTag.todo_id,
@@ -789,7 +810,7 @@ function transformTagFromDB(dbTag: any): TodoTag {
   }
 }
 
-function transformRelationshipFromDB(dbRel: any): TodoRelationship {
+function transformRelationshipFromDB(dbRel: RelationshipRow): TodoRelationship {
   return {
     id: dbRel.id,
     parentTodoId: dbRel.parent_todo_id,

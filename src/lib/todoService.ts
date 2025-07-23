@@ -15,6 +15,11 @@ export function convertBrainDumpNodeToTodo(
   userId: string,
   braindumpId: string
 ): CreateTodoInput | null {
+  // Null safety check for node and node.data
+  if (!node || !node.data) {
+    return null
+  }
+
   // Only convert thought nodes that look like tasks
   if (
     node.type !== 'thought' ||
@@ -32,16 +37,16 @@ export function convertBrainDumpNodeToTodo(
     'task'
 
   return {
-    title: node.data.label,
-    description: node.data.originalText,
+    title: node.data.label || 'Untitled Task',
+    description: node.data.originalText || undefined,
     type: todoType,
     status: convertNodeStatusToTodoStatus(node.data.taskStatus),
     priorityImportance: node.data.importance,
     priorityUrgency: node.data.urgency,
-    dueDate: node.data.dueDate,
-    scheduledDate: node.data.timeboxDate,
-    scheduledTime: node.data.timeboxStartTime,
-    scheduledDuration: node.data.timeboxDuration,
+    dueDate: node.data.dueDate || undefined,
+    scheduledDate: node.data.timeboxDate || undefined,
+    scheduledTime: node.data.timeboxStartTime || undefined,
+    scheduledDuration: node.data.timeboxDuration || undefined,
     sourceType: 'braindump' as TodoSourceType,
     sourceId: `${braindumpId}:${node.id}`,
     sourceMetadata: {
@@ -170,7 +175,7 @@ export async function migrateBrainDumpToTodos(
           ...transformTodoInputToDB(todoInput),
         }
         
-        console.log('Creating todo with data:', todoData)
+        // console.log('Creating todo with data:', todoData)
         
         const { data: todo, error: todoError } = await supabase
           .from('todos')
@@ -179,7 +184,7 @@ export async function migrateBrainDumpToTodos(
           .single()
 
         if (todoError || !todo) {
-          console.error('Todo creation failed:', { todoError, todoData })
+          // console.error('Todo creation failed:', { todoError, todoData })
           errors.push(`Failed to create todo for node ${node.id}: ${todoError?.message || 'No data returned'}`)
           continue
         }
@@ -213,9 +218,9 @@ export async function migrateBrainDumpToTodos(
         if (node.data.recurringCompletions?.length) {
           await createCompletionsFromNode(todo.id, node)
         }
-      } catch (err: any) {
-        errors.push(`Error processing node ${node.id}: ${err?.message || err}`)
-        console.error('Migration error details:', { node, error: err })
+      } catch (err) {
+        errors.push(`Error processing node ${node.id}: ${err instanceof Error ? err.message : String(err)}`)
+        // console.error('Migration error details:', { node, error: err })
       }
     }
 
@@ -223,7 +228,7 @@ export async function migrateBrainDumpToTodos(
     await establishRelationshipsFromEdges(dump.edges as any[], braindumpId)
 
   } catch (err) {
-    errors.push(`General error: ${err}`)
+    errors.push(`General error: ${err instanceof Error ? err.message : String(err)}`)
   }
 
   return { created, errors }
@@ -300,7 +305,7 @@ async function createCompletionsFromNode(todoId: string, node: BrainDumpNode) {
 }
 
 // Establish relationships from brain dump edges
-async function establishRelationshipsFromEdges(edges: any[], braindumpId: string) {
+async function establishRelationshipsFromEdges(edges: Array<{ source: string; target: string }>, braindumpId: string) {
   for (const edge of edges) {
     // Find todos for source and target
     const { data: sourceTodo } = await supabase
@@ -397,7 +402,7 @@ export async function runFullMigration(userId: string): Promise<{
           summary.journal.migrated++
         }
       } catch (err) {
-        summary.errors.push(`Journal ${entry.id}: ${err}`)
+        summary.errors.push(`Journal ${entry.id}: ${err instanceof Error ? err.message : String(err)}`)
       }
     }
 
@@ -460,12 +465,12 @@ export async function runFullMigration(userId: string): Promise<{
 
         if (migrated) summary.routines.migrated++
       } catch (err) {
-        summary.errors.push(`Routine ${entry.id}: ${err}`)
+        summary.errors.push(`Routine ${entry.id}: ${err instanceof Error ? err.message : String(err)}`)
       }
     }
 
   } catch (err) {
-    summary.errors.push(`General migration error: ${err}`)
+    summary.errors.push(`General migration error: ${err instanceof Error ? err.message : String(err)}`)
   }
 
   return { summary }

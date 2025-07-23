@@ -1,9 +1,9 @@
 import { create } from 'zustand'
-import type { JournalEntry, UserProgress, Achievement } from '../types/journal'
-import { XP_REWARDS, LEVELS, ACHIEVEMENTS_LIST } from '../types/journal'
-import { supabaseService } from '../services/supabase'
-import { isSupabaseConfigured } from '../lib/supabase'
-import { syncJournalQuestToTodo, syncJournalQuestDeletion } from '../lib/journalTodoSync'
+import type { JournalEntry, UserProgress, Achievement } from '@/types/journal'
+import { XP_REWARDS, LEVELS, ACHIEVEMENTS_LIST } from '@/types/journal'
+import { supabaseService } from '@/services/supabase'
+import { isSupabaseConfigured } from '@/lib/supabase'
+import { syncJournalQuestToTodo, syncJournalQuestDeletion } from '@/lib/journalTodoSync'
 
 interface JournalState {
   entries: JournalEntry[]

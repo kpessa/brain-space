@@ -52,6 +52,31 @@ Helps create well-formatted git commits following conventional commit standards.
 - Adds co-author attribution
 - Follows conventional commit format
 
+### `/cleanup` - Clean Up Repository
+Identifies and removes unnecessary files created during development.
+
+**Usage:** Type `/cleanup` in Claude Code
+
+**Features:**
+- Identifies temporary, debug, and test files
+- Checks for dependencies before removal
+- Groups files by category for review
+- Safely removes only unnecessary files
+- Cleans up related imports and routes
+
+### `/sync` - Sync with Main Branch
+Updates current branch with latest changes from main.
+
+**Usage:** Type `/sync` in Claude Code
+
+**Features:**
+- Fetches latest changes from main
+- Handles uncommitted changes (stash)
+- Offers merge or rebase options
+- Guides through conflict resolution
+- Manages push after sync
+- Shows new commits pulled in
+
 ## How to Use Slash Commands
 
 1. In Claude Code, simply type the slash command (e.g., `/pr`)

@@ -48,7 +48,7 @@ export default function TodoMigration() {
       const migrationStatus = await checkMigrationStatus(user.id)
       setStatus(migrationStatus)
     } catch (error) {
-      console.error('Error checking migration status:', error)
+      // console.error('Error checking migration status:', error)
     } finally {
       setIsChecking(false)
     }
@@ -89,13 +89,13 @@ export default function TodoMigration() {
       // Recheck status after migration
       await checkStatus()
     } catch (error) {
-      console.error('Error running migration:', error)
+      // console.error('Error running migration:', error)
       setMigrationResult({
         summary: {
           braindumps: { total: 0, migrated: 0 },
           journal: { total: 0, migrated: 0 },
           routines: { total: 0, migrated: 0 },
-          errors: [`Migration failed: ${error}`],
+          errors: [`Migration failed: ${error instanceof Error ? error.message : String(error)}`],
         },
       })
     } finally {
