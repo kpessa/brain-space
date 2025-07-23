@@ -14,7 +14,9 @@
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "pr": "node scripts/create-pr.js",
+    "pr:quick": "./scripts/quick-pr.sh"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.52.0",

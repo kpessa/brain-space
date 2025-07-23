@@ -1,5 +1,5 @@
 import type { Node, Edge } from '@xyflow/react'
-import type { BrainDumpNode } from '../types/braindump'
+import type { BrainDumpNode } from '@/types/braindump'
 
 interface LayoutOptions {
   nodeWidth: number
