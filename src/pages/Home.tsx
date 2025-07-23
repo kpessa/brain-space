@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Button } from '../components/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/Card'
-import { BookOpen, Sword, Trophy, Sparkles, Clock } from 'lucide-react'
+import { BookOpen, Sword, Trophy, Sparkles, Clock, SunMoon } from 'lucide-react'
 
 export default function Home() {
   return (
@@ -80,6 +80,28 @@ export default function Home() {
               <Link to="/timebox">
                 <Button variant="primary" className="w-full">
                   Plan Your Day
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-glow transition-all duration-300 animate-slideInRight animation-delay-100">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <SunMoon className="w-8 h-8 text-purple-500" />
+                <CardTitle>Morning & Evening Routines</CardTitle>
+              </div>
+              <CardDescription>
+                Transform your days with intentional morning and evening rituals
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-600 mb-4">
+                Join a 66-day journey to wake up earlier and create powerful daily routines that set you up for success.
+              </p>
+              <Link to="/routines">
+                <Button variant="primary" className="w-full">
+                  Start Your Journey
                 </Button>
               </Link>
             </CardContent>

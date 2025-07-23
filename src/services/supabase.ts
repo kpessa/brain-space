@@ -268,6 +268,133 @@ export class SupabaseService {
       )
       .subscribe()
   }
+
+  // Routine methods
+  async getRoutineProgress(userId: string) {
+    if (!isSupabaseConfigured()) return { data: null, error: null }
+    
+    return await supabase
+      .from('routine_progress')
+      .select('*')
+      .eq('user_id', userId)
+      .single()
+  }
+
+  async createRoutineProgress(progress: any) {
+    if (!isSupabaseConfigured()) return { data: null, error: null }
+    
+    return await supabase
+      .from('routine_progress')
+      .insert(progress)
+      .select()
+      .single()
+  }
+
+  async updateRoutineProgress(userId: string, updates: any) {
+    if (!isSupabaseConfigured()) return { data: null, error: null }
+    
+    return await supabase
+      .from('routine_progress')
+      .update(updates)
+      .eq('user_id', userId)
+      .select()
+      .single()
+  }
+
+  async getRoutineEntries(userId: string) {
+    if (!isSupabaseConfigured()) return { data: null, error: null }
+    
+    return await supabase
+      .from('routine_entries')
+      .select('*')
+      .eq('user_id', userId)
+      .order('day_number', { ascending: false })
+  }
+
+  async getRoutineEntry(entryId: string) {
+    if (!isSupabaseConfigured()) return { data: null, error: null }
+    
+    return await supabase
+      .from('routine_entries')
+      .select('*')
+      .eq('id', entryId)
+      .single()
+  }
+
+  async createRoutineEntry(entry: any) {
+    if (!isSupabaseConfigured()) return { data: null, error: null }
+    
+    // Convert camelCase to snake_case for database
+    const dbEntry = {
+      ...entry,
+      user_id: entry.userId,
+      day_number: entry.dayNumber,
+      evening_completed: entry.eveningCompleted,
+      sleep_intention: entry.sleepIntention,
+      wake_intention: entry.wakeIntention,
+      magical_moment: entry.magicalMoment,
+      morning_ritual_plan: entry.morningRitualPlan,
+      morning_completed: entry.morningCompleted,
+      actual_sleep_time: entry.actualSleepTime,
+      actual_wake_time: entry.actualWakeTime,
+      ritual_completed: entry.ritualCompleted,
+      one_percent_improvement: entry.onePercentImprovement,
+      distractions_to_minimize: entry.distractionsToMinimize,
+      created_at: entry.createdAt,
+      updated_at: entry.updatedAt,
+    }
+    
+    // Remove camelCase fields
+    delete dbEntry.userId
+    delete dbEntry.dayNumber
+    delete dbEntry.eveningCompleted
+    delete dbEntry.sleepIntention
+    delete dbEntry.wakeIntention
+    delete dbEntry.magicalMoment
+    delete dbEntry.morningRitualPlan
+    delete dbEntry.morningCompleted
+    delete dbEntry.actualSleepTime
+    delete dbEntry.actualWakeTime
+    delete dbEntry.ritualCompleted
+    delete dbEntry.onePercentImprovement
+    delete dbEntry.distractionsToMinimize
+    delete dbEntry.createdAt
+    delete dbEntry.updatedAt
+    
+    return await supabase
+      .from('routine_entries')
+      .insert(dbEntry)
+      .select()
+      .single()
+  }
+
+  async updateRoutineEntry(entryId: string, updates: any) {
+    if (!isSupabaseConfigured()) return { data: null, error: null }
+    
+    // Convert camelCase to snake_case for database
+    const dbUpdates: any = {}
+    
+    if (updates.eveningCompleted !== undefined) dbUpdates.evening_completed = updates.eveningCompleted
+    if (updates.sleepIntention !== undefined) dbUpdates.sleep_intention = updates.sleepIntention
+    if (updates.wakeIntention !== undefined) dbUpdates.wake_intention = updates.wakeIntention
+    if (updates.magicalMoment !== undefined) dbUpdates.magical_moment = updates.magicalMoment
+    if (updates.morningRitualPlan !== undefined) dbUpdates.morning_ritual_plan = updates.morningRitualPlan
+    if (updates.morningCompleted !== undefined) dbUpdates.morning_completed = updates.morningCompleted
+    if (updates.actualSleepTime !== undefined) dbUpdates.actual_sleep_time = updates.actualSleepTime
+    if (updates.actualWakeTime !== undefined) dbUpdates.actual_wake_time = updates.actualWakeTime
+    if (updates.ritualCompleted !== undefined) dbUpdates.ritual_completed = updates.ritualCompleted
+    if (updates.mit !== undefined) dbUpdates.mit = updates.mit
+    if (updates.onePercentImprovement !== undefined) dbUpdates.one_percent_improvement = updates.onePercentImprovement
+    if (updates.distractionsToMinimize !== undefined) dbUpdates.distractions_to_minimize = updates.distractionsToMinimize
+    if (updates.updatedAt !== undefined) dbUpdates.updated_at = updates.updatedAt
+    
+    return await supabase
+      .from('routine_entries')
+      .update(dbUpdates)
+      .eq('id', entryId)
+      .select()
+      .single()
+  }
 }
 
 export const supabaseService = new SupabaseService()

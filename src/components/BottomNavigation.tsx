@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Home, BookOpen, Brain, Clock, Trophy, Sparkles, LogOut, Grid } from 'lucide-react'
+import { Home, BookOpen, Brain, Clock, Trophy, Sparkles, LogOut, Grid, SunMoon } from 'lucide-react'
 import { cn } from '../lib/utils'
 import { useOrientation } from '../hooks/useOrientation'
 import { useAuth } from '@/contexts/AuthContext'
@@ -18,10 +18,10 @@ export default function BottomNavigation() {
   const navItems: NavItem[] = [
     { path: '/', icon: Home, label: 'Home' },
     { path: '/journal', icon: BookOpen, label: 'Journal' },
+    { path: '/routines', icon: SunMoon, label: 'Routines' },
     { path: '/braindump', icon: Brain, label: 'Brain' },
-    { path: '/matrix', icon: Grid, label: 'Matrix' },
     { path: '/timebox', icon: Clock, label: 'Timebox' },
-    { path: '/progress', icon: Trophy, label: 'Progress' },
+    { path: '/matrix', icon: Grid, label: 'Matrix' },
   ]
 
   // Hide bottom nav on certain routes

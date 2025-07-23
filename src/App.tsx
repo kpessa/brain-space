@@ -24,6 +24,7 @@ import DebugJournal from './pages/DebugJournal'
 import RecalculateProgress from './pages/RecalculateProgress'
 import Timebox from './pages/Timebox'
 import { Matrix } from './pages/Matrix'
+import Routines from './pages/Routines'
 
 function AppContent() {
   const { user, loading } = useAuth()
@@ -102,6 +103,7 @@ function AppContent() {
               <Route path="recalculate-progress" element={<RecalculateProgress />} />
               <Route path="timebox" element={<Timebox />} />
               <Route path="matrix" element={<Matrix />} />
+              <Route path="routines" element={<Routines />} />
             </Route>
           ) : (
             <>
