@@ -174,7 +174,7 @@ export function MorningRoutine() {
                 type="time"
                 value={actualSleepTime}
                 onChange={(e) => setActualSleepTime(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-base"
               />
             </div>
             <div>
@@ -183,7 +183,7 @@ export function MorningRoutine() {
                 type="time"
                 value={actualWakeTime}
                 onChange={(e) => setActualWakeTime(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-base"
               />
             </div>
           </div>
@@ -202,7 +202,7 @@ export function MorningRoutine() {
             value={mit}
             onChange={(e) => setMit(e.target.value)}
             placeholder="The one task that, if completed, would make today a success..."
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 h-20"
+            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 h-20 text-base"
           />
         </div>
 
@@ -220,7 +220,7 @@ export function MorningRoutine() {
             value={onePercent}
             onChange={(e) => setOnePercent(e.target.value)}
             placeholder="A tiny step towards a better version of yourself..."
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-base"
           />
         </div>
 
@@ -258,14 +258,14 @@ export function MorningRoutine() {
                 value={newDistraction}
                 onChange={(e) => setNewDistraction(e.target.value)}
                 placeholder="Distraction to minimize..."
-                className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-base"
               />
               <input
                 type="text"
                 value={newLimit}
                 onChange={(e) => setNewLimit(e.target.value)}
                 placeholder="Time limit..."
-                className="w-32 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                className="w-32 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-base"
               />
               <Button
                 variant="secondary"

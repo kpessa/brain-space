@@ -131,7 +131,7 @@ export function EveningRoutine() {
                 type="time"
                 value={sleepTime}
                 onChange={(e) => setSleepTime(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-base"
               />
             </div>
             <div>
@@ -140,7 +140,7 @@ export function EveningRoutine() {
                 type="time"
                 value={wakeTime}
                 onChange={(e) => setWakeTime(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-base"
               />
             </div>
           </div>
@@ -159,7 +159,7 @@ export function EveningRoutine() {
             value={magicalMoment}
             onChange={(e) => setMagicalMoment(e.target.value)}
             placeholder="Describe something that made you smile, a small victory, or a moment of gratitude..."
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 h-24"
+            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 h-24 text-base"
           />
         </div>
 
@@ -197,7 +197,7 @@ export function EveningRoutine() {
                 onChange={(e) => setNewRitual(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleAddRitual()}
                 placeholder="Add a simple morning action..."
-                className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-base"
               />
               <Button
                 variant="secondary"

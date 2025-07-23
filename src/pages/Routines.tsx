@@ -74,7 +74,7 @@ export default function Routines() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-brain-600 via-space-600 to-brain-700 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-brain-600 via-space-600 to-brain-700 flex items-center justify-center overflow-x-hidden">
         <div className="text-center text-white">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
           <p className="mt-4">Loading your routines...</p>
@@ -86,8 +86,8 @@ export default function Routines() {
   if (!progress || progress.currentDay === 0) {
     // Journey not started
     return (
-      <div className="min-h-screen bg-gradient-to-br from-brain-600 via-space-600 to-brain-700 p-4">
-        <div className="max-w-4xl mx-auto">
+      <div className="min-h-screen bg-gradient-to-br from-brain-600 via-space-600 to-brain-700 p-4 overflow-x-hidden">
+        <div className="max-w-4xl mx-auto max-w-screen">
           <header className="mb-8 text-center">
             <h1 className="text-4xl font-bold text-white mb-4">Morning & Evening Routines</h1>
             <p className="text-white/80 max-w-2xl mx-auto">
@@ -142,8 +142,8 @@ export default function Routines() {
   const nextMilestone = ROUTINE_MILESTONES.find(m => m.day === milestoneProgress?.next)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brain-600 via-space-600 to-brain-700 p-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-brain-600 via-space-600 to-brain-700 p-4 overflow-x-hidden touch-pan-y">
+      <div className="max-w-4xl mx-auto max-w-screen">
         <header className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-4xl font-bold text-white">Your Daily Routines</h1>

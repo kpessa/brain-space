@@ -495,3 +495,49 @@ body.mobile-fullscreen-active {
     }
   }
 }
+
+/* iOS Specific Input Styles to Prevent Zoom */
+@supports (-webkit-touch-callout: none) {
+  /* Prevent iOS zoom on input focus */
+  input[type="text"],
+  input[type="time"],
+  input[type="date"],
+  input[type="datetime-local"],
+  input[type="email"],
+  input[type="number"],
+  input[type="password"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  textarea,
+  select {
+    font-size: 16px !important; /* Minimum 16px prevents zoom */
+  }
+  
+  /* Additional iOS input styling */
+  input,
+  textarea,
+  select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    -webkit-text-size-adjust: 100%;
+  }
+  
+  /* Prevent double-tap zoom on buttons */
+  button,
+  a,
+  input[type="submit"],
+  input[type="button"] {
+    touch-action: manipulation;
+  }
+  
+  /* Disable user select on UI elements */
+  .btn,
+  button,
+  nav {
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    user-select: none;
+  }
+}
