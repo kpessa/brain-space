@@ -1,12 +1,14 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRoutineStore } from '../../store/routines'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../Card'
 import { Button } from '../Button'
 import { Moon, Plus, X, Sparkles } from 'lucide-react'
 import { MORNING_RITUAL_SUGGESTIONS } from '../../types/routines'
+import { useRoutineAutoSave } from '../../hooks/useRoutineAutoSave'
 
 export function EveningRoutine() {
   const { progress, currentEntry, completeEvening, isSyncing } = useRoutineStore()
+  const autoSave = useRoutineAutoSave('evening')
   
   const [sleepTime, setSleepTime] = useState(currentEntry?.sleepIntention || '22:00')
   const [wakeTime, setWakeTime] = useState(currentEntry?.wakeIntention || '06:00')
@@ -16,6 +18,28 @@ export function EveningRoutine() {
   )
   const [newRitual, setNewRitual] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
+  
+  // Update form when currentEntry changes
+  useEffect(() => {
+    if (currentEntry) {
+      setSleepTime(currentEntry.sleepIntention || '22:00')
+      setWakeTime(currentEntry.wakeIntention || '06:00')
+      setMagicalMoment(currentEntry.magicalMoment || '')
+      setRituals(currentEntry.morningRitualPlan || [])
+    }
+  }, [currentEntry])
+  
+  // Auto-save when form data changes
+  useEffect(() => {
+    if (!currentEntry?.eveningCompleted) {
+      autoSave({
+        sleepIntention: sleepTime,
+        wakeIntention: wakeTime,
+        magicalMoment,
+        morningRitualPlan: rituals,
+      })
+    }
+  }, [sleepTime, wakeTime, magicalMoment, rituals, autoSave, currentEntry?.eveningCompleted])
 
   const handleAddRitual = () => {
     if (newRitual.trim() && rituals.length < 5) {

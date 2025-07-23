@@ -28,8 +28,10 @@ export default function Routines() {
 
   useEffect(() => {
     if (user) {
-      initializeProgress(user.id)
-      loadEntries(user.id)
+      // First initialize progress, then load entries
+      initializeProgress(user.id).then(() => {
+        loadEntries(user.id)
+      })
     }
   }, [user, initializeProgress, loadEntries])
 

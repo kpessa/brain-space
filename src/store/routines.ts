@@ -17,6 +17,7 @@ interface RoutineStore {
   loadEntries: (userId: string) => Promise<void>
   getCurrentDayEntry: () => RoutineEntry | null
   createOrUpdateEntry: (data: Partial<RoutineEntry>) => Promise<void>
+  saveDraft: (data: Partial<RoutineEntry>) => Promise<void>
   completeEvening: (data: {
     sleepIntention: string
     wakeIntention: string
@@ -104,15 +105,39 @@ export const useRoutineStore = create<RoutineStore>((set, get) => ({
     try {
       set({ isLoading: true })
       
+      const { progress } = get()
+      if (!progress) {
+        logger.warn('ROUTINES', 'No progress loaded, cannot load entries')
+        return
+      }
+      
       if (isSupabaseConfigured()) {
-        const { data: entries } = await supabaseService.getRoutineEntries(userId)
+        const { data: entries, error } = await supabaseService.getRoutineEntries(userId)
+        
+        if (error) {
+          logger.error('ROUTINES', 'Failed to load entries from Supabase', { error })
+          return
+        }
+        
         set({ entries: entries || [] })
         
-        // Set current entry if exists
-        const today = new Date().toISOString().split('T')[0]
-        const todayEntry = entries?.find(e => e.date === today)
-        if (todayEntry) {
-          set({ currentEntry: todayEntry })
+        // Find the current day's entry based on dayNumber
+        if (progress.currentDay > 0 && entries) {
+          const currentDayEntry = entries.find(e => e.dayNumber === progress.currentDay)
+          
+          if (currentDayEntry) {
+            set({ currentEntry: currentDayEntry })
+            logger.info('ROUTINES', 'Found current day entry', { 
+              dayNumber: progress.currentDay,
+              entryId: currentDayEntry.id,
+              date: currentDayEntry.date
+            })
+          } else {
+            // No entry exists for current day yet
+            logger.info('ROUTINES', 'No entry found for current day', { 
+              dayNumber: progress.currentDay 
+            })
+          }
         }
       } else {
         // Offline mode
@@ -120,10 +145,11 @@ export const useRoutineStore = create<RoutineStore>((set, get) => ({
         const entries = stored ? JSON.parse(stored) : []
         set({ entries })
         
-        const today = new Date().toISOString().split('T')[0]
-        const todayEntry = entries.find((e: RoutineEntry) => e.date === today)
-        if (todayEntry) {
-          set({ currentEntry: todayEntry })
+        if (progress.currentDay > 0) {
+          const currentDayEntry = entries.find((e: RoutineEntry) => e.dayNumber === progress.currentDay)
+          if (currentDayEntry) {
+            set({ currentEntry: currentDayEntry })
+          }
         }
       }
     } catch (error) {
@@ -142,7 +168,10 @@ export const useRoutineStore = create<RoutineStore>((set, get) => ({
   
   createOrUpdateEntry: async (data: Partial<RoutineEntry>) => {
     const { progress, currentEntry } = get()
-    if (!progress) return
+    if (!progress) {
+      logger.error('ROUTINES', 'Cannot save entry without progress')
+      return
+    }
     
     try {
       set({ isSyncing: true })
@@ -155,39 +184,80 @@ export const useRoutineStore = create<RoutineStore>((set, get) => ({
         userId: progress.userId,
         dayNumber: progress.currentDay,
         date: today,
-        eveningCompleted: false,
-        morningCompleted: false,
+        eveningCompleted: currentEntry?.eveningCompleted || false,
+        morningCompleted: currentEntry?.morningCompleted || false,
         createdAt: currentEntry?.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         ...currentEntry,
         ...data,
       }
       
+      logger.info('ROUTINES', 'Saving entry', { 
+        entryId,
+        dayNumber: entry.dayNumber,
+        isUpdate: !!currentEntry,
+        data
+      })
+      
       if (isSupabaseConfigured()) {
+        let result
         if (currentEntry) {
-          await supabaseService.updateRoutineEntry(entryId, entry)
+          result = await supabaseService.updateRoutineEntry(entryId, entry)
         } else {
-          await supabaseService.createRoutineEntry(entry)
+          result = await supabaseService.createRoutineEntry(entry)
+        }
+        
+        if (result.error) {
+          logger.error('ROUTINES', 'Failed to save to Supabase', { error: result.error })
+          throw result.error
+        }
+        
+        // Use the returned data which has proper field mapping
+        if (result.data) {
+          set({ currentEntry: result.data })
+          
+          // Update entries list
+          set(state => ({
+            entries: currentEntry 
+              ? state.entries.map(e => e.id === entryId ? result.data : e)
+              : [...state.entries, result.data]
+          }))
         }
       } else {
         // Offline mode
-        const entries = [...get().entries.filter(e => e.id !== entryId), entry]
+        set({ currentEntry: entry })
+        
+        const entries = currentEntry
+          ? get().entries.map(e => e.id === entryId ? entry : e)
+          : [...get().entries, entry]
+          
         localStorage.setItem(`routine-entries-${progress.userId}`, JSON.stringify(entries))
         set({ entries })
       }
       
-      set({ currentEntry: entry })
-      
-      // Update entries list
-      set(state => ({
-        entries: state.entries.map(e => e.id === entryId ? entry : e)
-          .concat(currentEntry ? [] : [entry])
-      }))
+      logger.info('ROUTINES', 'Entry saved successfully', { entryId })
       
     } catch (error) {
       logger.error('ROUTINES', 'Failed to save entry', { error })
+      throw error
     } finally {
       set({ isSyncing: false })
+    }
+  },
+  
+  saveDraft: async (data: Partial<RoutineEntry>) => {
+    const { progress, currentEntry } = get()
+    if (!progress || progress.currentDay === 0) {
+      logger.warn('ROUTINES', 'Cannot save draft without active progress')
+      return
+    }
+    
+    // Don't mark as completed, just save the current state
+    try {
+      await get().createOrUpdateEntry(data)
+      logger.info('ROUTINES', 'Draft saved', { data })
+    } catch (error) {
+      logger.error('ROUTINES', 'Failed to save draft', { error })
     }
   },
   

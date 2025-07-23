@@ -1,12 +1,14 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRoutineStore } from '../../store/routines'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../Card'
 import { Button } from '../Button'
 import { Sun, Plus, X, Target, TrendingUp, AlertCircle } from 'lucide-react'
 import { DISTRACTION_CATEGORIES } from '../../types/routines'
+import { useRoutineAutoSave } from '../../hooks/useRoutineAutoSave'
 
 export function MorningRoutine() {
   const { progress, currentEntry, completeMorning, isSyncing } = useRoutineStore()
+  const autoSave = useRoutineAutoSave('morning')
   
   const [actualSleepTime, setActualSleepTime] = useState(
     currentEntry?.actualSleepTime || currentEntry?.sleepIntention || '22:00'
@@ -28,6 +30,32 @@ export function MorningRoutine() {
   const [showDistSuggestions, setShowDistSuggestions] = useState(false)
 
   const rituals = currentEntry?.morningRitualPlan || []
+  
+  // Update form when currentEntry changes
+  useEffect(() => {
+    if (currentEntry) {
+      setActualSleepTime(currentEntry.actualSleepTime || currentEntry.sleepIntention || '22:00')
+      setActualWakeTime(currentEntry.actualWakeTime || new Date().toTimeString().slice(0, 5))
+      setRitualCompleted(currentEntry.ritualCompleted || new Array(currentEntry.morningRitualPlan?.length || 0).fill(false))
+      setMit(currentEntry.mit || '')
+      setOnePercent(currentEntry.onePercentImprovement || '')
+      setDistractions(currentEntry.distractionsToMinimize || [])
+    }
+  }, [currentEntry])
+  
+  // Auto-save when form data changes
+  useEffect(() => {
+    if (!currentEntry?.morningCompleted) {
+      autoSave({
+        actualSleepTime,
+        actualWakeTime,
+        ritualCompleted,
+        mit,
+        onePercentImprovement: onePercent,
+        distractionsToMinimize: distractions,
+      })
+    }
+  }, [actualSleepTime, actualWakeTime, ritualCompleted, mit, onePercent, distractions, autoSave, currentEntry?.morningCompleted])
 
   const toggleRitual = (index: number) => {
     const updated = [...ritualCompleted]
