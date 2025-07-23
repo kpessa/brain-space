@@ -25,6 +25,9 @@ import RecalculateProgress from './pages/RecalculateProgress'
 import Timebox from './pages/Timebox'
 import { Matrix } from './pages/Matrix'
 import Routines from './pages/Routines'
+import TodoMigration from './pages/TodoMigration'
+import UnifiedTodos from './pages/UnifiedTodos'
+import TodoDashboard from './pages/TodoDashboard'
 
 function AppContent() {
   const { user, loading } = useAuth()
@@ -104,6 +107,9 @@ function AppContent() {
               <Route path="timebox" element={<Timebox />} />
               <Route path="matrix" element={<Matrix />} />
               <Route path="routines" element={<Routines />} />
+              <Route path="todo-migration" element={<TodoMigration />} />
+              <Route path="todos" element={<UnifiedTodos />} />
+              <Route path="todo-dashboard" element={<TodoDashboard />} />
             </Route>
           ) : (
             <>

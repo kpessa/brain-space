@@ -3,6 +3,7 @@ import type { RoutineEntry, RoutineProgress } from '../types/routines'
 import { supabaseService } from '../services/supabase'
 import { isSupabaseConfigured } from '../lib/supabase'
 import { logger } from '../services/logger'
+import { syncRoutineEntryToTodos } from '../lib/routineTodoSync'
 
 interface RoutineStore {
   // State
@@ -236,6 +237,14 @@ export const useRoutineStore = create<RoutineStore>((set, get) => ({
       }
       
       logger.info('ROUTINES', 'Entry saved successfully', { entryId })
+      
+      // Sync to todo system
+      if (isSupabaseConfigured() && progress.userId !== 'demo-user') {
+        const finalEntry = get().currentEntry
+        if (finalEntry) {
+          await syncRoutineEntryToTodos(finalEntry, progress.userId)
+        }
+      }
       
     } catch (error) {
       logger.error('ROUTINES', 'Failed to save entry', { error })

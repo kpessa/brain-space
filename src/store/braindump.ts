@@ -10,6 +10,7 @@ import { createAIService } from '../services/ai'
 import { supabaseService } from '../services/supabase'
 import { isSupabaseConfigured } from '../lib/supabase'
 import { logger } from '../services/logger'
+import { syncNodeToTodo, syncNodeDeletion, syncBrainDumpToTodos } from '../lib/braindumpTodoSync'
 
 interface ViewportState {
   x: number
@@ -361,6 +362,11 @@ export const useBrainDumpStore = create<BrainDumpState>((set, get) => ({
       entryId: entry.id,
       nodesCount: entry.nodes.length,
     })
+    
+    // Sync all task nodes to todos
+    if (isSupabaseConfigured() && userId && userId !== 'demo-user') {
+      await syncBrainDumpToTodos(entry.nodes, entry.edges, entry.id, userId)
+    }
 
     return entry
   },
@@ -512,6 +518,11 @@ export const useBrainDumpStore = create<BrainDumpState>((set, get) => ({
         nodes: [...currentEntry.nodes, node],
       })
       logger.info('STORE', 'Node persisted successfully', { nodeId: node.id })
+      
+      // Sync to todo system if it's a task node
+      if (currentEntry.userId && currentEntry.userId !== 'demo-user') {
+        await syncNodeToTodo(node, currentEntry.id, currentEntry.userId)
+      }
     } catch (error) {
       logger.error('STORE', 'Failed to persist node', { nodeId: node.id, error })
     }
@@ -540,6 +551,14 @@ export const useBrainDumpStore = create<BrainDumpState>((set, get) => ({
 
     // Save to database
     await updateEntry(currentEntry.id, { nodes: updatedNodes })
+    
+    // Sync to todo system if it's a task node
+    if (currentEntry.userId && currentEntry.userId !== 'demo-user') {
+      const updatedNode = updatedNodes.find(n => n.id === nodeId)
+      if (updatedNode) {
+        await syncNodeToTodo(updatedNode, currentEntry.id, currentEntry.userId)
+      }
+    }
   },
 
   deleteNode: async nodeId => {
@@ -572,6 +591,11 @@ export const useBrainDumpStore = create<BrainDumpState>((set, get) => ({
         edges: updatedEdges,
       })
       logger.info('STORE', 'Node deleted successfully', { nodeId })
+      
+      // Sync deletion to todo system
+      if (currentEntry.userId && currentEntry.userId !== 'demo-user') {
+        await syncNodeDeletion(nodeId, currentEntry.id)
+      }
     } catch (error) {
       logger.error('STORE', 'Failed to delete node', { nodeId, error })
     }

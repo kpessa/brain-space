@@ -3,6 +3,7 @@ import type { JournalEntry, UserProgress, Achievement } from '../types/journal'
 import { XP_REWARDS, LEVELS, ACHIEVEMENTS_LIST } from '../types/journal'
 import { supabaseService } from '../services/supabase'
 import { isSupabaseConfigured } from '../lib/supabase'
+import { syncJournalQuestToTodo, syncJournalQuestDeletion } from '../lib/journalTodoSync'
 
 interface JournalState {
   entries: JournalEntry[]
@@ -122,6 +123,9 @@ export const useJournalStore = create<JournalState>((set, get) => ({
     if (isSupabaseConfigured() && newProgress.userId !== 'demo-user') {
       await get().syncEntry(newEntry, newProgress.userId)
       await get().syncProgress(newProgress)
+      
+      // Sync daily quest to todo system
+      await syncJournalQuestToTodo(newEntry, newProgress.userId)
     }
   },
 
@@ -182,6 +186,11 @@ export const useJournalStore = create<JournalState>((set, get) => ({
       set({ isSyncing: true })
       try {
         await supabaseService.updateJournalEntry(id, updatedEntry)
+        
+        // Sync quest changes to todo system
+        if (updates.dailyQuest !== undefined) {
+          await syncJournalQuestToTodo(updatedEntry, userProgress.userId)
+        }
       } catch (error) {
         console.error('Failed to sync journal entry update:', error)
       } finally {
@@ -190,10 +199,17 @@ export const useJournalStore = create<JournalState>((set, get) => ({
     }
   },
 
-  deleteEntry: id => {
+  deleteEntry: async id => {
+    const { userProgress } = get()
+    
     set(state => ({
       entries: state.entries.filter(entry => entry.id !== id),
     }))
+    
+    // Sync deletion to todo system
+    if (isSupabaseConfigured() && userProgress.userId !== 'demo-user') {
+      await syncJournalQuestDeletion(id)
+    }
   },
 
   calculateStreak: () => {
