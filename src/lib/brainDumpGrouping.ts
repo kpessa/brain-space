@@ -1,4 +1,4 @@
-import type { BrainDumpEntry } from '../types/braindump'
+import type { BrainDumpEntry } from '@/types/braindump'
 
 export interface GroupedBrainDumps {
   [key: string]: {
