@@ -23,7 +23,7 @@ export const EightWeekView = {
   },
 
   // Navigation logic for the custom view
-  navigate: (date: Date, action: Navigate) => {
+  navigate: (date: Date, action: any) => {
     switch (action) {
       case Navigate.PREVIOUS:
         return dayjs(date).subtract(8, 'weeks').toDate()

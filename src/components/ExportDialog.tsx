@@ -58,7 +58,7 @@ export function ExportDialog({
         {/* Format selector */}
         <div className="flex gap-2 p-4 border-b">
           <Button
-            variant={format === 'yaml' ? 'default' : 'outline'}
+            variant={format === 'yaml' ? 'primary' : 'outline'}
             size="sm"
             onClick={() => setFormat('yaml')}
             className="flex items-center gap-2"
@@ -67,7 +67,7 @@ export function ExportDialog({
             YAML (Hierarchical)
           </Button>
           <Button
-            variant={format === 'json' ? 'default' : 'outline'}
+            variant={format === 'json' ? 'primary' : 'outline'}
             size="sm"
             onClick={() => setFormat('json')}
             className="flex items-center gap-2"

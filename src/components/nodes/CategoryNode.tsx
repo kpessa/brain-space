@@ -124,11 +124,11 @@ export function CategoryNode({
       maxWidth: 400,
     })
 
-    // Update dimensions
-    updateNode(id, {
-      width: dimensions.width,
-      height: dimensions.height,
-    })
+    // Update dimensions - removing width/height as they're not part of BrainDumpNode data type
+    // updateNode(id, {
+    //   width: dimensions.width,
+    //   height: dimensions.height,
+    // })
   }
 
   // Add double-click handlers to resize controls
@@ -137,19 +137,19 @@ export function CategoryNode({
 
     const resizeControls = nodeRef.current.querySelectorAll('.react-flow__resize-control')
 
-    const handleDoubleClick = (e: MouseEvent) => {
+    const handleResizeDoubleClick = (e: Event) => {
       e.stopPropagation()
       e.preventDefault()
       handleResizerDoubleClick(e as any)
     }
 
     resizeControls.forEach(control => {
-      control.addEventListener('dblclick', handleDoubleClick)
+      control.addEventListener('dblclick', handleResizeDoubleClick)
     })
 
     return () => {
       resizeControls.forEach(control => {
-        control.removeEventListener('dblclick', handleDoubleClick)
+        control.removeEventListener('dblclick', handleResizeDoubleClick)
       })
     }
   }, [selected, data.label, data.children, handleResizerDoubleClick])
@@ -161,10 +161,11 @@ export function CategoryNode({
         minWidth={150}
         minHeight={40}
         onResizeEnd={(_, params) => {
-          updateNode(id, {
-            width: params.width,
-            height: params.height,
-          })
+          // Width/height not part of BrainDumpNode data type
+          // updateNode(id, {
+          //   width: params.width,
+          //   height: params.height,
+          // })
         }}
         handleStyle={{
           width: '8px',

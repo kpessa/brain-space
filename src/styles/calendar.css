@@ -440,7 +440,7 @@
   }
   
   .eight-week-view .day-cell {
-    min-h-[80px];
+    min-height: 80px;
     touch-action: manipulation;
   }
   

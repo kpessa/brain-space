@@ -44,7 +44,7 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
     try {
       await addTask({
         label: label.trim(),
-        isTimedTask: showScheduling && (timeboxDate || timeboxStartTime),
+        isTimedTask: Boolean(showScheduling && (timeboxDate || timeboxStartTime)),
         timeboxDate: showScheduling ? timeboxDate : undefined,
         timeboxStartTime: showScheduling ? timeboxStartTime : undefined,
         importance: context.defaultImportance,

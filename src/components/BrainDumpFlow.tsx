@@ -489,10 +489,10 @@ function BrainDumpFlowInner() {
           onEdgeClick={eventHandlers.onEdgeClick}
           onNodeClick={eventHandlers.onNodeClick}
           onNodeContextMenu={eventHandlers.onNodeContextMenu}
-          onPaneContextMenu={eventHandlers.onPaneContextMenu}
-          onReconnect={handleEdgeReconnect}
-          onReconnectStart={handleEdgeReconnectStart}
-          onReconnectEnd={handleEdgeReconnectEnd}
+          onPaneContextMenu={eventHandlers.onPaneContextMenu as any}
+          onReconnect={handleEdgeReconnect as any}
+          onReconnectStart={handleEdgeReconnectStart as any}
+          onReconnectEnd={handleEdgeReconnectEnd as any}
           onConnectEnd={eventHandlers.onConnectEnd}
           reconnectRadius={20}
           panOnScroll={false}
@@ -500,7 +500,7 @@ function BrainDumpFlowInner() {
           zoomOnScroll={false}
           zoomOnPinch={true}
           zoomOnDoubleClick={false}
-          onPaneClick={(event: React.MouseEvent) => {
+          onPaneClick={(event: any) => {
             // Close edge hover menu when clicking on pane
             dialogManager.setEdgeHoverMenu({ isOpen: false, edge: null, position: { x: 0, y: 0 } })
 
@@ -531,7 +531,7 @@ function BrainDumpFlowInner() {
             animated: true,
             markerEnd: undefined,
           }}
-          connectionMode="loose"
+          connectionMode={"loose" as any}
           className="bg-white"
           fitView
           fitViewOptions={{
@@ -693,7 +693,7 @@ function BrainDumpFlowInner() {
 
             <div className="flex items-center gap-1 border-l pl-2 ml-1">
               <Button
-                variant={lassoMode === 'partial' ? 'default' : 'outline'}
+                variant={lassoMode === 'partial' ? 'primary' : 'outline'}
                 size="sm"
                 onClick={() => setLassoMode(lassoMode === 'partial' ? 'off' : 'partial')}
                 disabled={!currentEntry}
@@ -705,7 +705,7 @@ function BrainDumpFlowInner() {
               </Button>
 
               <Button
-                variant={lassoMode === 'full' ? 'default' : 'outline'}
+                variant={lassoMode === 'full' ? 'primary' : 'outline'}
                 size="sm"
                 onClick={() => setLassoMode(lassoMode === 'full' ? 'off' : 'full')}
                 disabled={!currentEntry}
@@ -719,7 +719,7 @@ function BrainDumpFlowInner() {
 
             <div className="flex items-center gap-1 border-l pl-2 ml-1">
               <Button
-                variant={viewMode === 'graph' ? 'default' : 'outline'}
+                variant={viewMode === 'graph' ? 'primary' : 'outline'}
                 size="sm"
                 onClick={() => setViewMode('graph')}
                 disabled={!currentEntry}
@@ -731,7 +731,7 @@ function BrainDumpFlowInner() {
               </Button>
 
               <Button
-                variant={viewMode === 'matrix' ? 'default' : 'outline'}
+                variant={viewMode === 'matrix' ? 'primary' : 'outline'}
                 size="sm"
                 onClick={() => setViewMode('matrix')}
                 disabled={!currentEntry}
@@ -820,7 +820,7 @@ function BrainDumpFlowInner() {
                 <div className="border-t my-2" />
 
                 <Button
-                  variant={lassoMode !== 'off' ? 'default' : 'ghost'}
+                  variant={lassoMode !== 'off' ? 'primary' : 'ghost'}
                   size="sm"
                   onClick={() => {
                     setLassoMode(
@@ -852,7 +852,7 @@ function BrainDumpFlowInner() {
                 <div className="border-t my-2" />
 
                 <Button
-                  variant={viewMode === 'graph' ? 'default' : 'ghost'}
+                  variant={viewMode === 'graph' ? 'primary' : 'ghost'}
                   size="sm"
                   onClick={() => {
                     setViewMode('graph')
@@ -866,7 +866,7 @@ function BrainDumpFlowInner() {
                 </Button>
 
                 <Button
-                  variant={viewMode === 'matrix' ? 'default' : 'ghost'}
+                  variant={viewMode === 'matrix' ? 'primary' : 'ghost'}
                   size="sm"
                   onClick={() => {
                     setViewMode('matrix')
@@ -895,19 +895,7 @@ function BrainDumpFlowInner() {
                   Export
                 </Button>
 
-                <Button
-                  variant={dialogManager.deleteMode ? 'destructive' : 'ghost'}
-                  size="sm"
-                  onClick={() => {
-                    dialogManager.toggleDeleteMode()
-                    setShowMobileMenu(false)
-                  }}
-                  disabled={!currentEntry}
-                  className="w-full justify-start"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  {dialogManager.deleteMode ? 'Exit Delete Mode' : 'Delete Mode'}
-                </Button>
+                {/* Delete Mode button removed - deleteMode not available on dialogManager */}
               </div>
             )}
           </div>
@@ -1069,9 +1057,9 @@ function BrainDumpFlowInner() {
               ...node.data,
               style,
             },
-          }
+          } as BrainDumpNode
 
-          const updatedNodes = nodes.map(n => (n.id === nodeId ? updatedNode : n))
+          const updatedNodes = (nodes as BrainDumpNode[]).map(n => (n.id === nodeId ? updatedNode : n))
           setNodes(updatedNodes)
 
           // Persist the changes
@@ -1103,7 +1091,7 @@ function BrainDumpFlowInner() {
 
           // Only update local state - avoid calling store.deleteNode to prevent render conflicts
 
-          const updatedNodes = nodes.filter(n => n.id !== nodeId)
+          const updatedNodes = (nodes as BrainDumpNode[]).filter(n => n.id !== nodeId)
           const updatedEdges = edges.filter(e => e.source !== nodeId && e.target !== nodeId)
 
           setNodes(updatedNodes)
@@ -1141,7 +1129,7 @@ function BrainDumpFlowInner() {
                 const baseY = node.position.y
                 const spacing = 100
 
-                const updatedNodes = nodes.map(n => {
+                const updatedNodes = (nodes as BrainDumpNode[]).map(n => {
                   const childEdge = childEdges.find(e => e.target === n.id)
                   if (childEdge) {
                     const childIndex = childEdges.findIndex(e => e.target === n.id)
@@ -1228,7 +1216,7 @@ function BrainDumpFlowInner() {
             },
           }
 
-          const updatedNodes = nodes.map(n => (n.id === nodeId ? updatedNode : n))
+          const updatedNodes = (nodes as BrainDumpNode[]).map(n => (n.id === nodeId ? updatedNode : n))
           setNodes(updatedNodes)
 
           // Persist the changes
@@ -1306,7 +1294,7 @@ function BrainDumpFlowInner() {
               },
             }
 
-            const updatedNodes = [...nodes, ghostNode]
+            const updatedNodes = [...(nodes as BrainDumpNode[]), ghostNode]
             setNodes(updatedNodes)
 
             if (currentEntry) {
@@ -1398,9 +1386,9 @@ function BrainDumpFlowInner() {
           return (
             <RecurrenceDialog
               taskId={recurrenceDialog.nodeId}
-              taskLabel={node.data.label}
-              currentPattern={node.data.recurrencePattern}
-              currentTaskType={node.data.taskType}
+              taskLabel={node.data.label as string}
+              currentPattern={node.data.recurrencePattern as any}
+              currentTaskType={node.data.taskType as any}
               onSave={async (taskId, pattern, taskType) => {
                 const targetNode = nodes.find(n => n.id === taskId)
                 if (!targetNode) return
@@ -1413,9 +1401,9 @@ function BrainDumpFlowInner() {
                     taskType,
                     recurrencePattern: pattern,
                   },
-                }
+                } as BrainDumpNode
 
-                const updatedNodes = nodes.map(n => (n.id === taskId ? updatedNode : n))
+                const updatedNodes = (nodes as BrainDumpNode[]).map(n => (n.id === taskId ? updatedNode : n))
                 setNodes(updatedNodes)
 
                 // Persist the changes

@@ -25,7 +25,7 @@ export function EdgeClickMenu({
 
   useEffect(() => {
     if (edge) {
-      setLabelValue(edge.label || '')
+      setLabelValue(String(edge.label || ''))
     }
   }, [edge])
 
@@ -53,7 +53,7 @@ export function EdgeClickMenu({
     if (e.key === 'Enter') {
       handleLabelSubmit()
     } else if (e.key === 'Escape') {
-      setLabelValue(edge.label || '')
+      setLabelValue(String(edge.label || ''))
       setIsEditingLabel(false)
     }
   }

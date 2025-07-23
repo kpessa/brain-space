@@ -36,7 +36,7 @@ export function BrainDumpItem({ entry, isActive, onClick }: BrainDumpItemProps) 
           <div className="flex items-center gap-2">
             <h3 className="font-medium text-sm truncate">{entry.title}</h3>
             {entry.type === 'topic-focused' && (
-              <Target className="w-3 h-3 text-brain-600 flex-shrink-0" title="Topic-focused" />
+              <Target className="w-3 h-3 text-brain-600 flex-shrink-0" />
             )}
           </div>
           <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">

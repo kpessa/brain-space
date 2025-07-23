@@ -56,8 +56,8 @@ export function EisenhowerMatrix({
   const matrixNodes: MatrixNode[] = nodes
     .filter(node => node.type === 'thought' || node.type === 'category')
     .map(node => {
-      const importance = logToLinear(node.data.importance ?? 5)
-      const urgency = logToLinear(node.data.urgency ?? 5)
+      const importance = logToLinear(Number(node.data.importance ?? 5))
+      const urgency = logToLinear(Number(node.data.urgency ?? 5))
 
       // Calculate position based on importance/urgency
       const x = MARGIN + (urgency / 10) * MATRIX_SIZE
@@ -65,7 +65,7 @@ export function EisenhowerMatrix({
 
       return {
         id: node.id,
-        label: node.data.label,
+        label: String(node.data.label || ''),
         importance,
         urgency,
         x,
@@ -257,8 +257,8 @@ export function EisenhowerMatrix({
       // Draw due date indicator if present
       const nodeData = nodes.find(n => n.id === node.id)?.data
       if (nodeData?.dueDate) {
-        const dueDesc = getDueDateDescription(nodeData.dueDate)
-        const overdue = isOverdue(nodeData.dueDate)
+        const dueDesc = getDueDateDescription(String(nodeData.dueDate))
+        const overdue = isOverdue(String(nodeData.dueDate))
 
         // Draw due date badge below node
         ctx.font = '8px Inter'
