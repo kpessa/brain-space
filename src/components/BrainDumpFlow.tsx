@@ -32,6 +32,7 @@ import {
   MoreVertical,
   Trash2,
   MousePointer2,
+  ArrowLeft,
 } from 'lucide-react'
 import type { BrainDumpNode } from '../types/braindump'
 import { useFullscreen } from '../hooks/useFullscreen'
@@ -90,8 +91,15 @@ const edgeTypes = {
 
 function BrainDumpFlowInner() {
   const { fitView, screenToFlowPosition } = useReactFlow()
-  const { currentEntry, updateEntry, isSyncing, updateNode, createTopicBrainDump } =
-    useBrainDumpStore()
+  const {
+    currentEntry,
+    updateEntry,
+    isSyncing,
+    updateNode,
+    createTopicBrainDump,
+    setCurrentEntry,
+    entries,
+  } = useBrainDumpStore()
 
   // UI state
   const { elementRef, isFullscreen, toggleFullscreen } = useFullscreen()
@@ -421,12 +429,22 @@ function BrainDumpFlowInner() {
         })
 
         setTopicDumpDialog({ isOpen: false, node: null })
+
+        // Navigate to the new topic brain dump
+        setCurrentEntry(result)
       } catch (error) {
-        logger.error('TOPIC_DUMP', 'Failed to create topic dump', { error })
         logger.error('TOPIC_DUMP', 'Failed to create topic dump', { error })
       }
     },
-    [topicDumpDialog.node, currentEntry, nodes, edges, createTopicBrainDump, updateNode]
+    [
+      topicDumpDialog.node,
+      currentEntry,
+      nodes,
+      edges,
+      createTopicBrainDump,
+      updateNode,
+      setCurrentEntry,
+    ]
   )
 
   if (!currentEntry) {
@@ -593,6 +611,32 @@ function BrainDumpFlowInner() {
         className="absolute left-4 z-10 flex gap-2 bg-white rounded-lg shadow-lg p-2"
         style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}
       >
+        {/* Back to parent brain dump button */}
+        {currentEntry?.parentBrainDumpId && (
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const parentEntry = entries.find(e => e.id === currentEntry.parentBrainDumpId)
+                if (parentEntry) {
+                  setCurrentEntry(parentEntry)
+                  logger.info('NAVIGATION', 'Navigated back to parent brain dump', {
+                    parentId: parentEntry.id,
+                    parentTitle: parentEntry.title,
+                  })
+                }
+              }}
+              className="flex items-center gap-1"
+              title="Go back to parent brain dump"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              {isMobile ? '' : 'Back'}
+            </Button>
+            <div className="border-l h-6 border-gray-300" />
+          </>
+        )}
+
         {/* Primary actions - always visible */}
         <Button
           variant="outline"
@@ -709,6 +753,38 @@ function BrainDumpFlowInner() {
 
             {showMobileMenu && (
               <div className="absolute top-full mt-2 right-0 bg-white dark:bg-gray-800 rounded-lg shadow-xl p-2 min-w-[200px] z-50">
+                {/* Back to parent brain dump button for mobile */}
+                {currentEntry?.parentBrainDumpId && (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        const parentEntry = entries.find(
+                          e => e.id === currentEntry.parentBrainDumpId
+                        )
+                        if (parentEntry) {
+                          setCurrentEntry(parentEntry)
+                          setShowMobileMenu(false)
+                          logger.info(
+                            'NAVIGATION',
+                            'Navigated back to parent brain dump (mobile)',
+                            {
+                              parentId: parentEntry.id,
+                              parentTitle: parentEntry.title,
+                            }
+                          )
+                        }
+                      }}
+                      className="w-full justify-start mb-1"
+                    >
+                      <ArrowLeft className="w-4 h-4 mr-2" />
+                      Back to Parent
+                    </Button>
+                    <div className="border-t my-2" />
+                  </>
+                )}
+
                 <Button
                   variant="ghost"
                   size="sm"

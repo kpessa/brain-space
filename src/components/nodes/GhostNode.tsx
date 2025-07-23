@@ -5,9 +5,10 @@ import { Ghost, ExternalLink } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { BrainDumpNode } from '@/types/braindump'
 import { useBrainDumpStore } from '@/store/braindump'
+import { logger } from '@/services/logger'
 
 export const GhostNode = memo(({ data, isConnectable, selected }: NodeProps<BrainDumpNode>) => {
-  const { currentEntry } = useBrainDumpStore()
+  const { currentEntry, entries, setCurrentEntry } = useBrainDumpStore()
 
   // Find the original node this ghost references
   const originalNode = currentEntry?.nodes.find(n => n.id === data.referencedNodeId)
@@ -27,10 +28,32 @@ export const GhostNode = memo(({ data, isConnectable, selected }: NodeProps<Brai
 
   const handleDoubleClick = useCallback(() => {
     if (originalNode) {
-      // Could implement navigation to original node
-      console.log('Navigate to original node:', originalNode.id)
+      // If the original node has a topic brain dump, navigate to it
+      if (originalNode.data.hasTopicBrainDump && originalNode.data.topicBrainDumpId) {
+        logger.info('GHOST_NODE', 'Double-click on ghost node with topic dump', {
+          nodeId: originalNode.id,
+          topicBrainDumpId: originalNode.data.topicBrainDumpId,
+        })
+
+        const topicEntry = entries.find(e => e.id === originalNode.data.topicBrainDumpId)
+        if (topicEntry) {
+          setCurrentEntry(topicEntry)
+          logger.info('GHOST_NODE', 'Navigated to topic brain dump', {
+            entryId: topicEntry.id,
+            title: topicEntry.title,
+          })
+        } else {
+          logger.warn('GHOST_NODE', 'Topic brain dump not found', {
+            topicBrainDumpId: originalNode.data.topicBrainDumpId,
+          })
+        }
+      } else {
+        logger.info('GHOST_NODE', 'Original node has no topic brain dump', {
+          nodeId: originalNode.id,
+        })
+      }
     }
-  }, [originalNode])
+  }, [originalNode, entries, setCurrentEntry])
 
   return (
     <div

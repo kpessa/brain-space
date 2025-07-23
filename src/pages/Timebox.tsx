@@ -707,7 +707,10 @@ export default function Timebox() {
           if (nodeId !== taskId) {
             const affectedNode = currentEntry.nodes.find(n => n.id === nodeId)
             if (affectedNode) {
-              if (completionResult.shouldCompleteParent || completionResult.shouldCompleteChildren) {
+              if (
+                completionResult.shouldCompleteParent ||
+                completionResult.shouldCompleteChildren
+              ) {
                 updateNode(nodeId, {
                   ...affectedNode.data,
                   taskStatus: newStatus as any,

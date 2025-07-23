@@ -44,7 +44,7 @@ const mockNodes: BrainDumpNode[] = [
   createMockNode('root', 'Brain Dump', 'category'),
 
   // Category nodes
-  createMockNode('cat-body', 'Body', 'category', { 
+  createMockNode('cat-body', 'Body', 'category', {
     category: 'misc',
     subtaskLogic: 'OR', // Either rollerblade OR tennis completes daily exercise
   }),
@@ -281,7 +281,7 @@ This is the actual implementation used in the /matrix route.
     },
   },
   decorators: [
-    (Story) => {
+    Story => {
       // Set up the store with mock data
       React.useEffect(() => {
         const store = useBrainDumpStore.getState()
@@ -303,7 +303,8 @@ export const Default: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'The complete Matrix page with all features enabled. Try dragging tasks between quadrants!',
+        story:
+          'The complete Matrix page with all features enabled. Try dragging tasks between quadrants!',
       },
     },
   },
@@ -313,7 +314,8 @@ export const GridView: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Shows the grid view with tasks organized in four quadrants based on importance and urgency.',
+        story:
+          'Shows the grid view with tasks organized in four quadrants based on importance and urgency.',
       },
     },
   },
@@ -326,7 +328,8 @@ export const HierarchyView: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Shows the hierarchy view using CardDeck to display tasks with parent-child relationships.',
+        story:
+          'Shows the hierarchy view using CardDeck to display tasks with parent-child relationships.',
       },
     },
   },
@@ -349,7 +352,9 @@ export const WithSearch: Story = {
   },
   play: async ({ canvasElement }) => {
     // Simulate typing in the search box
-    const searchInput = canvasElement.querySelector('input[placeholder*="Search"]') as HTMLInputElement
+    const searchInput = canvasElement.querySelector(
+      'input[placeholder*="Search"]'
+    ) as HTMLInputElement
     if (searchInput) {
       searchInput.value = 'bug'
       searchInput.dispatchEvent(new Event('input', { bubbles: true }))
@@ -361,7 +366,8 @@ export const CategoryFilter: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Shows how category filtering works. Select a category to see only tasks in that category.',
+        story:
+          'Shows how category filtering works. Select a category to see only tasks in that category.',
       },
     },
   },
@@ -390,7 +396,7 @@ export const MobileView: Story = {
 
 export const EmptyState: Story = {
   decorators: [
-    (Story) => {
+    Story => {
       // Clear the entry to show empty state
       React.useEffect(() => {
         const store = useBrainDumpStore.getState()

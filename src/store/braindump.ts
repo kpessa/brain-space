@@ -56,6 +56,16 @@ interface BrainDumpState {
   processRawText: (text: string) => ProcessedThought[]
   processWithAI: (text: string) => Promise<ProcessedThought[]>
 
+  // Topic Brain Dump
+  createTopicBrainDump: (params: {
+    parentBrainDumpId: string
+    originNodeId: string
+    topicFocus: string
+    thoughts: string
+    nodes: BrainDumpNode[]
+    edges: BrainDumpEdge[]
+  }) => Promise<BrainDumpEntry>
+
   // Sync actions
   setEntries: (entries: BrainDumpEntry[]) => void
   syncEntry: (entry: BrainDumpEntry) => Promise<void>
@@ -656,6 +666,40 @@ export const useBrainDumpStore = create<BrainDumpState>((set, get) => ({
     })
 
     return thoughts
+  },
+
+  createTopicBrainDump: async ({
+    parentBrainDumpId,
+    originNodeId,
+    topicFocus,
+    thoughts,
+    nodes,
+    edges,
+  }) => {
+    logger.info('STORE', 'Creating topic brain dump', {
+      parentBrainDumpId,
+      originNodeId,
+      topicFocus,
+      nodesCount: nodes.length,
+      edgesCount: edges.length,
+    })
+
+    const { createEntry } = get()
+
+    // Create the topic-focused brain dump entry
+    const entry = await createEntry(
+      `Topic: ${topicFocus}`,
+      thoughts,
+      'demo-user',
+      parentBrainDumpId,
+      originNodeId,
+      topicFocus,
+      'topic-focused',
+      nodes,
+      edges
+    )
+
+    return entry
   },
 
   setEntries: entries => {

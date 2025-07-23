@@ -5,6 +5,7 @@ import { cn } from '../lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from './Button'
 import BottomNavigation from './BottomNavigation'
+import { QuickAddButton } from './QuickAddButton'
 import { useOrientation } from '../hooks/useOrientation'
 
 export default function Layout() {
@@ -125,6 +126,9 @@ export default function Layout() {
 
       {/* Mobile Bottom Navigation */}
       <BottomNavigation />
+
+      {/* Quick Add Button - Always visible */}
+      {user && <QuickAddButton />}
     </div>
   )
 }

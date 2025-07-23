@@ -83,7 +83,7 @@ export function Matrix() {
   const buildParentChildMap = () => {
     const parentMap = new Map<string, string>() // child -> parent
     const childrenMap = new Map<string, string[]>() // parent -> children[]
-    
+
     edges.forEach(edge => {
       parentMap.set(edge.target, edge.source)
       if (!childrenMap.has(edge.source)) {
@@ -91,7 +91,7 @@ export function Matrix() {
       }
       childrenMap.get(edge.source)!.push(edge.target)
     })
-    
+
     return { parentMap, childrenMap }
   }
 
@@ -192,21 +192,16 @@ export function Matrix() {
     if (!task) return
 
     const newStatus = currentStatus === 'completed' ? 'pending' : 'completed'
-    
+
     // Evaluate smart completion logic
-    const completionResult = evaluateTaskCompletion(
-      taskId,
-      newStatus as any,
-      nodes,
-      edges
-    )
-    
+    const completionResult = evaluateTaskCompletion(taskId, newStatus as any, nodes, edges)
+
     // Update the primary task
     updateNode(taskId, {
       ...task.data,
       taskStatus: newStatus,
     })
-    
+
     // Handle cascading completions
     completionResult.affectedNodeIds.forEach(nodeId => {
       if (nodeId !== taskId) {
@@ -221,7 +216,7 @@ export function Matrix() {
         }
       }
     })
-    
+
     // Show message if there were cascading effects
     if (completionResult.message && completionResult.affectedNodeIds.length > 1) {
       console.log(completionResult.message) // Could be replaced with toast notification
@@ -737,8 +732,9 @@ export function Matrix() {
             dueDate: contextMenu.task.data.dueDate,
             hasChildren: (childrenMap.get(contextMenu.task.id) || []).length > 0,
             parentId: parentMap.get(contextMenu.task.id),
-            parentLabel: parentMap.get(contextMenu.task.id) ? 
-              nodes.find(n => n.id === parentMap.get(contextMenu.task.id))?.data.label : undefined,
+            parentLabel: parentMap.get(contextMenu.task.id)
+              ? nodes.find(n => n.id === parentMap.get(contextMenu.task.id))?.data.label
+              : undefined,
             isCollapsed: collapsedNodes.has(contextMenu.task.id),
             childrenCount: getDescendants(contextMenu.task.id).length,
           }}
