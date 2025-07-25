@@ -42,6 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     getRedirectResult(auth)
       .then(async (result) => {
         if (result && result.user) {
+          console.log('Redirect sign-in successful:', result.user.email)
           // Handle successful redirect sign-in
           const userRef = doc(db, 'users', result.user.uid, 'profile', 'data')
           const userDoc = await getDoc(userRef)
@@ -60,6 +61,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
       .catch((error) => {
         console.error('Redirect result error:', error)
+        // Clear any redirect errors to prevent loops
+        if (error.code === 'auth/redirect-cancelled-by-user') {
+          console.log('User cancelled the sign-in')
+        }
       })
 
     // Check offline status

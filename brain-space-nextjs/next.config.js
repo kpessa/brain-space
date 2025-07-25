@@ -25,6 +25,16 @@ const nextConfig = {
           },
         ],
       },
+      {
+        // Special headers for Firebase auth handler
+        source: '/__/auth/handler',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN',
+          },
+        ],
+      },
     ]
   },
   

@@ -5,7 +5,7 @@ export function middleware(request: NextRequest) {
   const requestHeaders = new Headers(request.headers)
   
   // Public routes that don't require authentication
-  const publicRoutes = ['/login', '/api/ai']
+  const publicRoutes = ['/login', '/api/ai', '/__/auth/handler']
   
   const { pathname } = request.nextUrl
   
