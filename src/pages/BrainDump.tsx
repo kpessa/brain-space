@@ -5,6 +5,7 @@ import { BrainDumpItem } from '../components/BrainDumpItem'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/Card'
 import { Button } from '../components/Button'
 import { useBrainDumpStore } from '../store/braindump'
+import { AIDebugToggle } from '../components/AIDebugToggle'
 import {
   Brain,
   List,
@@ -483,6 +484,7 @@ export default function BrainDump() {
           </div>
         </div>
       </div>
+      <AIDebugToggle />
     </div>
   )
 }

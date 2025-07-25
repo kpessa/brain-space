@@ -1,6 +1,5 @@
 export interface AIProvider {
   categorizeThoughts(text: string): Promise<CategorizationResult>
-  enhanceNode(text: string): Promise<{ nodeData: any }>
 }
 
 export interface CategorizationResult {
@@ -16,18 +15,21 @@ interface CategoryResult {
   reasoning: string
 }
 
-interface ThoughtAnalysis {
+export interface ThoughtAnalysis {
+  id?: string
   text: string
   category: string
   confidence: number
   keywords: string[]
   sentiment: 'positive' | 'negative' | 'neutral'
-  urgency?: 'low' | 'medium' | 'high'
-  importance?: 'low' | 'medium' | 'high'
-  dueDate?: string
-  reasoning?: string
-  nodeType?: string
-  metadata?: Record<string, any>
+  urgency?: number // 1-10 scale for detailed priority
+  importance?: number // 1-10 scale for detailed priority
+  urgencyLevel?: 'low' | 'medium' | 'high' // For simpler categorization
+  importanceLevel?: 'low' | 'medium' | 'high' // For simpler categorization
+  dueDate?: string // ISO date string
+  reasoning?: string // AI's reasoning
+  nodeType?: string // For firebase integration
+  metadata?: Record<string, any> // For firebase integration
 }
 
 interface ThoughtRelationship {
@@ -39,80 +41,338 @@ interface ThoughtRelationship {
 
 // Mock AI service for now - replace with real API calls
 export class MockAIService implements AIProvider {
-  async enhanceNode(text: string): Promise<{ nodeData: any }> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    // Simple mock enhancement
-    const nodeData: any = {
-      title: text.substring(0, 60),
-      type: 'thought',
-      description: text.length > 60 ? text : undefined,
-      tags: ['unprocessed'],
-    }
-    
-    // Detect type based on keywords
-    const lower = text.toLowerCase()
-    if (lower.includes('todo') || lower.includes('need to') || lower.includes('task')) {
-      nodeData.type = 'task'
-      nodeData.urgency = 5
-      nodeData.importance = 5
-    } else if (lower.includes('idea') || lower.includes('what if')) {
-      nodeData.type = 'idea'
-    } else if (lower.includes('?')) {
-      nodeData.type = 'question'
-    } else if (lower.includes('problem') || lower.includes('issue')) {
-      nodeData.type = 'problem'
-      nodeData.urgency = 7
-    }
-    
-    return { nodeData }
-  }
-
   async categorizeThoughts(text: string): Promise<CategorizationResult> {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 1500))
 
     const lines = text.split('\n').filter(line => line.trim())
-    const thoughts: ThoughtAnalysis[] = []
-    const categories: Map<string, CategoryResult> = new Map()
-
-    // Enhanced categorization logic
-    lines.forEach(line => {
-      const analysis = this.analyzeLine(line)
-      thoughts.push(analysis)
-
-      // Group by category
-      if (!categories.has(analysis.category)) {
-        categories.set(analysis.category, {
-          name: this.getCategoryName(analysis.category),
-          thoughts: [],
-          confidence: 0,
-          reasoning: this.getCategoryReasoning(analysis.category),
-        })
-      }
-      categories.get(analysis.category)!.thoughts.push(analysis)
-    })
-
-    // Calculate average confidence per category
-    categories.forEach(cat => {
-      cat.confidence = cat.thoughts.reduce((sum, t) => sum + t.confidence, 0) / cat.thoughts.length
-    })
+    
+    // Step 1: Break down verbose thoughts into concise nodes
+    const conciseThoughts = this.breakDownThoughts(lines)
+    
+    // Step 2: Identify main themes/categories from content
+    const mainCategories = this.identifyMainCategories(conciseThoughts)
+    
+    // Step 3: Assign thoughts to categories and create hierarchy
+    const categorizedThoughts = this.assignToCategories(conciseThoughts, mainCategories)
+    
+    // Step 4: Build category results with hierarchical structure
+    const categories: CategoryResult[] = mainCategories.map(category => ({
+      name: category.name,
+      thoughts: categorizedThoughts.filter(t => t.category === category.id),
+      confidence: category.confidence,
+      reasoning: category.reasoning,
+    }))
 
     // Find relationships
-    const relationships = this.findRelationships(thoughts)
+    const relationships = this.findRelationships(categorizedThoughts)
 
     // Generate suggestions
-    const suggestions = this.generateSuggestions(thoughts, Array.from(categories.values()))
+    const suggestions = this.generateSuggestions(categorizedThoughts, categories)
 
     return {
-      categories: Array.from(categories.values()),
+      categories,
       relationships,
       suggestions,
     }
   }
 
-  private analyzeLine(line: string): ThoughtAnalysis {
+  private breakDownThoughts(lines: string[]): ThoughtAnalysis[] {
+    const thoughts: ThoughtAnalysis[] = []
+    const processedIdeas = new Set<string>() // Track unique ideas
+    
+    lines.forEach((line, index) => {
+      // Extract independent ideas from the line
+      const ideas = this.extractIndependentIdeas(line)
+      
+      ideas.forEach((idea, ideaIndex) => {
+        // Skip if we've already processed a very similar idea
+        const normalizedIdea = idea.toLowerCase().trim()
+        if (processedIdeas.has(normalizedIdea)) return
+        processedIdeas.add(normalizedIdea)
+        
+        thoughts.push(this.analyzeLine(idea, `thought-${Date.now()}-${index}-${ideaIndex}`))
+      })
+    })
+    
+    return thoughts
+  }
+
+  private extractIndependentIdeas(text: string): string[] {
+    const ideas: string[] = []
+    
+    // Common separators that indicate multiple ideas
+    const separators = [
+      '; ', ', and ', ', also ', ', plus ', ', then ',
+      ' and also ', ' as well as ', ' in addition to ',
+      '. ', '! ', '? '
+    ]
+    
+    // Split by separators
+    let segments = [text]
+    for (const sep of separators) {
+      const newSegments: string[] = []
+      segments.forEach(segment => {
+        if (segment.includes(sep)) {
+          const parts = segment.split(sep)
+          newSegments.push(...parts.filter(p => p.trim().length > 3))
+        } else {
+          newSegments.push(segment)
+        }
+      })
+      segments = newSegments
+    }
+    
+    // Process each segment to extract core idea
+    segments.forEach(segment => {
+      const coreIdea = this.extractCoreIdea(segment)
+      if (coreIdea && coreIdea.length > 5) {
+        ideas.push(coreIdea)
+      }
+    })
+    
+    return ideas
+  }
+
+  private extractCoreIdea(text: string): string {
+    let cleaned = text.trim()
+    
+    // Remove common filler phrases at the beginning
+    const fillerStarts = [
+      'i need to ', 'i have to ', 'i should ', 'i must ', 'i want to ',
+      'we need to ', 'we have to ', 'we should ', 'we must ',
+      'need to ', 'have to ', 'should ', 'must ', 'want to ',
+      'going to ', 'gonna ', 'gotta ',
+      'there is ', 'there are ', 'there\'s ',
+      'i think ', 'i feel ', 'i believe ',
+      'maybe ', 'perhaps ', 'probably ',
+      'also ', 'and ', 'then ', 'so ',
+      'like ', 'um ', 'uh ', 'well ',
+      'basically ', 'actually ', 'really ',
+      'kind of ', 'sort of ', 'a bit '
+    ]
+    
+    // Remove filler from start
+    let changed = true
+    while (changed) {
+      changed = false
+      for (const filler of fillerStarts) {
+        if (cleaned.toLowerCase().startsWith(filler)) {
+          cleaned = cleaned.substring(filler.length).trim()
+          changed = true
+          break
+        }
+      }
+    }
+    
+    // Remove common filler words/phrases from anywhere
+    const fillerPhrases = [
+      ' that i need to ', ' that we need to ',
+      ' i think ', ' i guess ', ' i suppose ',
+      ' kind of ', ' sort of ', ' a bit ',
+      ' like ', ' you know ', ' I mean ',
+      ' basically ', ' actually ', ' really ',
+      ' or something ', ' and stuff ', ' and things ',
+      ' and whatnot ', ' and so on ', ' etc'
+    ]
+    
+    for (const filler of fillerPhrases) {
+      cleaned = cleaned.replace(new RegExp(filler, 'gi'), ' ')
+    }
+    
+    // Remove redundant words
+    const redundantWords = [
+      'very ', 'quite ', 'rather ', 'pretty ',
+      'just ', 'only ', 'simply ',
+      'definitely ', 'certainly ', 'surely ',
+      'totally ', 'completely ', 'absolutely ',
+      'literally ', 'honestly ', 'frankly '
+    ]
+    
+    for (const word of redundantWords) {
+      cleaned = cleaned.replace(new RegExp('\\b' + word + '\\b', 'gi'), ' ')
+    }
+    
+    // Clean up extra spaces and punctuation
+    cleaned = cleaned
+      .replace(/\s+/g, ' ')
+      .replace(/\s+([.,!?])/g, '$1')
+      .trim()
+    
+    // Capitalize first letter
+    if (cleaned.length > 0) {
+      cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1)
+    }
+    
+    // If the result is too short or just punctuation, return empty
+    if (cleaned.length < 3 || /^[.,!?]+$/.test(cleaned)) {
+      return ''
+    }
+    
+    return cleaned
+  }
+
+  private identifyMainCategories(thoughts: ThoughtAnalysis[]): Array<{id: string, name: string, confidence: number, reasoning: string}> {
+    // Analyze content to identify main themes
+    const keywordAnalysis = this.analyzeContentThemes(thoughts)
+    const categories: Array<{id: string, name: string, confidence: number, reasoning: string}> = []
+    
+    // Look for work-related content
+    const workKeywords = ['work', 'job', 'meeting', 'project', 'team', 'office', 'boss', 'client', 'deadline', 'task']
+    const workCount = this.countKeywordMatches(thoughts, workKeywords)
+    if (workCount > 0) {
+      categories.push({
+        id: 'work',
+        name: 'Work',
+        confidence: Math.min(0.9, workCount * 0.2),
+        reasoning: 'Contains work-related activities and responsibilities'
+      })
+    }
+    
+    // Look for travel/trips
+    const travelKeywords = ['trip', 'travel', 'vacation', 'flight', 'hotel', 'visit', 'go to', 'plane', 'airport']
+    const travelCount = this.countKeywordMatches(thoughts, travelKeywords)
+    if (travelCount > 0) {
+      categories.push({
+        id: 'travel',
+        name: 'Trips & Travel',
+        confidence: Math.min(0.9, travelCount * 0.3),
+        reasoning: 'Contains travel plans and trip-related items'
+      })
+    }
+    
+    // Look for personal/life content
+    const personalKeywords = ['family', 'friend', 'personal', 'home', 'health', 'exercise', 'hobby', 'weekend']
+    const personalCount = this.countKeywordMatches(thoughts, personalKeywords)
+    if (personalCount > 0) {
+      categories.push({
+        id: 'personal',
+        name: 'Personal',
+        confidence: Math.min(0.8, personalCount * 0.25),
+        reasoning: 'Contains personal life and family-related items'
+      })
+    }
+    
+    // Look for projects/goals
+    const projectKeywords = ['project', 'goal', 'plan', 'build', 'create', 'develop', 'launch', 'idea']
+    const projectCount = this.countKeywordMatches(thoughts, projectKeywords)
+    if (projectCount > 0) {
+      categories.push({
+        id: 'projects',
+        name: 'Projects & Goals',
+        confidence: Math.min(0.8, projectCount * 0.2),
+        reasoning: 'Contains project ideas and goal-oriented activities'
+      })
+    }
+    
+    // Look for learning/education
+    const learningKeywords = ['learn', 'study', 'course', 'book', 'research', 'understand', 'skill']
+    const learningCount = this.countKeywordMatches(thoughts, learningKeywords)
+    if (learningCount > 0) {
+      categories.push({
+        id: 'learning',
+        name: 'Learning & Growth',
+        confidence: Math.min(0.8, learningCount * 0.3),
+        reasoning: 'Contains learning activities and educational content'
+      })
+    }
+    
+    // Always include a miscellaneous category for uncategorized items
+    categories.push({
+      id: 'misc',
+      name: 'Miscellaneous',
+      confidence: 0.5,
+      reasoning: 'General thoughts and uncategorized items'
+    })
+    
+    // Return top 3-5 categories by confidence
+    return categories.sort((a, b) => b.confidence - a.confidence).slice(0, 5)
+  }
+
+  private countKeywordMatches(thoughts: ThoughtAnalysis[], keywords: string[]): number {
+    return thoughts.reduce((count, thought) => {
+      const text = thought.text.toLowerCase()
+      return count + keywords.filter(keyword => text.includes(keyword)).length
+    }, 0)
+  }
+
+  private analyzeContentThemes(thoughts: ThoughtAnalysis[]): Map<string, number> {
+    const themes = new Map<string, number>()
+    
+    thoughts.forEach(thought => {
+      const words = thought.text.toLowerCase().split(/\s+/)
+      words.forEach(word => {
+        if (word.length > 3 && !this.isStopWord(word)) {
+          themes.set(word, (themes.get(word) || 0) + 1)
+        }
+      })
+    })
+    
+    return themes
+  }
+
+  private isStopWord(word: string): boolean {
+    const stopWords = ['the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'that', 'this', 'have', 'has', 'had', 'will', 'would', 'could', 'should']
+    return stopWords.includes(word)
+  }
+
+  private assignToCategories(thoughts: ThoughtAnalysis[], categories: Array<{id: string, name: string, confidence: number, reasoning: string}>): ThoughtAnalysis[] {
+    return thoughts.map(thought => {
+      let bestCategory = 'misc'
+      let bestScore = 0
+      
+      // Test each category to see which fits best
+      categories.forEach(category => {
+        const score = this.scoreThoughtForCategory(thought, category.id)
+        if (score > bestScore) {
+          bestScore = score
+          bestCategory = category.id
+        }
+      })
+      
+      return {
+        ...thought,
+        category: bestCategory,
+        confidence: Math.max(thought.confidence, bestScore)
+      }
+    })
+  }
+
+  private scoreThoughtForCategory(thought: ThoughtAnalysis, categoryId: string): number {
+    const text = thought.text.toLowerCase()
+    
+    switch (categoryId) {
+      case 'work':
+        const workKeywords = ['work', 'job', 'meeting', 'project', 'team', 'office', 'boss', 'client', 'deadline', 'task', 'email', 'call']
+        return this.calculateKeywordScore(text, workKeywords)
+      
+      case 'travel':
+        const travelKeywords = ['trip', 'travel', 'vacation', 'flight', 'hotel', 'visit', 'go to', 'plane', 'airport', 'booking', 'pack']
+        return this.calculateKeywordScore(text, travelKeywords)
+      
+      case 'personal':
+        const personalKeywords = ['family', 'friend', 'personal', 'home', 'health', 'exercise', 'hobby', 'weekend', 'dinner', 'movie']
+        return this.calculateKeywordScore(text, personalKeywords)
+      
+      case 'projects':
+        const projectKeywords = ['project', 'goal', 'plan', 'build', 'create', 'develop', 'launch', 'idea', 'implement', 'design']
+        return this.calculateKeywordScore(text, projectKeywords)
+      
+      case 'learning':
+        const learningKeywords = ['learn', 'study', 'course', 'book', 'research', 'understand', 'skill', 'tutorial', 'practice']
+        return this.calculateKeywordScore(text, learningKeywords)
+      
+      default:
+        return 0.1 // Low score for misc category
+    }
+  }
+
+  private calculateKeywordScore(text: string, keywords: string[]): number {
+    const matches = keywords.filter(keyword => text.includes(keyword)).length
+    return Math.min(0.9, matches * 0.3)
+  }
+
+  private analyzeLine(line: string, id?: string): ThoughtAnalysis {
     const lower = line.toLowerCase()
     const words = lower.split(/\s+/)
 
@@ -231,6 +491,7 @@ export class MockAIService implements AIProvider {
     const sentiment = this.analyzeSentiment(line)
 
     return {
+      id: id || `thought-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       text: line.trim(),
       category: category === 'misc' && keywords.length > 0 ? 'ideas' : category,
       confidence,
@@ -347,130 +608,57 @@ export class MockAIService implements AIProvider {
   }
 }
 
-// Firebase Functions implementation
-class FirebaseFunctionService implements AIProvider {
-  private provider: 'openai' | 'anthropic' | 'gemini'
-
-  constructor(provider: 'openai' | 'anthropic' | 'gemini') {
-    this.provider = provider
-  }
-
-  async enhanceNode(text: string): Promise<{ nodeData: any }> {
-    try {
-      // Get the current user's ID token
-      const { auth } = await import('@/lib/firebase')
-      const user = auth.currentUser
-      if (!user) {
-        throw new Error('User not authenticated')
-      }
-
-      const idToken = await user.getIdToken()
-
-      // Determine the function URL based on environment
-      const isDevelopment = import.meta.env.DEV
-      const functionUrl = isDevelopment
-        ? 'http://localhost:5001/brain-space-5d787/us-central1/enhanceNode'
-        : `https://us-central1-${import.meta.env.VITE_FIREBASE_PROJECT_ID}.cloudfunctions.net/enhanceNode`
-
-      const response = await fetch(functionUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${idToken}`,
-        },
-        body: JSON.stringify({
-          text,
-          provider: this.provider,
-        }),
-      })
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error('Function response error:', errorText)
-        try {
-          const error = JSON.parse(errorText)
-          throw new Error(error.error || error.message || `API error: ${response.statusText}`)
-        } catch (e) {
-          throw new Error(`API error: ${response.statusText} - ${errorText}`)
-        }
-      }
-
-      const result = await response.json()
-      return result
-    } catch (error) {
-      console.error('Firebase Function error:', error)
-      throw error
-    }
-  }
-
-  async categorizeThoughts(text: string): Promise<CategorizationResult> {
-    try {
-      // Get the current user's ID token
-      const { auth } = await import('@/lib/firebase')
-      const user = auth.currentUser
-      if (!user) {
-        throw new Error('User not authenticated')
-      }
-
-      const idToken = await user.getIdToken()
-
-      // Determine the function URL based on environment
-      const isDevelopment = import.meta.env.DEV
-      const functionUrl = isDevelopment
-        ? 'http://localhost:5001/brain-space-5d787/us-central1/categorizeThoughts'
-        : `https://us-central1-${import.meta.env.VITE_FIREBASE_PROJECT_ID}.cloudfunctions.net/categorizeThoughts`
-
-      const response = await fetch(functionUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${idToken}`,
-        },
-        body: JSON.stringify({
-          text,
-          provider: this.provider,
-        }),
-      })
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error('Function response error:', errorText)
-        try {
-          const error = JSON.parse(errorText)
-          throw new Error(error.error || error.message || `API error: ${response.statusText}`)
-        } catch (e) {
-          throw new Error(`API error: ${response.statusText} - ${errorText}`)
-        }
-      }
-
-      const result = await response.json()
-      return result
-    } catch (error) {
-      console.error('Firebase Function error:', error)
-      // Fallback to mock service
-      return new MockAIService().categorizeThoughts(text)
-    }
-  }
-}
-
 // Factory to create AI service based on provider
-export function createAIService(provider?: string): AIProvider {
-  const aiProvider = provider || import.meta.env.VITE_AI_PROVIDER
-
-  // If using Firebase auth, always use Firebase Functions
-  if (import.meta.env.VITE_USE_FIREBASE_AUTH === 'true') {
-    switch (aiProvider) {
-      case 'openai':
-        return new FirebaseFunctionService('openai')
-      case 'anthropic':
-        return new FirebaseFunctionService('anthropic')
-      case 'gemini':
-        return new FirebaseFunctionService('gemini')
-      default:
-        return new MockAIService()
-    }
+export async function createAIService(provider?: string): Promise<AIProvider> {
+  const debugMode = localStorage.getItem('ai_debug') === 'true'
+  
+  // Check environment variables for AI provider configuration
+  const configuredProvider = provider || import.meta.env.VITE_AI_PROVIDER
+  
+  if (debugMode) {
+    console.log('🔧 AI Service Factory')
+    console.log('Requested provider:', provider)
+    console.log('Configured provider:', configuredProvider)
+    console.log('Environment:', {
+      VITE_AI_PROVIDER: import.meta.env.VITE_AI_PROVIDER,
+      hasOpenAIKey: !!import.meta.env.VITE_OPENAI_API_KEY,
+      hasAnthropicKey: !!import.meta.env.VITE_ANTHROPIC_API_KEY
+    })
   }
-
-  // Otherwise fallback to mock service
+  
+  switch (configuredProvider) {
+    case 'openai':
+      const openaiKey = import.meta.env.VITE_OPENAI_API_KEY
+      if (openaiKey && openaiKey !== 'your_openai_api_key_here') {
+        if (debugMode) {
+          console.log('✅ Creating OpenAI provider')
+        }
+        const { OpenAIProvider } = await import('./aiProviders/openai')
+        return new OpenAIProvider(openaiKey)
+      }
+      if (debugMode) {
+        console.log('❌ OpenAI key not configured properly')
+      }
+      break
+      
+    case 'anthropic':
+      const anthropicKey = import.meta.env.VITE_ANTHROPIC_API_KEY
+      if (anthropicKey && anthropicKey !== 'your_anthropic_api_key_here') {
+        if (debugMode) {
+          console.log('✅ Creating Anthropic provider')
+        }
+        const { AnthropicProvider } = await import('./aiProviders/anthropic')
+        return new AnthropicProvider(anthropicKey)
+      }
+      if (debugMode) {
+        console.log('❌ Anthropic key not configured properly')
+      }
+      break
+  }
+  
+  // Fall back to mock service if no provider is configured
+  if (debugMode) {
+    console.log('⚠️ Falling back to mock AI service')
+  }
   return new MockAIService()
 }

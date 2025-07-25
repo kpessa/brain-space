@@ -7,6 +7,9 @@
 
 ## Technical Preferences
 
+### Supabase CLI
+- use --password flag when running supabase CLI.  ask me for the password.
+
 ### Logging / Debugging / Troubleshooting
 - When trying to troubleshoot a problem in a webapp, i prefer to have a logging service, that I can easily download the logs with a shortcut key, CTRL+SHIFT+L, and then reference to agent after to make progress instead of the agent trying to open a development server.
 - After making progress, want to clean up log statements to keep webapp clean and only focusing on issue currently.

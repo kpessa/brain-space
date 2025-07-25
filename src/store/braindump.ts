@@ -108,16 +108,36 @@ const createNodesFromThoughts = (
     {} as Record<string, ProcessedThought[]>
   )
 
-  // Create category nodes horizontally to the right of root
+  // Get the categories sorted by number of thoughts (most important first)
+  const sortedCategories = Object.entries(categorizedThoughts)
+    .sort(([, a], [, b]) => b.length - a.length)
+    .filter(([category]) => category !== 'misc') // Put misc at the end
+  
+  // Add misc category back at the end if it exists
+  if (categorizedThoughts.misc && categorizedThoughts.misc.length > 0) {
+    sortedCategories.push(['misc', categorizedThoughts.misc])
+  }
+
+  // Create category nodes with proper naming and positioning
   const categoryX = 300
-  const categorySpacing = 150
-  Object.entries(categorizedThoughts).forEach(([category, categoryThoughts], index) => {
+  const categorySpacing = 180
+  const categoryNames: Record<string, string> = {
+    work: 'Work',
+    travel: 'Trips & Travel', 
+    personal: 'Personal',
+    projects: 'Projects & Goals',
+    learning: 'Learning & Growth',
+    misc: 'Miscellaneous'
+  }
+
+  sortedCategories.forEach(([category, categoryThoughts], index) => {
+    const categoryDisplayName = categoryNames[category] || category.charAt(0).toUpperCase() + category.slice(1)
     const categoryNode: BrainDumpNode = {
       id: `category-${category}`,
       type: 'category',
       position: { x: categoryX, y: 100 + index * categorySpacing },
       data: {
-        label: category,
+        label: categoryDisplayName,
         category,
         isCollapsed: false,
         children: categoryThoughts.map(t => t.id),
@@ -134,20 +154,23 @@ const createNodesFromThoughts = (
       animated: true,
     })
 
-    // Create thought nodes horizontally to the right of categories
+    // Create thought nodes as children of categories
     categoryThoughts.forEach((thought, thoughtIndex) => {
       const thoughtNode: BrainDumpNode = {
         id: thought.id,
         type: 'thought',
         position: {
-          x: categoryX + 250,
-          y: 100 + index * categorySpacing + thoughtIndex * 80 - (categoryThoughts.length - 1) * 40,
+          x: categoryX + 280,
+          y: 100 + index * categorySpacing + thoughtIndex * 60 - (categoryThoughts.length - 1) * 30,
         },
         data: {
           label: thought.text,
           category: thought.category,
           originalText: thought.text,
-          aiGenerated: false,
+          aiGenerated: true,
+          urgency: thought.urgency,
+          importance: thought.importance,
+          dueDate: thought.dueDate,
         },
       }
       nodes.push(thoughtNode)
@@ -670,54 +693,26 @@ export const useBrainDumpStore = create<BrainDumpState>((set, get) => ({
   processRawText: processTextSimple,
 
   processWithAI: async (text: string) => {
-    const aiService = createAIService()
-    console.log('Calling AI service to categorize thoughts...')
+    const aiService = await createAIService()
     const result = await aiService.categorizeThoughts(text)
-    console.log('AI service response:', result)
 
-    // Convert AI results to ProcessedThought format with all fields
+    // Convert AI results to ProcessedThought format
     const thoughts: ProcessedThought[] = []
-    let thoughtId = 0
-
-    // Handle the new format where thoughts are in categories
-    if (!result.categories || !Array.isArray(result.categories)) {
-      console.error('Unexpected AI response format:', result)
-      throw new Error('Invalid AI response format')
-    }
 
     result.categories.forEach(category => {
       category.thoughts.forEach(thought => {
-        // Extract GenAiNodeInput data from the AI response
-        const nodeData = thought.nodeData || {}
-        
         thoughts.push({
-          id: `thought-ai-${Date.now()}-${thoughtId++}`,
-          text: thought.text, // Original thought text preserved by AI
-          category: category.name,
-          confidence: thought.confidence || category.confidence || 0.8,
-          relatedThoughts: result.relationships
-            ?.filter(r => r.from === nodeData.title || r.from === thought.text)
-            ?.map(r => r.to) || [],
-          // Map from GenAiNodeInput fields
-          keywords: nodeData.aliases || nodeData.tags || [],
-          sentiment: 'neutral', // Not provided by GenAiNodeInput
-          urgency: nodeData.urgency,
-          importance: nodeData.importance,
-          dueDate: nodeData.dueDate ? 
-            (nodeData.dueDate.type === 'exact' ? nodeData.dueDate.date : undefined) : undefined,
+          id: thought.id || `thought-ai-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          text: thought.text,
+          category: thought.category,
+          confidence: thought.confidence,
+          relatedThoughts: result.relationships.filter(r => r.from === thought.text).map(r => r.to),
+          urgency: thought.urgency,
+          importance: thought.importance,
+          dueDate: thought.dueDate,
           reasoning: thought.reasoning || category.reasoning,
-          nodeType: nodeData.type || 'thought',
-          metadata: {
-            title: nodeData.title,
-            description: nodeData.description,
-            tags: nodeData.tags,
-            priority: nodeData.priority,
-            completed: nodeData.completed,
-            children: nodeData.children,
-            logicType: nodeData.logicType,
-            attempts: nodeData.attempts,
-            recurrence: nodeData.recurrence,
-          },
+          nodeType: thought.nodeType || 'thought',
+          metadata: thought.metadata || {},
         })
       })
     })

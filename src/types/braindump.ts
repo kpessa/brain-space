@@ -131,12 +131,14 @@ export interface ProcessedThought {
   // Additional fields from AI
   keywords?: string[]
   sentiment?: 'positive' | 'negative' | 'neutral'
-  urgency?: 'low' | 'medium' | 'high'
-  importance?: 'low' | 'medium' | 'high'
-  dueDate?: string
-  reasoning?: string
-  nodeType?: string
-  metadata?: Record<string, any>
+  urgency?: number // 1-10 scale for detailed priority
+  importance?: number // 1-10 scale for detailed priority
+  urgencyLevel?: 'low' | 'medium' | 'high' // For simpler categorization
+  importanceLevel?: 'low' | 'medium' | 'high' // For simpler categorization
+  dueDate?: string // ISO date string
+  reasoning?: string // AI's reasoning
+  nodeType?: string // For firebase integration
+  metadata?: Record<string, any> // For firebase integration
 }
 
 export interface BrainDumpProcessingResult {

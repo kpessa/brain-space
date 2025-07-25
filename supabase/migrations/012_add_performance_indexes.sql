@@ -33,9 +33,9 @@ WHERE status != 'completed';
 -- todo_id for joins
 CREATE INDEX IF NOT EXISTS idx_todo_recurrence_todo_id ON public.todo_recurrence(todo_id);
 
--- next_due_date for finding upcoming recurrences
-CREATE INDEX IF NOT EXISTS idx_todo_recurrence_next_due ON public.todo_recurrence(next_due_date)
-WHERE is_active = true;
+-- next_occurrence_date for finding upcoming recurrences
+CREATE INDEX IF NOT EXISTS idx_todo_recurrence_next_due ON public.todo_recurrence(next_occurrence_date)
+WHERE next_occurrence_date IS NOT NULL;
 
 -- Indexes for todo_completions table
 -- todo_id + completion_date for history queries

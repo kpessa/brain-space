@@ -5,6 +5,20 @@ import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
+  server: {
+    proxy: {
+      '/api/anthropic': {
+        target: 'https://api.anthropic.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/anthropic/, '')
+      },
+      '/api/openai': {
+        target: 'https://api.openai.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/openai/, '')
+      }
+    }
+  },
   plugins: [
     react({
       jsxRuntime: 'automatic'
