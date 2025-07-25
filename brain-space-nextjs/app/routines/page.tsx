@@ -634,7 +634,6 @@ export default function Routines() {
           </div>
         </div>
       </Modal>
-      </div>
     </div>
     </DashboardWrapper>
   )
