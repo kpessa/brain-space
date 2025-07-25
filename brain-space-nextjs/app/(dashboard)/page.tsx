@@ -1,15 +1,14 @@
-import { Metadata } from 'next'
+'use client'
+
+import { useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import { BookOpen, Trophy, Clock, SunMoon, Brain, Sparkles, Sword, Calendar, Grid } from 'lucide-react'
 
-export const metadata: Metadata = {
-  title: 'Dashboard - Brain Space',
-  description: 'Your Hero\'s Journey dashboard - Chronicle your adventures and track your growth',
-}
-
 export default function Dashboard() {
+  // Force client component by using state
+  const [mounted, setMounted] = useState(false)
   return (
     <div className="min-h-screen bg-gradient-to-br from-brain-600 via-space-600 to-brain-700 flex items-center justify-center p-4">
       <div className="max-w-4xl w-full">
