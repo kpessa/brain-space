@@ -55,7 +55,7 @@ const quadrants: Quadrant[] = [
 
 export default function EisenhowerMatrix() {
   const { user } = useAuth()
-  const { nodes, loading, error, loadNodes, updateNode, createNode } = useNodesStore()
+  const { nodes, isLoading: loading, error, loadNodes, updateNode, createNode } = useNodesStore()
   const [quadrantNodes, setQuadrantNodes] = useState<Record<string, any[]>>({
     'urgent-important': [],
     'not-urgent-important': [],
@@ -296,7 +296,7 @@ export default function EisenhowerMatrix() {
             isOpen={showAddDialog}
             title="Add New Task"
             placeholder="Enter task title..."
-            onConfirm={handleAddTask}
+            onSubmit={handleAddTask}
             onCancel={() => {
               setShowAddDialog(false)
               setSelectedQuadrant('')

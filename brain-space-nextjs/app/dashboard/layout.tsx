@@ -20,13 +20,17 @@ import {
   Network,
   Plus,
   Grid3x3,
+  ListTodo,
+  Repeat,
 } from 'lucide-react'
 
 const navigation = [
+  { name: 'Todos', href: '/dashboard/todos', icon: ListTodo },
   { name: 'Journal', href: '/dashboard/journal', icon: BookOpen },
   { name: 'Nodes', href: '/dashboard/nodes', icon: Network },
   { name: 'Brain Dump', href: '/dashboard/braindump', icon: Brain },
   { name: 'Matrix', href: '/dashboard/matrix', icon: Grid3x3 },
+  { name: 'Recurring', href: '/dashboard/recurring', icon: Repeat },
   { name: 'Progress', href: '/dashboard/progress', icon: Trophy },
   { name: 'Timebox', href: '/dashboard/timebox', icon: Clock },
   { name: 'Routines', href: '/dashboard/routines', icon: SunMoon },

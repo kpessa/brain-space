@@ -1,5 +1,7 @@
 // Flexible Node type definition with optional fields and aliasing support
 
+import type { RecurringCompletion, TaskType } from './recurrence'
+
 export type LogicType = 'AND' | 'OR'
 
 export interface Attempt {
@@ -101,8 +103,16 @@ export interface Node {
 
   // Metadata (optional)
   completed?: boolean
+  completedAt?: string
   createdAt?: string
   updatedAt?: string
+
+  // Recurring task fields (optional)
+  taskType?: TaskType
+  recurringCompletions?: RecurringCompletion[]
+  currentStreak?: number
+  longestStreak?: number
+  lastRecurringCompletionDate?: string
 }
 
 // Helper functions for node operations

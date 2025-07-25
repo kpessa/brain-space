@@ -93,7 +93,7 @@ export default function BrainDump() {
       
       setShowInput(false)
     } catch (error) {
-      console.error('Failed to process thoughts:', error)
+      // Failed to process thoughts
     } finally {
       setLoading(false)
     }
@@ -200,7 +200,7 @@ export default function BrainDump() {
       
       alert(`Successfully converted ${successCount} thoughts to nodes!`)
     } catch (error) {
-      console.error('Failed to convert thoughts to nodes:', error)
+      // Failed to convert thoughts to nodes
       alert('Failed to convert some thoughts to nodes')
     } finally {
       setConvertLoading(false)

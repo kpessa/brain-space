@@ -33,9 +33,9 @@ export default function CalendarPage() {
   const checkAuthorization = async () => {
     try {
       // First try manual initialization
-      console.log('Checking Google Calendar authorization...')
+      // Checking Google Calendar authorization...
       const initStatus = await googleCalendarService.initializeManually()
-      console.log('Initialization status:', initStatus)
+      // Initialization status check
 
       // Wait for Google APIs to load
       let attempts = 0
@@ -45,8 +45,8 @@ export default function CalendarPage() {
       }
 
       if (!googleCalendarService.isReady()) {
-        console.error('Google Calendar APIs failed to load after manual init')
-        console.error('Final status:', googleCalendarService.getInitStatus())
+        // Google Calendar APIs failed to load after manual init
+        // Final status check
         setIsLoading(false)
         return
       }
@@ -55,7 +55,7 @@ export default function CalendarPage() {
       const authorized = await googleCalendarService.authorize(true)
       setIsAuthorized(authorized)
     } catch (error) {
-      console.error('Error checking authorization:', error)
+      // Error checking authorization
     } finally {
       setIsLoading(false)
     }
@@ -70,22 +70,22 @@ export default function CalendarPage() {
         await loadCalendarsAndEvents()
       }
     } catch (error) {
-      console.error('Error authorizing:', error)
+      // Error authorizing
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleDisconnect = async () => {
-    try {
-      await googleCalendarService.signOut()
-      setIsAuthorized(false)
-      setEvents([])
-      setCalendars([])
-    } catch (error) {
-      console.error('Error disconnecting:', error)
-    }
-  }
+  // const handleDisconnect = async () => {
+  //   try {
+  //     await googleCalendarService.signOut()
+  //     setIsAuthorized(false)
+  //     setEvents([])
+  //     setCalendars([])
+  //   } catch (error) {
+  //     console.error('Error disconnecting:', error)
+  //   }
+  // }
 
   const loadCalendarsAndEvents = async () => {
     try {
@@ -105,7 +105,7 @@ export default function CalendarPage() {
         ? calendarList.filter(cal => selectedCalendarIds.has(cal.id))
         : calendarList // If none selected, show all (first time user experience)
 
-      console.log(`Loading events from ${calendarsToLoad.length} calendars out of ${calendarList.length} total`)
+      // Loading events from calendars
 
       for (const calendar of calendarsToLoad) {
         try {
@@ -133,13 +133,13 @@ export default function CalendarPage() {
           
           allEvents.push(...transformedEvents)
         } catch (error) {
-          console.error(`Error loading events from calendar ${calendar.summary}:`, error)
+          // Error loading events from calendar
         }
       }
 
       setEvents(allEvents)
     } catch (error) {
-      console.error('Error loading calendars and events:', error)
+      // Error loading calendars and events
     }
   }
 
@@ -148,12 +148,12 @@ export default function CalendarPage() {
   }
 
   const handleSelectEvent = (event: any) => {
-    console.log('Selected event:', event)
+    // Selected event
     // TODO: Show event details modal
   }
 
   const handleSelectSlot = (slotInfo: any) => {
-    console.log('Selected slot:', slotInfo)
+    // Selected slot
     // TODO: Show create event modal
   }
 

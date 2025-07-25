@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { Node, NodeType } from '@/types/node'
+import type { RecurringCompletion, TaskType } from '@/types/recurrence'
 import { db } from '@/lib/firebase'
 import {
   collection,
@@ -27,6 +28,7 @@ interface NodesStore {
   createNode: (node: Partial<Node>) => Promise<string | null>
   updateNode: (nodeId: string, updates: Partial<Node>) => Promise<void>
   deleteNode: (nodeId: string) => Promise<void>
+  completeRecurringTask: (nodeId: string, date: string) => Promise<void>
 
   // Utilities
   getNodeById: (nodeId: string) => Node | undefined
@@ -112,7 +114,7 @@ export const useNodesStore = create<NodesStore>((set, get) => ({
       if (nodeData.importance !== undefined) newNode.importance = nodeData.importance
       if (nodeData.dueDate !== undefined) newNode.dueDate = nodeData.dueDate
 
-      console.log('Saving node to Firestore:', nodeId, newNode)
+      // Saving node to Firestore
       
       // Create a clean object for Firestore (no undefined values)
       const firestoreData = Object.entries(newNode).reduce((acc, [key, value]) => {
@@ -129,7 +131,7 @@ export const useNodesStore = create<NodesStore>((set, get) => ({
         updatedAt: serverTimestamp(),
       })
 
-      console.log('Node saved to Firestore successfully')
+      // Node saved to Firestore successfully
 
       // Update local state
       const nodes = [...get().nodes, newNode]
@@ -137,7 +139,7 @@ export const useNodesStore = create<NodesStore>((set, get) => ({
 
       return nodeId
     } catch (error) {
-      console.error('Error in createNode:', error)
+      // Error in createNode
       set({ error: (error as Error).message })
       return null
     }
@@ -171,6 +173,29 @@ export const useNodesStore = create<NodesStore>((set, get) => ({
       // Reload to ensure consistency
       await get().loadNodes(node.userId)
     }
+  },
+
+  // Complete a recurring task for a specific date
+  completeRecurringTask: async (nodeId: string, date: string) => {
+    const node = get().nodes.find(n => n.id === nodeId)
+    if (!node || !node.recurringCompletions) {
+      return
+    }
+
+    const completion: RecurringCompletion = {
+      date,
+      completedAt: new Date().toISOString(),
+      status: 'completed',
+    }
+
+    const existingCompletions = node.recurringCompletions || []
+    const updatedCompletions = existingCompletions.filter(c => c.date !== date)
+    updatedCompletions.push(completion)
+
+    await get().updateNode(nodeId, {
+      recurringCompletions: updatedCompletions,
+      lastRecurringCompletionDate: date,
+    })
   },
 
   // Delete a node

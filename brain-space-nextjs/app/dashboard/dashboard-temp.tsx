@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
-import { BookOpen, Trophy, Clock, SunMoon, Brain, Sparkles, Sword, Calendar, Grid3x3 } from 'lucide-react'
+import { BookOpen, Trophy, Clock, SunMoon, Brain, Sparkles, Sword, Calendar, Grid3x3, ListTodo, Repeat } from 'lucide-react'
 
 export default function Dashboard() {
   // Force client component by using state and effect
@@ -26,6 +26,28 @@ export default function Dashboard() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <Card className="hover:shadow-lg transition-all duration-300 animate-slide-up">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <ListTodo className="w-8 h-8 text-purple-500" />
+                <CardTitle>Unified Todos</CardTitle>
+              </div>
+              <CardDescription>
+                All your tasks from every source in one place
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-600 mb-4">
+                View and manage todos from your journal, nodes, brain dumps, and routines all in one dashboard.
+              </p>
+              <Link href="/dashboard/todos">
+                <Button variant="primary" className="w-full">
+                  Manage All Tasks
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
           <Card className="hover:shadow-lg transition-all duration-300 animate-slide-up">
             <CardHeader>
               <div className="flex items-center gap-3">
@@ -88,6 +110,28 @@ export default function Dashboard() {
               <Link href="/dashboard/matrix">
                 <Button variant="primary" className="w-full">
                   Prioritize Tasks
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-all duration-300 animate-slide-up">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <Repeat className="w-8 h-8 text-purple-500" />
+                <CardTitle>Recurring Tasks & Habits</CardTitle>
+              </div>
+              <CardDescription>
+                Build consistency with recurring tasks and habit tracking
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-600 mb-4">
+                Set up daily, weekly, or monthly tasks and track your completion streaks.
+              </p>
+              <Link href="/dashboard/recurring">
+                <Button variant="primary" className="w-full">
+                  Manage Recurring Tasks
                 </Button>
               </Link>
             </CardContent>

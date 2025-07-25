@@ -150,7 +150,7 @@ export const useJournalStore = create<JournalState>((set, get) => ({
       await setDoc(doc(db, 'users', entryData.userId, 'progress', 'journal'), newProgress)
     }
     } catch (error) {
-      console.error('Error adding entry:', error)
+      // Error adding entry
       throw error
     } finally {
       set({ isSyncing: false })
@@ -220,7 +220,7 @@ export const useJournalStore = create<JournalState>((set, get) => ({
       })
     }
     } catch (error) {
-      console.error('Error updating entry:', error)
+      // Error updating entry
       throw error
     } finally {
       set({ isSyncing: false })
@@ -244,7 +244,7 @@ export const useJournalStore = create<JournalState>((set, get) => ({
         await deleteDoc(doc(db, 'users', entry.userId, 'journal', id))
       }
     } catch (error) {
-      console.error('Error deleting entry:', error)
+      // Error deleting entry
       throw error
     } finally {
       set({ isSyncing: false })
@@ -453,7 +453,7 @@ export const useJournalStore = create<JournalState>((set, get) => ({
       
       set({ entries })
     } catch (error) {
-      console.error('Error loading entries from Firestore:', error)
+      // Error loading entries from Firestore
     } finally {
       set({ isLoading: false })
     }
@@ -474,7 +474,7 @@ export const useJournalStore = create<JournalState>((set, get) => ({
         set({ userProgress: newProgress })
       }
     } catch (error) {
-      console.error('Error loading user progress from Firestore:', error)
+      // Error loading user progress from Firestore
     }
   },
   
@@ -500,7 +500,7 @@ export const useJournalStore = create<JournalState>((set, get) => ({
       
       await Promise.all(batch)
     } catch (error) {
-      console.error('Error syncing to Firestore:', error)
+      // Error syncing to Firestore
     } finally {
       set({ isSyncing: false })
     }
