@@ -1,101 +1,139 @@
-# Brain Space - Project Preferences
+# CLAUDE.md
 
-## Development Philosophy
-- **Rapid Development First** - Prioritize fast iteration and developer experience
-- **Visual Component Development** - Use Storybook to visualize all components
-- **Modern PWA Architecture** - Build for offline-first, installable web apps
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Technical Preferences
+## Current Status: Migration to Next.js
 
-### Supabase CLI
-- use --password flag when running supabase CLI.  ask me for the password.
+**Important**: This project is currently being migrated from a React (Vite) + Firebase architecture to a Next.js fullstack application with React Server Components and App Router. The Next.js app is located in the `brain-space-nextjs/` subdirectory.
 
-### Logging / Debugging / Troubleshooting
-- When trying to troubleshoot a problem in a webapp, i prefer to have a logging service, that I can easily download the logs with a shortcut key, CTRL+SHIFT+L, and then reference to agent after to make progress instead of the agent trying to open a development server.
-- After making progress, want to clean up log statements to keep webapp clean and only focusing on issue currently.
+## High-Level Architecture
 
-### CLI Tools
-- I want to always use the CLI tools to develop.  If they do not work because they require user input, I would like claude code to prompt me to use the CLI tool.
+Brain Space is a PWA-first personal knowledge management system currently transitioning from a React frontend and Firebase backend to a Next.js fullstack architecture. The application uses a brain dump flow for capturing thoughts, which are then processed by AI services to categorize and organize them into structured nodes.
 
-### Refactoring
-- Always look for opportunities to refactor and make code cleaner and more maintainable.  If a file becomes greater than a few hundred lines, look into refactoring and offer a solution if available.
+### Key Architecture Components:
 
-### Package Management
-- **pnpm** - Default package manager (not npm or yarn)
+1. **Current Frontend (Vite + React + TypeScript)** - Being migrated
+   - `/src/components/`: Reusable UI components with Storybook stories
+   - `/src/pages/`: Page-level components (Journal, Timebox, Progress, etc.)
+   - `/src/store/`: Zustand stores for state management
+   - `/src/lib/`: Utility functions and services
+   - `/src/services/`: Business logic (AI providers, logging, sync)
 
-### Code Quality
-- **ESLint** - Configured for rapid development with lenient rules:
-  - Warnings instead of errors for most rules
-  - Allow `any` types with warnings
-  - Allow console.log with warnings
-  - Unused variables as warnings
-- **Prettier** - Auto-format on save with:
-  - Single quotes
-  - No semicolons
-  - 2-space indentation
-  - 100 character line width
+2. **New Next.js Application** (in `brain-space-nextjs/`)
+   - App Router with React Server Components
+   - Server-side rendering and API routes
+   - Gradual migration of components from the React app
+   - Modern Next.js patterns and best practices
 
-### Testing & Quality Commands
+3. **Backend (Firebase + Genkit)**
+   - Firebase Auth for authentication
+   - Firestore for data persistence
+   - Firebase Functions for serverless AI processing
+   - Genkit for AI model orchestration
+
+4. **AI Service Architecture**
+   - Factory pattern for swappable AI providers (OpenAI, Anthropic, Firebase)
+   - Firebase-hosted Genkit functions for secure API key management
+   - Mock AI service for development without API keys
+
+## Common Development Commands
+
 ```bash
-pnpm run lint:fix      # Auto-fix linting issues
-pnpm run format        # Format code with Prettier
-pnpm run type-check    # TypeScript type checking
+# Package manager - ALWAYS use pnpm
+pnpm install              # Install dependencies
+
+# React App (Current)
+pnpm run dev             # Start development server
+pnpm run storybook       # Start Storybook for component development
+
+# Next.js App (New)
+cd brain-space-nextjs && pnpm run dev  # Start Next.js development server
+
+# Testing & Quality
+pnpm run lint            # Run ESLint
+pnpm run lint:fix        # Auto-fix linting issues
+pnpm run format          # Format code with Prettier
+pnpm run type-check      # TypeScript type checking
+
+# Building
+pnpm run build           # Build for production
+pnpm run preview         # Preview production build
+
+# Firebase Development
+firebase emulators:start # Start all Firebase emulators
+cd functions && pnpm run genkit:start # Start Genkit AI flows
+
+# Firebase Deployment
+./deploy-functions.sh    # Deploy Firebase functions (quick method)
+firebase deploy --only functions # Deploy functions manually
+firebase deploy          # Deploy everything (hosting, functions, rules)
+
+# Supabase CLI (requires password)
+supabase --password <password> [command] # Use --password flag for all commands
 ```
 
-## Tech Stack
+## AI Provider Configuration
 
-### Core
-- **React 18** with TypeScript
-- **Vite** for lightning-fast development
-- **Tailwind CSS** with custom Brain Space design system
-- **Storybook** for component visualization
+The app supports multiple AI providers through environment variables:
 
-### Design System
-- **Colors**: Custom brain (purple) and space (blue) palettes
-- **Typography**: Inter font family
-- **Components**: Tailwind-based with class-variance-authority
-- **Animations**: Smooth transitions with custom keyframes
+```env
+# Choose AI provider: 'firebase' | 'openai' | 'anthropic' | 'mock'
+VITE_AI_PROVIDER=firebase
 
-### State & Data (Planned)
-- **Zustand** for lightweight state management
-- **React Query (TanStack Query)** for server state
-- **Supabase** for backend services
+# Provider-specific keys (only needed for direct API calls)
+VITE_OPENAI_API_KEY=your_key
+VITE_ANTHROPIC_API_KEY=your_key
 
-### UI Components (Planned)
-- **Radix UI** for accessible, unstyled components
-- Custom components built on top of Radix primitives
-
-## Project Structure
-```
-brain-space/
-├── src/
-│   ├── components/     # Reusable UI components with .stories.tsx files
-│   ├── hooks/         # Custom React hooks
-│   ├── lib/           # Utilities (cn function, etc.)
-│   ├── pages/         # Page components
-│   ├── store/         # Zustand stores
-│   └── types/         # TypeScript types
-├── .storybook/        # Storybook configuration
-└── public/            # Static assets, PWA manifest
+# Firebase configuration
+VITE_FIREBASE_API_KEY=...
+VITE_USE_FIREBASE_EMULATORS=true # For local development
 ```
 
-## Key Features to Implement
-1. **PWA Support** - Manifest, service worker, offline functionality
-2. **TypeScript Path Aliases** - @/components, @/hooks, @/lib
-3. **Dark Mode** - Already set up in CSS variables
-4. **Authentication** - Via Supabase
-5. **Real-time Sync** - For collaborative features
+For production, use Firebase Functions with secrets:
+```bash
+firebase functions:secrets:set GOOGLE_AI_API_KEY
+firebase functions:secrets:set OPENAI_API_KEY
+```
 
 ## Development Workflow
-1. Create component in `src/components/`
-2. Add Storybook story in `ComponentName.stories.tsx`
-3. Use Tailwind classes with custom design tokens
-4. Run `pnpm run storybook` to develop visually
-5. Keep components pure and composable
+
+### Current React App
+1. **Component Development**: Create components in `/src/components/` with corresponding `.stories.tsx` files
+2. **State Management**: Use Zustand stores in `/src/store/` for global state
+3. **AI Integration**: The brain dump flow uses AI to categorize thoughts into structured nodes
+4. **Firebase Sync**: Authentication and data persistence handled through Firebase services
+5. **TypeScript**: Configured for rapid prototyping with relaxed rules (warnings instead of errors)
+
+### Migration Strategy to Next.js
+1. **Gradual Migration**: Components are being migrated one by one to `brain-space-nextjs/`
+2. **Server Components**: Leveraging React Server Components for better performance
+3. **API Routes**: Moving backend logic to Next.js API routes
+4. **Shared Code**: Reusing types, utilities, and business logic where possible
+5. **Parallel Development**: Both apps can run simultaneously during migration
+
+## Key Features & Flows
+
+### Brain Dump Flow
+1. User enters thoughts in `BrainDumpInput`
+2. Thoughts are processed by AI service (`categorizeThoughts`)
+3. Results displayed in `BrainDumpFlow` with categories and relationships
+4. User can convert thoughts to structured nodes
+
+### AI Service Selection
+- `createAIService()` factory in `/src/services/ai.ts` handles provider selection
+- Firebase provider preferred for security (API keys stored as secrets)
+- Falls back to mock service if no provider configured
+
+### Firebase Integration
+- Auth state managed in `AppWithFirebase.tsx`
+- Firestore rules in `firestore.rules`
+- Functions deployed to handle AI categorization securely
 
 ## Important Notes
-- Always use **pnpm** instead of npm/yarn
-- Prefer editing existing files over creating new ones
-- ESLint is intentionally lenient for rapid prototyping
-- All components should have corresponding Storybook stories
-- Use the custom `cn()` utility for merging Tailwind classes
+
+- TypeScript is intentionally configured for rapid prototyping (lenient rules)
+- Always use `pnpm` for package management
+- Component-first development with Storybook
+- Path alias `@/` configured for imports from `/src/`
+- PWA features enabled with Vite PWA plugin
+- Firebase emulators available for local development

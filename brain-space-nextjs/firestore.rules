@@ -1,0 +1,70 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // User profile rules
+    match /users/{userId}/profile/{document=**} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId);
+    }
+    
+    // Journal entries rules
+    match /users/{userId}/journal/{entryId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isOwner(userId) && resource.data.userId == userId;
+      allow delete: if isOwner(userId);
+    }
+    
+    // User progress rules
+    match /users/{userId}/progress/{progressType} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId) && request.resource.data.userId == userId;
+    }
+    
+    // Todo rules
+    match /users/{userId}/todos/{todoId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isOwner(userId) && resource.data.userId == userId;
+      allow delete: if isOwner(userId);
+    }
+    
+    // Brain dump rules
+    match /users/{userId}/braindumps/{dumpId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isOwner(userId) && resource.data.userId == userId;
+      allow delete: if isOwner(userId);
+    }
+    
+    // Nodes rules
+    match /users/{userId}/nodes/{nodeId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isOwner(userId) && resource.data.userId == userId;
+      allow delete: if isOwner(userId);
+    }
+    
+    // Calendar integration rules
+    match /users/{userId}/calendar/{document=**} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId);
+    }
+    
+    // Settings rules
+    match /users/{userId}/settings/{document=**} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId);
+    }
+  }
+}

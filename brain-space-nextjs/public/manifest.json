@@ -1,0 +1,54 @@
+{
+  "name": "Brain Space",
+  "short_name": "Brain Space",
+  "description": "Your intelligent thought management system",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#8b5cf6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["productivity", "utilities"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Journal",
+      "short_name": "Journal",
+      "description": "Access your journal entries",
+      "url": "/journal",
+      "icons": [{"src": "/android-chrome-192x192.png", "sizes": "192x192"}]
+    },
+    {
+      "name": "Add Node",
+      "short_name": "Add Node",
+      "description": "Create a new thought node",
+      "url": "/nodes",
+      "icons": [{"src": "/android-chrome-192x192.png", "sizes": "192x192"}]
+    }
+  ]
+}
