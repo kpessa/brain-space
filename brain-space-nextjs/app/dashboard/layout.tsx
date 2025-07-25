@@ -19,12 +19,14 @@ import {
   X,
   Network,
   Plus,
+  Grid3x3,
 } from 'lucide-react'
 
 const navigation = [
   { name: 'Journal', href: '/dashboard/journal', icon: BookOpen },
   { name: 'Nodes', href: '/dashboard/nodes', icon: Network },
   { name: 'Brain Dump', href: '/dashboard/braindump', icon: Brain },
+  { name: 'Matrix', href: '/dashboard/matrix', icon: Grid3x3 },
   { name: 'Progress', href: '/dashboard/progress', icon: Trophy },
   { name: 'Timebox', href: '/dashboard/timebox', icon: Clock },
   { name: 'Routines', href: '/dashboard/routines', icon: SunMoon },

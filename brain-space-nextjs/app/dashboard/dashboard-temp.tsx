@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
-import { BookOpen, Trophy, Clock, SunMoon, Brain, Sparkles, Sword, Calendar } from 'lucide-react'
+import { BookOpen, Trophy, Clock, SunMoon, Brain, Sparkles, Sword, Calendar, Grid3x3 } from 'lucide-react'
 
 export default function Dashboard() {
   // Force client component by using state and effect
@@ -66,6 +66,28 @@ export default function Dashboard() {
               <Link href="/dashboard/braindump">
                 <Button variant="primary" className="w-full">
                   Explore Ideas
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-all duration-300 animate-slide-up">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <Grid3x3 className="w-8 h-8 text-purple-500" />
+                <CardTitle>Eisenhower Matrix</CardTitle>
+              </div>
+              <CardDescription>
+                Prioritize tasks by urgency and importance
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-600 mb-4">
+                Organize your tasks into four quadrants to focus on what matters most.
+              </p>
+              <Link href="/dashboard/matrix">
+                <Button variant="primary" className="w-full">
+                  Prioritize Tasks
                 </Button>
               </Link>
             </CardContent>
