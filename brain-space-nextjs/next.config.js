@@ -28,12 +28,43 @@ const nextConfig = {
     ]
   },
   
-  // Redirect dashboard routes
+  // Redirect old routes to new structure
   async redirects() {
     return [
+      // Redirect old route group paths to new dashboard paths
       {
-        source: '/dashboard',
-        destination: '/',
+        source: '/journal',
+        destination: '/dashboard/journal',
+        permanent: true,
+      },
+      {
+        source: '/braindump',
+        destination: '/dashboard/braindump',
+        permanent: true,
+      },
+      {
+        source: '/nodes',
+        destination: '/dashboard/nodes',
+        permanent: true,
+      },
+      {
+        source: '/progress',
+        destination: '/dashboard/progress',
+        permanent: true,
+      },
+      {
+        source: '/timebox',
+        destination: '/dashboard/timebox',
+        permanent: true,
+      },
+      {
+        source: '/routines',
+        destination: '/dashboard/routines',
+        permanent: true,
+      },
+      {
+        source: '/calendar',
+        destination: '/dashboard/calendar',
         permanent: true,
       },
     ]

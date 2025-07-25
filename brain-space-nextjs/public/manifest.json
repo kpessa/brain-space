@@ -40,14 +40,14 @@
       "name": "Journal",
       "short_name": "Journal",
       "description": "Access your journal entries",
-      "url": "/journal",
+      "url": "/dashboard/journal",
       "icons": [{"src": "/android-chrome-192x192.png", "sizes": "192x192"}]
     },
     {
       "name": "Add Node",
       "short_name": "Add Node",
       "description": "Create a new thought node",
-      "url": "/nodes",
+      "url": "/dashboard/nodes",
       "icons": [{"src": "/android-chrome-192x192.png", "sizes": "192x192"}]
     }
   ]
