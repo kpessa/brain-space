@@ -67,6 +67,7 @@ interface BrainDumpState {
   addNode: (node: BrainDumpNode) => void
   updateNode: (nodeId: string, updates: Partial<BrainDumpNode>) => void
   deleteNode: (nodeId: string) => void
+  toggleNodeCollapse: (nodeId: string) => void
   
   // Edge operations
   addEdge: (edge: BrainDumpEdge) => void
@@ -237,6 +238,18 @@ export const useBrainDumpStore = create<BrainDumpState>((set, get) => ({
       edge => edge.source !== nodeId && edge.target !== nodeId
     )
     get().updateEntry(currentEntry.id, { nodes: updatedNodes, edges: updatedEdges })
+  },
+  
+  toggleNodeCollapse: (nodeId: string) => {
+    const { currentEntry } = get()
+    if (!currentEntry) return
+    
+    const updatedNodes = currentEntry.nodes.map(node =>
+      node.id === nodeId 
+        ? { ...node, data: { ...node.data, isCollapsed: !node.data.isCollapsed } }
+        : node
+    )
+    get().updateEntry(currentEntry.id, { nodes: updatedNodes })
   },
   
   addEdge: (edge: BrainDumpEdge) => {

@@ -28,8 +28,8 @@ import {
   ArrowLeft,
   CheckSquare,
 } from 'lucide-react'
-import { CategoryNode } from './nodes/CategoryNode'
-import { ThoughtNode } from './nodes/ThoughtNode'
+import { CategoryNode } from './flow/nodes/CategoryNode'
+import { ThoughtNode } from './flow/nodes/ThoughtNode'
 import { useBrainDumpStore, type BrainDumpNode, type BrainDumpEdge } from '@/store/braindumpStore'
 import { useNodesStore } from '@/store/nodeStore'
 import { useAuth } from '@/contexts/AuthContext'
