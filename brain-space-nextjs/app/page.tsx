@@ -13,6 +13,8 @@ export default function Home() {
     if (!loading) {
       if (user) {
         router.push('/journal')
+      } else {
+        router.push('/login')
       }
     }
   }, [user, loading, router])

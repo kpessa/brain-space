@@ -1,0 +1,13 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "pnpm run build",
+  "installCommand": "pnpm install",
+  "functions": {
+    "app/api/ai/categorize/route.ts": {
+      "maxDuration": 30
+    },
+    "app/api/ai/enhance-node/route.ts": {
+      "maxDuration": 30
+    }
+  }
+}

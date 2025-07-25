@@ -4,7 +4,9 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { 
   User, 
   onAuthStateChanged, 
-  signInWithPopup, 
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
   signOut as firebaseSignOut,
   signInWithEmailAndPassword,
@@ -36,6 +38,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { setUser: setStoreUser, setLoading: setStoreLoading } = useAuthStore()
 
   useEffect(() => {
+    // Check for redirect result first
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (result && result.user) {
+          // Handle successful redirect sign-in
+          const userRef = doc(db, 'users', result.user.uid, 'profile', 'data')
+          const userDoc = await getDoc(userRef)
+
+          if (!userDoc.exists()) {
+            await setDoc(userRef, {
+              id: result.user.uid,
+              email: result.user.email,
+              displayName: result.user.displayName,
+              photoURL: result.user.photoURL,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            })
+          }
+        }
+      })
+      .catch((error) => {
+        console.error('Redirect result error:', error)
+      })
+
     // Check offline status
     const handleOnline = () => setIsOfflineMode(false)
     const handleOffline = () => setIsOfflineMode(true)
@@ -124,30 +150,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // provider.addScope('https://www.googleapis.com/auth/calendar.readonly')
       // provider.addScope('https://www.googleapis.com/auth/calendar.events')
 
-      const result = await signInWithPopup(auth, provider)
+      try {
+        // Try popup first
+        const result = await signInWithPopup(auth, provider)
 
-      // Create or update user profile
-      const userRef = doc(db, 'users', result.user.uid, 'profile', 'data')
-      const userDoc = await getDoc(userRef)
+        // Create or update user profile
+        const userRef = doc(db, 'users', result.user.uid, 'profile', 'data')
+        const userDoc = await getDoc(userRef)
 
-      if (!userDoc.exists()) {
-        await setDoc(userRef, {
-          id: result.user.uid,
-          email: result.user.email,
-          displayName: result.user.displayName,
-          photoURL: result.user.photoURL,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })
-      } else {
-        await setDoc(
-          userRef,
-          {
-            ...userDoc.data(),
+        if (!userDoc.exists()) {
+          await setDoc(userRef, {
+            id: result.user.uid,
+            email: result.user.email,
+            displayName: result.user.displayName,
+            photoURL: result.user.photoURL,
+            createdAt: new Date(),
             updatedAt: new Date(),
-          },
-          { merge: true }
-        )
+          })
+        } else {
+          await setDoc(
+            userRef,
+            {
+              ...userDoc.data(),
+              updatedAt: new Date(),
+            },
+            { merge: true }
+          )
+        }
+      } catch (popupError: any) {
+        // If popup blocked or COOP error, fall back to redirect
+        if (popupError.code === 'auth/popup-blocked' || 
+            popupError.code === 'auth/popup-closed-by-user' ||
+            popupError.message?.includes('Cross-Origin-Opener-Policy')) {
+          console.log('Popup blocked, using redirect instead')
+          await signInWithRedirect(auth, provider)
+        } else {
+          throw popupError
+        }
       }
     } catch (error) {
       console.error('Google sign in error:', error)

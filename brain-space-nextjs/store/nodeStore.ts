@@ -111,8 +111,6 @@ export const useNodesStore = create<NodesStore>((set, get) => ({
       if (nodeData.urgency !== undefined) newNode.urgency = nodeData.urgency
       if (nodeData.importance !== undefined) newNode.importance = nodeData.importance
       if (nodeData.dueDate !== undefined) newNode.dueDate = nodeData.dueDate
-      if (nodeData.parentId !== undefined) newNode.parentId = nodeData.parentId
-      if (nodeData.relatedIds !== undefined) newNode.relatedIds = nodeData.relatedIds
 
       console.log('Saving node to Firestore:', nodeId, newNode)
       

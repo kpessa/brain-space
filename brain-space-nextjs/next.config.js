@@ -1,12 +1,38 @@
-import type { NextConfig } from 'next'
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   // Enable React strict mode
   reactStrictMode: true,
   
   // Configure image domains
   images: {
     domains: ['lh3.googleusercontent.com'], // For Google profile images
+  },
+  
+  
+  // Configure headers for Firebase Auth popup compatibility
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin-allow-popups',
+          },
+        ],
+      },
+    ]
+  },
+  
+  // Redirect dashboard routes
+  async redirects() {
+    return [
+      {
+        source: '/dashboard',
+        destination: '/',
+        permanent: true,
+      },
+    ]
   },
   
   // Environment variables that should be available on the client
@@ -21,4 +47,4 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default nextConfig
+module.exports = nextConfig

@@ -1,11 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth/next'
-import { getAuth } from 'firebase-admin/auth'
-import { getFirestore } from 'firebase-admin/firestore'
-import { initializeAdmin } from '@/lib/firebase-admin'
-
-// Initialize Firebase Admin
-initializeAdmin()
+import { adminAuth, adminDb } from '@/lib/firebase-admin'
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,12 +10,19 @@ export async function GET(request: NextRequest) {
     }
 
     const token = authHeader.split('Bearer ')[1]
-    const decodedToken = await getAuth().verifyIdToken(token)
+    
+    if (!adminAuth || !adminDb) {
+      return NextResponse.json(
+        { error: 'Firebase Admin not initialized' },
+        { status: 500 }
+      )
+    }
+    
+    const decodedToken = await adminAuth.verifyIdToken(token)
     const userId = decodedToken.uid
 
     // Check if user has Google Calendar token stored
-    const db = getFirestore()
-    const settingsDoc = await db
+    const settingsDoc = await adminDb
       .collection('users')
       .doc(userId)
       .collection('settings')
@@ -53,12 +54,19 @@ export async function DELETE(request: NextRequest) {
     }
 
     const token = authHeader.split('Bearer ')[1]
-    const decodedToken = await getAuth().verifyIdToken(token)
+    
+    if (!adminAuth || !adminDb) {
+      return NextResponse.json(
+        { error: 'Firebase Admin not initialized' },
+        { status: 500 }
+      )
+    }
+    
+    const decodedToken = await adminAuth.verifyIdToken(token)
     const userId = decodedToken.uid
 
     // Clear Google Calendar token
-    const db = getFirestore()
-    await db
+    await adminDb
       .collection('users')
       .doc(userId)
       .collection('settings')

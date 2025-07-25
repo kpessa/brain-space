@@ -1,0 +1,6 @@
+{
+  "installCommand": "cd brain-space-nextjs && pnpm install",
+  "buildCommand": "cd brain-space-nextjs && pnpm run build",
+  "outputDirectory": "brain-space-nextjs/.next",
+  "framework": "nextjs"
+}
