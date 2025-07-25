@@ -11,6 +11,7 @@ import { ROUTINE_MILESTONES, MORNING_RITUAL_SUGGESTIONS, DISTRACTION_CATEGORIES 
 import { format } from 'date-fns'
 import { Badge } from '@/components/ui/Badge'
 import { X } from 'lucide-react'
+import { DashboardWrapper } from '@/components/DashboardWrapper'
 
 
 
@@ -116,62 +117,67 @@ export default function Routines() {
   
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-brain-600 via-space-600 to-brain-700 p-4 flex items-center justify-center">
-        <div className="text-center text-white">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
-          <p className="mt-4">Loading your routines...</p>
+      <DashboardWrapper>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brain-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading your routines...</p>
+          </div>
         </div>
-      </div>
+      </DashboardWrapper>
     )
   }
   
   if (!progress || progress.currentDay === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-brain-600 via-space-600 to-brain-700 p-4">
-        <div className="max-w-4xl mx-auto">
-          <header className="mb-8 text-center">
-            <h1 className="text-4xl font-bold text-white mb-4">Morning & Evening Routines</h1>
-            <p className="text-white/80 max-w-2xl mx-auto">
-              Transform your days with intentional morning and evening routines. This 66-day journey
-              helps you wake up earlier and start each day with purpose.
-            </p>
-          </header>
-          
-          <Card className="max-w-2xl mx-auto">
-            <CardHeader className="text-center">
-              <CardTitle className="text-2xl">Start Your 66-Day Journey</CardTitle>
-              <CardDescription>
-                Build life-changing habits with science-backed routines
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-center">
-              <Button 
-                variant="primary" 
-                size="lg"
-                onClick={startJourney}
-              >
-                <Play className="w-5 h-5 mr-2" />
-                Begin Journey
-              </Button>
-            </CardContent>
-          </Card>
+      <DashboardWrapper>
+        <div className="bg-gradient-to-br from-brain-600 via-space-600 to-brain-700 -m-8 p-8 min-h-[calc(100vh-4rem)]">
+          <div className="max-w-4xl mx-auto">
+            <header className="mb-8 text-center">
+              <h1 className="text-4xl font-bold text-white mb-4">Morning & Evening Routines</h1>
+              <p className="text-white/80 max-w-2xl mx-auto">
+                Transform your days with intentional morning and evening routines. This 66-day journey
+                helps you wake up earlier and start each day with purpose.
+              </p>
+            </header>
+            
+            <Card className="max-w-2xl mx-auto">
+              <CardHeader className="text-center">
+                <CardTitle className="text-2xl">Start Your 66-Day Journey</CardTitle>
+                <CardDescription>
+                  Build life-changing habits with science-backed routines
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-center">
+                <Button 
+                  variant="primary" 
+                  size="lg"
+                  onClick={startJourney}
+                >
+                  <Play className="w-5 h-5 mr-2" />
+                  Begin Journey
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </div>
+      </DashboardWrapper>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brain-600 via-space-600 to-brain-700 p-4">
-      <div className="max-w-7xl mx-auto">
-        <header className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <SunMoon className="w-12 h-12 text-white" />
-            <h1 className="text-4xl font-bold text-white">Daily Routines</h1>
-          </div>
-          <p className="text-white/80 text-lg">
-            Transform your life with the power of morning and evening rituals
-          </p>
-        </header>
+    <DashboardWrapper>
+      <div className="bg-gradient-to-br from-brain-600 via-space-600 to-brain-700 -m-8 p-8 min-h-[calc(100vh-4rem)]">
+        <div className="max-w-7xl mx-auto">
+          <header className="text-center mb-8">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <SunMoon className="w-12 h-12 text-white" />
+              <h1 className="text-4xl font-bold text-white">Daily Routines</h1>
+            </div>
+            <p className="text-white/80 text-lg">
+              Transform your life with the power of morning and evening rituals
+            </p>
+          </header>
 
         {/* 66-Day Challenge Progress */}
         <Card className="mb-8">
@@ -628,6 +634,8 @@ export default function Routines() {
           </div>
         </div>
       </Modal>
+      </div>
     </div>
+    </DashboardWrapper>
   )
 }

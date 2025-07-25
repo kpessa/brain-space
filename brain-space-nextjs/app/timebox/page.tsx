@@ -9,6 +9,7 @@ import { useNodesStore } from '@/store/nodeStore'
 import { useAuth } from '@/contexts/AuthContext'
 import { format, addDays, subDays } from 'date-fns'
 import { cn } from '@/lib/utils'
+import { DashboardWrapper } from '@/components/DashboardWrapper'
 
 
 // Helper to get priority color
@@ -129,50 +130,51 @@ export default function Timebox() {
   )
   const totalHours = timeSlots.filter(slot => slot.tasks.length > 0).length * 2
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brain-600 via-space-600 to-brain-700 p-4">
-      <div className="max-w-7xl mx-auto">
-        <header className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <Clock className="w-12 h-12 text-white" />
-              <div>
-                <h1 className="text-4xl font-bold text-white">Timebox Schedule</h1>
-                <p className="text-white/80">
-                  Organize your day into focused 2-hour blocks
-                </p>
+    <DashboardWrapper>
+      <div className="bg-gradient-to-br from-brain-600 via-space-600 to-brain-700 -m-8 p-8 min-h-[calc(100vh-4rem)]">
+        <div className="max-w-7xl mx-auto">
+          <header className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <Clock className="w-12 h-12 text-white" />
+                <div>
+                  <h1 className="text-4xl font-bold text-white">Timebox Schedule</h1>
+                  <p className="text-white/80">
+                    Organize your day into focused 2-hour blocks
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={goToPreviousDay}
+                  className="bg-white/10 text-white hover:bg-white/20 border-white/20"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={goToToday}
+                  className="bg-white/10 text-white hover:bg-white/20 border-white/20 px-4"
+                >
+                  Today
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={goToNextDay}
+                  className="bg-white/10 text-white hover:bg-white/20 border-white/20"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={goToPreviousDay}
-                className="bg-white/10 text-white hover:bg-white/20 border-white/20"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={goToToday}
-                className="bg-white/10 text-white hover:bg-white/20 border-white/20 px-4"
-              >
-                Today
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={goToNextDay}
-                className="bg-white/10 text-white hover:bg-white/20 border-white/20"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
+            <div className="text-center text-white/90 text-lg">
+              {format(new Date(selectedDate), 'EEEE, MMMM d, yyyy')}
             </div>
-          </div>
-          <div className="text-center text-white/90 text-lg">
-            {format(new Date(selectedDate), 'EEEE, MMMM d, yyyy')}
-          </div>
-        </header>
+          </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Unscheduled Tasks */}
@@ -375,7 +377,8 @@ export default function Timebox() {
             </div>
           </CardContent>
         </Card>
+        </div>
       </div>
-    </div>
+    </DashboardWrapper>
   )
 }

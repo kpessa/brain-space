@@ -7,6 +7,7 @@ import { useJournalStore } from '@/store/journalStore'
 import { useNodesStore } from '@/store/nodeStore'
 import { useAuth } from '@/contexts/AuthContext'
 import { LEVELS } from '@/types/journal'
+import { DashboardWrapper } from '@/components/DashboardWrapper'
 
 export default function Progress() {
   const { user } = useAuth()
@@ -110,17 +111,18 @@ export default function Progress() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brain-600 via-space-600 to-brain-700 p-4">
-      <div className="max-w-6xl mx-auto">
-        <header className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Trophy className="w-12 h-12 text-yellow-400" />
-            <h1 className="text-4xl font-bold text-white">Hero Progress</h1>
-          </div>
-          <p className="text-white/80 text-lg">
-            Track your growth, celebrate achievements, and level up your life
-          </p>
-        </header>
+    <DashboardWrapper>
+      <div className="bg-gradient-to-br from-brain-600 via-space-600 to-brain-700 -m-8 p-8 min-h-[calc(100vh-4rem)]">
+        <div className="max-w-6xl mx-auto">
+          <header className="text-center mb-8">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <Trophy className="w-12 h-12 text-yellow-400" />
+              <h1 className="text-4xl font-bold text-white">Hero Progress</h1>
+            </div>
+            <p className="text-white/80 text-lg">
+              Track your growth, celebrate achievements, and level up your life
+            </p>
+          </header>
 
         {/* Player Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -274,7 +276,8 @@ export default function Progress() {
             </CardContent>
           </Card>
         </div>
+        </div>
       </div>
-    </div>
+    </DashboardWrapper>
   )
 }

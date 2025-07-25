@@ -7,6 +7,7 @@ import { googleCalendarService } from '@/services/googleCalendar'
 import { EightWeekViewComponent } from '@/components/calendar/EightWeekView'
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Settings } from 'lucide-react'
 import { useCalendarStore } from '@/store/calendarStore'
+import { DashboardWrapper } from '@/components/DashboardWrapper'
 
 export default function CalendarPage() {
   const { user } = useAuth()
@@ -187,39 +188,46 @@ export default function CalendarPage() {
   }
 
   if (!user) {
-    return null
+    return (
+      <DashboardWrapper>
+        <div className="flex items-center justify-center h-64">
+          <p className="text-gray-600">Please sign in to view your calendar</p>
+        </div>
+      </DashboardWrapper>
+    )
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <div className="mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex items-center space-x-3">
-            <CalendarIcon className="h-8 w-8 text-brain-600" />
-            <h1 className="text-3xl font-bold text-gray-900">Calendar</h1>
+    <DashboardWrapper>
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center space-x-3">
+              <CalendarIcon className="h-8 w-8 text-brain-600" />
+              <h1 className="text-3xl font-bold text-gray-900">Calendar</h1>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              {isAuthorized && (
+                <>
+                  <button
+                    onClick={() => router.push('/calendar/settings')}
+                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                    title="Calendar Settings"
+                  >
+                    <Settings className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={() => {/* TODO: Show create event modal */}}
+                    className="flex items-center space-x-2 px-4 py-2 bg-brain-600 text-white rounded-lg hover:bg-brain-700 transition-colors"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>New Event</span>
+                  </button>
+                </>
+              )}
+            </div>
           </div>
-          
-          <div className="flex items-center space-x-2">
-            {isAuthorized && (
-              <>
-                <button
-                  onClick={() => router.push('/calendar/settings')}
-                  className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                  title="Calendar Settings"
-                >
-                  <Settings className="h-5 w-5" />
-                </button>
-                <button
-                  onClick={() => {/* TODO: Show create event modal */}}
-                  className="flex items-center space-x-2 px-4 py-2 bg-brain-600 text-white rounded-lg hover:bg-brain-700 transition-colors"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>New Event</span>
-                </button>
-              </>
-            )}
-          </div>
-        </div>
 
         {!isAuthorized && !isLoading && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
@@ -308,7 +316,8 @@ export default function CalendarPage() {
             </div>
           </>
         )}
+        </div>
       </div>
-    </div>
+    </DashboardWrapper>
   )
 }

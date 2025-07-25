@@ -11,6 +11,7 @@ import { LevelDisplay } from '@/components/journal/LevelDisplay'
 import { StreakCounter } from '@/components/journal/StreakCounter'
 import { LEVELS } from '@/types/journal'
 import { useAuth } from '@/contexts/AuthContext'
+import { DashboardWrapper } from '@/components/DashboardWrapper'
 
 export default function Journal() {
   const { user } = useAuth()
@@ -28,17 +29,20 @@ export default function Journal() {
   
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-brain-600 via-space-600 to-brain-700 p-4 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
-          <p className="mt-4 text-white">Loading journal...</p>
+      <DashboardWrapper>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brain-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading journal...</p>
+          </div>
         </div>
-      </div>
+      </DashboardWrapper>
     )
   }
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brain-600 via-space-600 to-brain-700 p-4">
+    <DashboardWrapper>
+      <div className="bg-gradient-to-br from-brain-600 via-space-600 to-brain-700 -m-8 p-8 min-h-[calc(100vh-4rem)]">
       <div className="max-w-6xl mx-auto">
         <header className="mb-8">
           <div className="flex items-center justify-between mb-4">
@@ -186,6 +190,7 @@ export default function Journal() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </DashboardWrapper>
   )
 }

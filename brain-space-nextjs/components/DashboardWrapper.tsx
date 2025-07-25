@@ -37,11 +37,7 @@ const navigation = [
   { name: 'Calendar', href: '/calendar', icon: Calendar },
 ]
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export function DashboardWrapper({ children }: { children: React.ReactNode }) {
   const { user, loading, signOut } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [quickAddOpen, setQuickAddOpen] = useState(false)

@@ -28,6 +28,7 @@ import {
   Archive
 } from 'lucide-react'
 import { format } from 'date-fns'
+import { DashboardWrapper } from '@/components/DashboardWrapper'
 
 type FilterType = 'all' | 'today' | 'upcoming' | 'overdue' | 'completed'
 type SourceFilter = 'all' | UnifiedTodo['source']
@@ -146,9 +147,11 @@ export default function UnifiedTodosDashboard() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brain-600"></div>
-      </div>
+      <DashboardWrapper>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brain-600"></div>
+        </div>
+      </DashboardWrapper>
     )
   }
 
@@ -158,14 +161,15 @@ export default function UnifiedTodosDashboard() {
   const upcomingTodos = getUpcomingTodos(7).filter(t => !t.completed && !todayTodos.includes(t))
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brain-600 via-space-600 to-brain-700 p-4">
-      <div className="max-w-7xl mx-auto">
-        <header className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Unified Todos</h1>
-          <p className="text-white/80 text-lg">
-            All your tasks from every source in one place
-          </p>
-        </header>
+    <DashboardWrapper>
+      <div className="bg-gradient-to-br from-brain-600 via-space-600 to-brain-700 -m-8 p-8 min-h-[calc(100vh-4rem)]">
+        <div className="max-w-7xl mx-auto">
+          <header className="mb-8">
+            <h1 className="text-4xl font-bold text-white mb-2">Unified Todos</h1>
+            <p className="text-white/80 text-lg">
+              All your tasks from every source in one place
+            </p>
+          </header>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -427,8 +431,9 @@ export default function UnifiedTodosDashboard() {
             </CardContent>
           </Card>
         )}
+        </div>
       </div>
-    </div>
+    </DashboardWrapper>
   )
 }
 

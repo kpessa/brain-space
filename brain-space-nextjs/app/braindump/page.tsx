@@ -11,6 +11,7 @@ import { useNodesStore } from '@/store/nodeStore'
 import { useAuth } from '@/contexts/AuthContext'
 import { createAIService } from '@/services/ai'
 import type { NodeType } from '@/types/node'
+import { DashboardWrapper } from '@/components/DashboardWrapper'
 
 // Mock data for demo purposes
 const brainDumpEntries = [
@@ -208,37 +209,38 @@ export default function BrainDump() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brain-600 via-space-600 to-brain-700 p-4">
-      <div className="max-w-7xl mx-auto">
-        <header className="mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Brain className="w-12 h-12 text-white" />
-              <div>
-                <h1 className="text-4xl font-bold text-white">Brain Dump</h1>
-                <p className="text-white/80 text-lg">
-                  Visualize your thoughts and ideas in interactive mindmaps
-                </p>
+    <DashboardWrapper>
+      <div className="bg-gradient-to-br from-brain-600 via-space-600 to-brain-700 -m-8 p-8 min-h-[calc(100vh-4rem)]">
+        <div className="max-w-7xl mx-auto">
+          <header className="mb-8">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Brain className="w-12 h-12 text-white" />
+                <div>
+                  <h1 className="text-4xl font-bold text-white">Brain Dump</h1>
+                  <p className="text-white/80 text-lg">
+                    Visualize your thoughts and ideas in interactive mindmaps
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex items-center gap-2 bg-white/10 text-white hover:bg-white/20 border-white/20"
+                >
+                  <Upload className="w-5 h-5" />
+                  Import
+                </Button>
+                <Button
+                  variant="primary"
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="w-5 h-5" />
+                  New Brain Dump
+                </Button>
               </div>
             </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                className="flex items-center gap-2 bg-white/10 text-white hover:bg-white/20 border-white/20"
-              >
-                <Upload className="w-5 h-5" />
-                Import
-              </Button>
-              <Button
-                variant="primary"
-                className="flex items-center gap-2"
-              >
-                <Plus className="w-5 h-5" />
-                New Brain Dump
-              </Button>
-            </div>
-          </div>
-        </header>
+          </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Sidebar with entries list */}
@@ -529,6 +531,7 @@ export default function BrainDump() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </DashboardWrapper>
   )
 }

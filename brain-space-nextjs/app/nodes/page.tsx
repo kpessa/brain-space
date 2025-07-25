@@ -31,6 +31,7 @@ import {
   Upload
 } from 'lucide-react'
 import { format } from 'date-fns'
+import { DashboardWrapper } from '@/components/DashboardWrapper'
 
 interface NodeCreateModalProps {
   isOpen: boolean
@@ -380,78 +381,83 @@ export default function Nodes() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-brain-600 via-space-600 to-brain-700 p-4 flex items-center justify-center">
-        <Card>
-          <CardContent className="text-center py-12">
-            <p className="text-gray-600">Please sign in to view your nodes</p>
-          </CardContent>
-        </Card>
-      </div>
+      <DashboardWrapper>
+        <div className="flex items-center justify-center h-64">
+          <Card>
+            <CardContent className="text-center py-12">
+              <p className="text-gray-600">Please sign in to view your nodes</p>
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardWrapper>
     )
   }
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-brain-600 via-space-600 to-brain-700 p-4 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
-          <p className="mt-4 text-white">Loading nodes...</p>
+      <DashboardWrapper>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brain-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading nodes...</p>
+          </div>
         </div>
-      </div>
+      </DashboardWrapper>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brain-600 via-space-600 to-brain-700 p-4">
-      <div className="max-w-7xl mx-auto">
-        <header className="mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Network className="w-12 h-12 text-white" />
-              <div>
-                <h1 className="text-4xl font-bold text-white">My Nodes</h1>
-                <p className="text-white/80 text-lg">
-                  Organize your thoughts, tasks, and ideas
-                </p>
+    <DashboardWrapper>
+      <div className="bg-gradient-to-br from-brain-600 via-space-600 to-brain-700 -m-8 p-8 min-h-[calc(100vh-4rem)]">
+        <div className="max-w-7xl mx-auto">
+          <header className="mb-8">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Network className="w-12 h-12 text-white" />
+                <div>
+                  <h1 className="text-4xl font-bold text-white">My Nodes</h1>
+                  <p className="text-white/80 text-lg">
+                    Organize your thoughts, tasks, and ideas
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {/* Import */}
+                <label className="cursor-pointer">
+                  <input type="file" accept=".json" onChange={importNodes} className="hidden" />
+                  <Button variant="outline" className="flex items-center gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20">
+                    <Upload className="w-4 h-4" />
+                    Import
+                  </Button>
+                </label>
+                
+                {/* Export */}
+                <Button
+                  variant="outline"
+                  onClick={exportNodes}
+                  className="flex items-center gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20"
+                >
+                  <Download className="w-4 h-4" />
+                  Export
+                </Button>
+                
+                {/* Add Node */}
+                <Button
+                  onClick={() => setIsCreateModalOpen(true)}
+                  variant="primary"
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="w-5 h-5" />
+                  Add Node
+                </Button>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              {/* Import */}
-              <label className="cursor-pointer">
-                <input type="file" accept=".json" onChange={importNodes} className="hidden" />
-                <Button variant="outline" className="flex items-center gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20">
-                  <Upload className="w-4 h-4" />
-                  Import
-                </Button>
-              </label>
-              
-              {/* Export */}
-              <Button
-                variant="outline"
-                onClick={exportNodes}
-                className="flex items-center gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20"
-              >
-                <Download className="w-4 h-4" />
-                Export
-              </Button>
-              
-              {/* Add Node */}
-              <Button
-                onClick={() => setIsCreateModalOpen(true)}
-                variant="primary"
-                className="flex items-center gap-2"
-              >
-                <Plus className="w-5 h-5" />
-                Add Node
-              </Button>
+            
+            {/* AI Provider Selector */}
+            <div className="mt-4 flex justify-end">
+              <AIProviderSelector />
             </div>
-          </div>
-          
-          {/* AI Provider Selector */}
-          <div className="mt-4 flex justify-end">
-            <AIProviderSelector />
-          </div>
-        </header>
+          </header>
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -602,7 +608,8 @@ export default function Nodes() {
           isOpen={isCreateModalOpen}
           onClose={() => setIsCreateModalOpen(false)}
         />
+        </div>
       </div>
-    </div>
+    </DashboardWrapper>
   )
 }
