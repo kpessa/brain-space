@@ -1,21 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 export function middleware(request: NextRequest) {
-  // For now, we'll let all requests through
-  // In a real app, you'd verify the Firebase auth token here
+  // Clone the request headers
+  const requestHeaders = new Headers(request.headers)
   
   // Public routes that don't require authentication
   const publicRoutes = ['/login', '/api/ai']
   
   const { pathname } = request.nextUrl
   
+  // Create response with COOP headers for Firebase Auth
+  const response = NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  })
+  
+  // Set COOP headers for Firebase Auth compatibility
+  response.headers.set('Cross-Origin-Opener-Policy', 'same-origin-allow-popups')
+  response.headers.set('Cross-Origin-Embedder-Policy', 'unsafe-none')
+  
   // Allow access to public routes and API routes
   if (publicRoutes.some(route => pathname.startsWith(route)) || pathname.startsWith('/api/')) {
-    return NextResponse.next()
+    return response
   }
   
   // For now, allow all routes (remove this in production)
-  return NextResponse.next()
+  return response
   
   // TODO: Add actual Firebase auth verification
   // const token = request.cookies.get('auth-token')

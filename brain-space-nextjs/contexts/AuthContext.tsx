@@ -150,8 +150,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // provider.addScope('https://www.googleapis.com/auth/calendar.readonly')
       // provider.addScope('https://www.googleapis.com/auth/calendar.events')
 
+      // Check if we're in production and should use redirect instead of popup
+      const isProduction = process.env.NODE_ENV === 'production'
+      const shouldUseRedirect = isProduction && typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')
+
+      if (shouldUseRedirect) {
+        // Use redirect flow in production to avoid COOP issues
+        await signInWithRedirect(auth, provider)
+        return
+      }
+
       try {
-        // Try popup first
+        // Try popup first in development
         const result = await signInWithPopup(auth, provider)
 
         // Create or update user profile
