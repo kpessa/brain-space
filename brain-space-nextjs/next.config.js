@@ -28,46 +28,9 @@ const nextConfig = {
     ]
   },
   
-  // Redirect old routes to new structure
+  // No redirects needed since we're using route groups
   async redirects() {
-    return [
-      // Redirect old route group paths to new dashboard paths
-      {
-        source: '/journal',
-        destination: '/dashboard/journal',
-        permanent: true,
-      },
-      {
-        source: '/braindump',
-        destination: '/dashboard/braindump',
-        permanent: true,
-      },
-      {
-        source: '/nodes',
-        destination: '/dashboard/nodes',
-        permanent: true,
-      },
-      {
-        source: '/progress',
-        destination: '/dashboard/progress',
-        permanent: true,
-      },
-      {
-        source: '/timebox',
-        destination: '/dashboard/timebox',
-        permanent: true,
-      },
-      {
-        source: '/routines',
-        destination: '/dashboard/routines',
-        permanent: true,
-      },
-      {
-        source: '/calendar',
-        destination: '/dashboard/calendar',
-        permanent: true,
-      },
-    ]
+    return []
   },
   
   // Environment variables that should be available on the client
