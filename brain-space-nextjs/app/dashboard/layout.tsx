@@ -22,13 +22,13 @@ import {
 } from 'lucide-react'
 
 const navigation = [
-  { name: 'Journal', href: '/journal', icon: BookOpen },
-  { name: 'Nodes', href: '/nodes', icon: Network },
-  { name: 'Brain Dump', href: '/braindump', icon: Brain },
-  { name: 'Progress', href: '/progress', icon: Trophy },
-  { name: 'Timebox', href: '/timebox', icon: Clock },
-  { name: 'Routines', href: '/routines', icon: SunMoon },
-  { name: 'Calendar', href: '/calendar', icon: Calendar },
+  { name: 'Journal', href: '/dashboard/journal', icon: BookOpen },
+  { name: 'Nodes', href: '/dashboard/nodes', icon: Network },
+  { name: 'Brain Dump', href: '/dashboard/braindump', icon: Brain },
+  { name: 'Progress', href: '/dashboard/progress', icon: Trophy },
+  { name: 'Timebox', href: '/dashboard/timebox', icon: Clock },
+  { name: 'Routines', href: '/dashboard/routines', icon: SunMoon },
+  { name: 'Calendar', href: '/dashboard/calendar', icon: Calendar },
 ]
 
 export default function DashboardLayout({
