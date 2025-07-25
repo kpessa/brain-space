@@ -1,9 +1,13 @@
 import { create } from 'zustand'
 import type { RoutineEntry, RoutineProgress } from '../types/routines'
 import { supabaseService } from '../services/supabase'
+import { firebaseService } from '../services/firebase'
 import { isSupabaseConfigured } from '../lib/supabase'
 import { logger } from '../services/logger'
 import { syncRoutineEntryToTodos } from '../lib/routineTodoSync'
+
+// Helper to determine which service to use
+const useFirebaseAuth = () => import.meta.env.VITE_USE_FIREBASE_AUTH === 'true'
 
 interface RoutineStore {
   // State
@@ -54,7 +58,28 @@ export const useRoutineStore = create<RoutineStore>((set, get) => ({
       set({ isLoading: true })
 
       // Check if user has existing progress
-      if (isSupabaseConfigured()) {
+      if (useFirebaseAuth()) {
+        const existingProgress = await firebaseService.getRoutineProgress(userId)
+
+        if (existingProgress) {
+          set({ progress: existingProgress })
+        } else {
+          // Create new progress entry
+          const newProgress: RoutineProgress = {
+            userId,
+            currentDay: 0,
+            totalDaysCompleted: 0,
+            isActive: true,
+            morningRoutinesCompleted: 0,
+            eveningRoutinesCompleted: 0,
+            currentStreak: 0,
+            longestStreak: 0,
+          }
+
+          await firebaseService.createRoutineProgress(newProgress)
+          set({ progress: newProgress })
+        }
+      } else if (isSupabaseConfigured()) {
         const { data: existingProgress } = await supabaseService.getRoutineProgress(userId)
 
         if (existingProgress) {
@@ -112,7 +137,10 @@ export const useRoutineStore = create<RoutineStore>((set, get) => ({
         return
       }
 
-      if (isSupabaseConfigured()) {
+      if (useFirebaseAuth()) {
+        const entries = await firebaseService.getRoutineEntries(userId)
+        set({ entries: entries || [] })
+      } else if (isSupabaseConfigured()) {
         const { data: entries, error } = await supabaseService.getRoutineEntries(userId)
 
         if (error) {
@@ -202,7 +230,24 @@ export const useRoutineStore = create<RoutineStore>((set, get) => ({
         data,
       })
 
-      if (isSupabaseConfigured()) {
+      if (useFirebaseAuth()) {
+        let result
+        if (currentEntry) {
+          await firebaseService.updateRoutineEntry(progress.userId, entryId, entry)
+          result = { ...entry, id: entryId }
+        } else {
+          result = await firebaseService.createRoutineEntry(progress.userId, entry)
+        }
+
+        set({ currentEntry: result })
+
+        // Update entries list
+        set(state => ({
+          entries: currentEntry
+            ? state.entries.map(e => (e.id === entryId ? result : e))
+            : [...state.entries, result],
+        }))
+      } else if (isSupabaseConfigured()) {
         let result
         if (currentEntry) {
           result = await supabaseService.updateRoutineEntry(entryId, entry)
@@ -287,7 +332,9 @@ export const useRoutineStore = create<RoutineStore>((set, get) => ({
         lastCompletedDate: new Date().toISOString().split('T')[0],
       }
 
-      if (isSupabaseConfigured()) {
+      if (useFirebaseAuth()) {
+        await firebaseService.updateRoutineProgress(progress.userId, updatedProgress)
+      } else if (isSupabaseConfigured()) {
         await supabaseService.updateRoutineProgress(progress.userId, updatedProgress)
       } else {
         localStorage.setItem(`routine-progress-${progress.userId}`, JSON.stringify(updatedProgress))
@@ -323,7 +370,9 @@ export const useRoutineStore = create<RoutineStore>((set, get) => ({
         ),
       }
 
-      if (isSupabaseConfigured()) {
+      if (useFirebaseAuth()) {
+        await firebaseService.updateRoutineProgress(progress.userId, updatedProgress)
+      } else if (isSupabaseConfigured()) {
         await supabaseService.updateRoutineProgress(progress.userId, updatedProgress)
       } else {
         localStorage.setItem(`routine-progress-${progress.userId}`, JSON.stringify(updatedProgress))
@@ -343,7 +392,9 @@ export const useRoutineStore = create<RoutineStore>((set, get) => ({
       startedAt: progress.startedAt || new Date().toISOString().split('T')[0],
     }
 
-    if (isSupabaseConfigured()) {
+    if (useFirebaseAuth()) {
+      await firebaseService.updateRoutineProgress(progress.userId, updatedProgress)
+    } else if (isSupabaseConfigured()) {
       await supabaseService.updateRoutineProgress(progress.userId, updatedProgress)
     } else {
       localStorage.setItem(`routine-progress-${progress.userId}`, JSON.stringify(updatedProgress))
@@ -361,7 +412,9 @@ export const useRoutineStore = create<RoutineStore>((set, get) => ({
       isActive: false,
     }
 
-    if (isSupabaseConfigured()) {
+    if (useFirebaseAuth()) {
+      await firebaseService.updateRoutineProgress(progress.userId, updatedProgress)
+    } else if (isSupabaseConfigured()) {
       await supabaseService.updateRoutineProgress(progress.userId, updatedProgress)
     } else {
       localStorage.setItem(`routine-progress-${progress.userId}`, JSON.stringify(updatedProgress))
@@ -379,7 +432,9 @@ export const useRoutineStore = create<RoutineStore>((set, get) => ({
       isActive: true,
     }
 
-    if (isSupabaseConfigured()) {
+    if (useFirebaseAuth()) {
+      await firebaseService.updateRoutineProgress(progress.userId, updatedProgress)
+    } else if (isSupabaseConfigured()) {
       await supabaseService.updateRoutineProgress(progress.userId, updatedProgress)
     } else {
       localStorage.setItem(`routine-progress-${progress.userId}`, JSON.stringify(updatedProgress))

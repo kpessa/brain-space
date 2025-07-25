@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuthWrapper } from '../hooks/useAuthWrapper'
 import { useRoutineStore } from '../store/routines'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/Card'
 import { Button } from '../components/Button'
@@ -9,7 +9,7 @@ import { MorningRoutine } from '../components/routines/MorningRoutine'
 import { EveningRoutine } from '../components/routines/EveningRoutine'
 
 export default function Routines() {
-  const { user } = useAuth()
+  const { user } = useAuthWrapper()
   const {
     progress,
     currentEntry,
@@ -33,7 +33,8 @@ export default function Routines() {
         loadEntries(user.id)
       })
     }
-  }, [user, initializeProgress, loadEntries])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]) // Only re-run when user ID changes
 
   // Update current time every minute
   useEffect(() => {

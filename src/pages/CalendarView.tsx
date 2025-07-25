@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
-import { Calendar } from 'react-big-calendar'
+import { Link } from 'react-router-dom'
+import { Calendar, Navigate } from 'react-big-calendar'
 import type { Event, View } from 'react-big-calendar'
 import dayjs from 'dayjs'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
 import '../styles/calendar.css'
-import { googleCalendarService } from '../services/googleCalendar'
+import { googleCalendarService } from '../services/googleCalendarWrapper'
 import { useCalendarStore } from '../store/calendarStore'
 import { EightWeekView, EightWeekViewComponent } from '../components/EightWeekView'
 import { ErrorBoundary } from '../components/ErrorBoundary'
@@ -36,7 +37,7 @@ const CustomToolbar: React.FC<CustomToolbarProps> = ({
   view,
   views,
   onEightWeekView,
-  currentView
+  currentView,
 }) => {
   return (
     <div className="rbc-toolbar">
@@ -124,15 +125,18 @@ const MobileCalendarMenu: React.FC<MobileCalendarMenuProps> = ({
   onViewChange,
   onRefresh,
   isRefreshing,
-  loading
+  loading,
 }) => {
   const [isOpen, setIsOpen] = useState(false)
-  
+
   const handleNavigate = (direction: 'PREV' | 'NEXT' | 'TODAY') => {
     if (direction === 'TODAY') {
       onNavigate(new Date())
     } else if (currentView === 'eightWeek') {
-      const newDate = EightWeekView.navigate(currentDate, direction === 'PREV' ? Navigate.PREVIOUS : Navigate.NEXT)
+      const newDate = EightWeekView.navigate(
+        currentDate,
+        direction === 'PREV' ? Navigate.PREVIOUS : Navigate.NEXT
+      )
       onNavigate(newDate)
     } else {
       // For standard views, we'll use a simple month navigation
@@ -146,10 +150,11 @@ const MobileCalendarMenu: React.FC<MobileCalendarMenuProps> = ({
     setIsOpen(false)
   }
 
-  const currentTitle = currentView === 'eightWeek' 
-    ? EightWeekView.title(currentDate)
-    : dayjs(currentDate).format('MMMM YYYY')
-  
+  const currentTitle =
+    currentView === 'eightWeek'
+      ? EightWeekView.title(currentDate)
+      : dayjs(currentDate).format('MMMM YYYY')
+
   return (
     <div className="relative lg:hidden">
       <button
@@ -159,15 +164,12 @@ const MobileCalendarMenu: React.FC<MobileCalendarMenuProps> = ({
       >
         <MoreVertical className="w-4 h-4" />
       </button>
-      
+
       {isOpen && (
         <>
           {/* Backdrop */}
-          <div 
-            className="fixed inset-0 z-40"
-            onClick={() => setIsOpen(false)}
-          />
-          
+          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+
           {/* Menu */}
           <div className="absolute right-0 top-full mt-1 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-50 py-2">
             {/* Current view type */}
@@ -176,7 +178,7 @@ const MobileCalendarMenu: React.FC<MobileCalendarMenuProps> = ({
                 {currentView === 'eightWeek' ? '8 Week View' : `${currentView} view`}
               </p>
             </div>
-            
+
             {/* Navigation */}
             <div className="px-2 py-2 border-b border-gray-100">
               <div className="flex items-center justify-center space-x-1">
@@ -200,10 +202,12 @@ const MobileCalendarMenu: React.FC<MobileCalendarMenuProps> = ({
                 </button>
               </div>
             </div>
-            
+
             {/* View selection */}
             <div className="px-2 py-2 border-b border-gray-100">
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide px-2 mb-1">Calendar View</p>
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide px-2 mb-1">
+                Calendar View
+              </p>
               <div className="grid grid-cols-2 gap-1">
                 {['month', 'week', 'day', 'agenda'].map(viewName => (
                   <button
@@ -236,7 +240,7 @@ const MobileCalendarMenu: React.FC<MobileCalendarMenuProps> = ({
                 </button>
               </div>
             </div>
-            
+
             {/* Actions */}
             <div className="px-2 py-2">
               <button
@@ -250,14 +254,14 @@ const MobileCalendarMenu: React.FC<MobileCalendarMenuProps> = ({
                 <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                 Refresh Events
               </button>
-              <a
-                href="/calendar-settings"
+              <Link
+                to="/calendar/settings"
                 className="flex items-center gap-3 w-full px-2 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors rounded"
                 onClick={() => setIsOpen(false)}
               >
                 <Settings className="w-4 h-4" />
                 Calendar Settings
-              </a>
+              </Link>
               <button
                 className="flex items-center gap-3 w-full px-2 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors rounded"
                 onClick={() => {
@@ -279,7 +283,7 @@ const MobileCalendarMenu: React.FC<MobileCalendarMenuProps> = ({
 // Desktop header menu button component
 const HeaderMenuButton: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false)
-  
+
   return (
     <div className="relative">
       <button
@@ -289,25 +293,22 @@ const HeaderMenuButton: React.FC = () => {
       >
         <MoreVertical className="w-4 h-4" />
       </button>
-      
+
       {isOpen && (
         <>
           {/* Backdrop */}
-          <div 
-            className="fixed inset-0 z-40"
-            onClick={() => setIsOpen(false)}
-          />
-          
+          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+
           {/* Menu */}
           <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50 py-1">
-            <a
-              href="/calendar-settings"
+            <Link
+              to="/calendar/settings"
               className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               onClick={() => setIsOpen(false)}
             >
               <Settings className="w-4 h-4" />
               Calendar Settings
-            </a>
+            </Link>
             <button
               className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors w-full text-left"
               onClick={() => {
@@ -372,12 +373,12 @@ export const CalendarView: React.FC = () => {
 
       // Try Google Calendar
       try {
-        await googleCalendarService.initialize()
-        await googleCalendarService.authenticate()
-        setIsGoogleAuthenticated(true)
-
-        const googleCalendars = await googleCalendarService.listCalendars()
-        allCalendars.push(...googleCalendars)
+        const isAuthorized = await googleCalendarService.authorize(true) // immediate mode
+        if (isAuthorized) {
+          setIsGoogleAuthenticated(true)
+          const googleCalendars = await googleCalendarService.listCalendars()
+          allCalendars.push(...googleCalendars)
+        }
       } catch (err) {
         // Google Calendar not authenticated - this is expected on first load
       }
@@ -532,9 +533,9 @@ export const CalendarView: React.FC = () => {
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
           <p className="text-xl mb-4">Please authenticate with Google Calendar</p>
-          <a href="/calendar-settings" className="text-blue-500 hover:text-blue-700 underline">
+          <Link to="/calendar/settings" className="text-blue-500 hover:text-blue-700 underline">
             Go to Calendar Settings
-          </a>
+          </Link>
         </div>
       </div>
     )
@@ -545,9 +546,9 @@ export const CalendarView: React.FC = () => {
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
           <p className="text-xl mb-4">No calendars selected</p>
-          <a href="/calendar-settings" className="text-blue-500 hover:text-blue-700 underline">
+          <Link to="/calendar/settings" className="text-blue-500 hover:text-blue-700 underline">
             Select Calendars
-          </a>
+          </Link>
         </div>
       </div>
     )
@@ -585,61 +586,64 @@ export const CalendarView: React.FC = () => {
     <div className="h-screen bg-gray-50 flex flex-col">
       <div className="bg-white/95 backdrop-blur rounded-b-xl shadow-lg mx-2 mb-2 mt-safe flex-1 flex flex-col overflow-hidden">
         <div className="p-2 pb-1 flex-shrink-0">
-        {/* Header with date and menu */}
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            {/* Mobile: Show current date */}
-            <div className="lg:hidden">
-              <h1 className="text-base font-semibold text-gray-800">
-                {currentView === 'eightWeek' 
-                  ? EightWeekView.title(currentDate)
-                  : dayjs(currentDate).format('MMM YYYY')
-                }
-              </h1>
+          {/* Header with date and menu */}
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              {/* Mobile: Show current date */}
+              <div className="lg:hidden">
+                <h1 className="text-base font-semibold text-gray-800">
+                  {currentView === 'eightWeek'
+                    ? EightWeekView.title(currentDate)
+                    : dayjs(currentDate).format('MMM YYYY')}
+                </h1>
+              </div>
+              {/* Desktop: Show "Calendar" title */}
+              <h1 className="hidden lg:block text-lg font-semibold text-gray-800">Calendar</h1>
+              {loading && !isRefreshing && (
+                <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              )}
+              {error && (
+                <span className="text-xs text-red-500 bg-red-50 px-2 py-1 rounded">Error</span>
+              )}
             </div>
-            {/* Desktop: Show "Calendar" title */}
-            <h1 className="hidden lg:block text-lg font-semibold text-gray-800">Calendar</h1>
-            {loading && !isRefreshing && (
-              <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            )}
-            {error && <span className="text-xs text-red-500 bg-red-50 px-2 py-1 rounded">Error</span>}
-          </div>
-          
-          <div className="flex items-center gap-2">
-            {/* Desktop: Show refresh button */}
-            <button
-              onClick={handleRefresh}
-              disabled={isRefreshing || loading}
-              className="hidden lg:block p-2 hover:bg-gray-100 rounded-lg disabled:opacity-50 transition-all"
-              title="Refresh calendar events"
-            >
-              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            </button>
-            
-            {/* Mobile: Everything in menu */}
-            <MobileCalendarMenu 
-              currentView={currentView}
-              currentDate={currentDate}
-              onNavigate={handleNavigate}
-              onViewChange={handleViewChange}
-              onRefresh={handleRefresh}
-              isRefreshing={isRefreshing}
-              loading={loading}
-            />
-            
-            {/* Desktop: Settings menu only */}
-            <div className="hidden lg:block">
-              <HeaderMenuButton />
+
+            <div className="flex items-center gap-2">
+              {/* Desktop: Show refresh button */}
+              <button
+                onClick={handleRefresh}
+                disabled={isRefreshing || loading}
+                className="hidden lg:block p-2 hover:bg-gray-100 rounded-lg disabled:opacity-50 transition-all"
+                title="Refresh calendar events"
+              >
+                <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              </button>
+
+              {/* Mobile: Everything in menu */}
+              <MobileCalendarMenu
+                currentView={currentView}
+                currentDate={currentDate}
+                onNavigate={handleNavigate}
+                onViewChange={handleViewChange}
+                onRefresh={handleRefresh}
+                isRefreshing={isRefreshing}
+                loading={loading}
+              />
+
+              {/* Desktop: Settings menu only */}
+              <div className="hidden lg:block">
+                <HeaderMenuButton />
+              </div>
             </div>
           </div>
         </div>
 
-        </div>
-        
-        <div className="flex-1 min-h-0 px-4 pb-4 overflow-auto touch-pan-y" style={{ 
-          WebkitOverflowScrolling: 'touch',
-          touchAction: 'pan-y pinch-zoom'
-        }}>
+        <div
+          className="flex-1 min-h-0 px-4 pb-4 overflow-auto touch-pan-y"
+          style={{
+            WebkitOverflowScrolling: 'touch',
+            touchAction: 'pan-y pinch-zoom',
+          }}
+        >
           <ErrorBoundary
             context="Calendar View"
             isolate={true}
@@ -647,7 +651,9 @@ export const CalendarView: React.FC = () => {
               <div className="flex items-center justify-center h-full">
                 <div className="text-center p-8">
                   <h3 className="text-lg font-medium text-gray-900 mb-2">Calendar Error</h3>
-                  <p className="text-gray-600 mb-4">There was an issue loading the calendar view.</p>
+                  <p className="text-gray-600 mb-4">
+                    There was an issue loading the calendar view.
+                  </p>
                   <button
                     onClick={() => window.location.reload()}
                     className="px-4 py-2 bg-brain-600 text-white rounded hover:bg-brain-700"
@@ -665,7 +671,7 @@ export const CalendarView: React.FC = () => {
                   <div className="hidden lg:block">
                     <CustomToolbar
                       label={EightWeekView.title(currentDate)}
-                      onNavigate={(action) => {
+                      onNavigate={action => {
                         if (action === 'PREV') {
                           setCurrentDate(EightWeekView.navigate(currentDate, 'PREVIOUS' as any))
                         } else if (action === 'NEXT') {
@@ -694,11 +700,11 @@ export const CalendarView: React.FC = () => {
               </ErrorBoundary>
             ) : (
               <ErrorBoundary context="Standard Calendar View" isolate={true}>
-                <div 
-                  className="h-full overflow-auto touch-pan-y" 
-                  style={{ 
+                <div
+                  className="h-full overflow-auto touch-pan-y"
+                  style={{
                     WebkitOverflowScrolling: 'touch',
-                    touchAction: 'pan-y pinch-zoom'
+                    touchAction: 'pan-y pinch-zoom',
                   }}
                 >
                   <Calendar
@@ -720,15 +726,15 @@ export const CalendarView: React.FC = () => {
                     popup
                     tooltipAccessor={event => `${event.title} (${event.resource?.calendarName})`}
                     components={{
-                      toolbar: (props) => (
+                      toolbar: props => (
                         <div className="hidden lg:block">
-                          <CustomToolbar 
-                            {...props} 
+                          <CustomToolbar
+                            {...props}
                             onEightWeekView={() => handleViewChange('eightWeek')}
                             currentView={currentView}
                           />
                         </div>
-                      )
+                      ),
                     }}
                   />
                 </div>

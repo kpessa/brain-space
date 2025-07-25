@@ -210,7 +210,7 @@ export class GoogleCalendarService {
         reject(new Error('Token client not initialized'))
         return
       }
-      
+
       this.tokenClient.requestAccessToken()
 
       // Add timeout

@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { Calendar, Cloud, ChevronRight, Check } from 'lucide-react'
-import { googleCalendarService } from '../services/googleCalendar'
+import { googleCalendarService } from '../services/googleCalendarWrapper'
 import { useCalendarStore } from '../store/calendarStore'
 
 // Google icon component
@@ -28,7 +28,7 @@ const GoogleIcon = () => (
 
 export const CalendarSettings: React.FC = () => {
   const { selectedCalendarIds } = useCalendarStore()
-  const isGoogleConnected = googleCalendarService.isAuthenticated()
+  const isGoogleConnected = googleCalendarService.isAuthorized()
 
   const googleCalendarCount = selectedCalendarIds.size
 
@@ -47,7 +47,7 @@ export const CalendarSettings: React.FC = () => {
       <div className="space-y-4">
         {/* Google Calendar */}
         <Link
-          to="/google-calendar-test"
+          to="/calendar-test"
           className="block bg-white border rounded-lg p-6 hover:shadow-md transition-shadow"
         >
           <div className="flex items-center justify-between">

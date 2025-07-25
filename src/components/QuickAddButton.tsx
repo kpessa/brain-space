@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { QuickAddModal } from './QuickAddModal'
+import { EnhancedQuickAddModal } from './EnhancedQuickAddModal'
 
 interface QuickAddButtonProps {
   className?: string
@@ -30,14 +30,14 @@ export function QuickAddButton({ className }: QuickAddButtonProps) {
           'mb-16 sm:mb-0',
           className
         )}
-        title="Add Task"
-        aria-label="Add new task"
+        title="Add Node (AI Enhanced)"
+        aria-label="Add new node with AI enhancement"
       >
         <Plus className="w-6 h-6" />
       </button>
 
-      {/* Quick Add Modal */}
-      <QuickAddModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      {/* Enhanced Quick Add Modal */}
+      <EnhancedQuickAddModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </>
   )
 }

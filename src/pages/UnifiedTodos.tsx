@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuthWrapper } from '@/hooks/useAuthWrapper'
 import { useTodoStore } from '@/store/todos'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/Card'
 import { Button } from '@/components/Button'
@@ -24,7 +24,7 @@ import type { Todo, TodoFilter, EisenhowerQuadrant } from '@/types/todo'
 import { getQuadrantInfo } from '@/types/todo'
 
 export default function UnifiedTodos() {
-  const { user } = useAuth()
+  const { user } = useAuthWrapper()
   const {
     todos,
     isLoading,

@@ -26,7 +26,7 @@ import type {
   ProcessedThought,
 } from '../types/braindump'
 import { DEFAULT_CATEGORIES } from '../types/braindump'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuthWrapper } from '../hooks/useAuthWrapper'
 import {
   groupBrainDumpsByTopic,
   groupBrainDumpsByType,
@@ -36,7 +36,7 @@ import {
 import { useOrientation } from '../hooks/useOrientation'
 import { cn } from '../lib/utils'
 
-// Helper function (copied from store - should be extracted to utils)
+// Helper function to create nodes from AI-processed thoughts
 const createNodesFromThoughts = (
   thoughts: ProcessedThought[]
 ): { nodes: BrainDumpNode[]; edges: BrainDumpEdge[] } => {
@@ -52,6 +52,7 @@ const createNodesFromThoughts = (
       label: 'Brain Dump',
       isCollapsed: false,
       children: [],
+      nodeType: 'root',
     },
   }
   nodes.push(rootNode)
@@ -105,7 +106,17 @@ const createNodesFromThoughts = (
           label: thought.text,
           category: thought.category,
           originalText: thought.text,
-          aiGenerated: false,
+          aiGenerated: true,
+          // Include all AI-generated fields
+          nodeType: thought.nodeType || 'thought',
+          confidence: thought.confidence,
+          keywords: thought.keywords,
+          sentiment: thought.sentiment,
+          urgency: thought.urgency,
+          importance: thought.importance,
+          dueDate: thought.dueDate,
+          reasoning: thought.reasoning,
+          metadata: thought.metadata,
         },
       }
       nodes.push(thoughtNode)
@@ -124,7 +135,7 @@ const createNodesFromThoughts = (
 
 export default function BrainDump() {
   const { entries, currentEntry, createEntry, setCurrentEntry, processWithAI } = useBrainDumpStore()
-  const { user } = useAuth()
+  const { user } = useAuthWrapper()
   const [showInput, setShowInput] = useState(!currentEntry)
   const [isProcessing, setIsProcessing] = useState(false)
   const [useAI, setUseAI] = useState(true)

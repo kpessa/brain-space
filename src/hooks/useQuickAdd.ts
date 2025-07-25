@@ -1,37 +1,59 @@
 import { useLocation } from 'react-router-dom'
-import { useBrainDumpStore } from '@/store/braindump'
-import type { BrainDumpNode } from '@/types/braindump'
+import { useNodesStore } from '@/store/nodes'
+import type { Node } from '@/types/node'
 
 export interface QuickAddContext {
-  page: 'braindump' | 'matrix' | 'timebox' | 'other'
-  defaultTimedTask: boolean
+  page: 'nodes' | 'matrix' | 'timebox' | 'braindump' | 'other'
+  defaultScheduled: boolean
   defaultImportance: number
   defaultUrgency: number
   defaultDate?: string
 }
 
-export interface QuickAddData {
-  label: string
-  timeboxDate?: string
-  timeboxStartTime?: string
-  isTimedTask?: boolean
-  importance?: number
-  urgency?: number
+export interface QuickAddNodeData {
+  type: 'thought' | 'category' | 'goal' | 'project' | 'task' | 'option' | 'idea' | 'question' | 'problem' | 'insight' | 'concern'
+  text?: string // For thoughts
+  name?: string // For categories
   category?: string
+  urgency?: number
+  importance?: number
+  reasoning?: string
+  dueDate?: string
+  scheduledTime?: string
+  confidence?: number // For categories
+  // AI-enhanced fields
+  title?: string
+  description?: string
+  aliases?: string[]
+  tags?: string[]
+  priority?: number
+  children?: string[]
+  logicType?: 'AND' | 'OR'
+  recurrence?: any
+  completed?: boolean
 }
 
 export function useQuickAdd() {
   const location = useLocation()
-  const { currentEntry, addNode } = useBrainDumpStore()
+  const { createNode } = useNodesStore()
 
   // Detect current context for smart defaults
   const getContext = (): QuickAddContext => {
     const path = location.pathname
 
+    if (path.startsWith('/nodes')) {
+      return {
+        page: 'nodes',
+        defaultScheduled: false,
+        defaultImportance: 5,
+        defaultUrgency: 5,
+      }
+    }
+
     if (path.startsWith('/braindump')) {
       return {
         page: 'braindump',
-        defaultTimedTask: false,
+        defaultScheduled: false,
         defaultImportance: 5,
         defaultUrgency: 5,
       }
@@ -40,7 +62,7 @@ export function useQuickAdd() {
     if (path.startsWith('/matrix')) {
       return {
         page: 'matrix',
-        defaultTimedTask: false,
+        defaultScheduled: false,
         defaultImportance: 8, // High importance for quick capture
         defaultUrgency: 7,
       }
@@ -50,7 +72,7 @@ export function useQuickAdd() {
       const today = new Date().toISOString().split('T')[0]
       return {
         page: 'timebox',
-        defaultTimedTask: true,
+        defaultScheduled: true,
         defaultImportance: 6,
         defaultUrgency: 6,
         defaultDate: today,
@@ -59,56 +81,48 @@ export function useQuickAdd() {
 
     return {
       page: 'other',
-      defaultTimedTask: false,
+      defaultScheduled: false,
       defaultImportance: 5,
       defaultUrgency: 5,
     }
   }
 
-  // Add a new task
-  const addTask = async (data: QuickAddData) => {
-    const context = getContext()
-    const nodeId = `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+  // Add a new node
+  const addNode = async (data: QuickAddNodeData) => {
+    if (data.type === 'category') {
+      throw new Error('Category creation not yet implemented')
+    }
 
-    // Create the new node
-    const newNode: BrainDumpNode = {
-      id: nodeId,
-      type: 'thought',
-      position: { x: 0, y: 0 },
+    // Create a proper Node object for Firebase
+    const newNode: Partial<Node> = {
+      type: data.type || 'thought',
       data: {
-        label: data.label.trim(),
-        category: data.category || 'tasks',
-        importance: data.importance ?? context.defaultImportance,
-        urgency: data.urgency ?? context.defaultUrgency,
-        layoutMode: 'freeform',
-        isCollapsed: false,
-        children: [],
-        // Timebox properties
-        isTimedTask: data.isTimedTask ?? context.defaultTimedTask,
-        timeboxDate: data.timeboxDate || context.defaultDate,
-        timeboxStartTime: data.timeboxStartTime,
-        timeboxDuration: data.isTimedTask ? 60 : undefined, // Default 1 hour
-        // Task properties
-        taskStatus: 'pending',
-        totalAttempts: 0,
-        attempts: [],
+        title: data.title || data.text || '',
+        description: data.description || data.reasoning || data.text || '',
+        tags: data.tags || [data.category || 'general'],
+        aliases: data.aliases || [],
+        priority: data.priority || 5,
+        urgency: data.urgency || 5,
+        importance: data.importance || 5,
+        dueDate: data.dueDate ? { date: data.dueDate, time: data.scheduledTime } : undefined,
+        children: data.children || [],
+        logicType: data.logicType,
+        recurrence: data.recurrence,
+        completed: data.completed || false,
+      },
+      ui: {
+        position: { x: 0, y: 0 },
+        collapsed: false,
       },
     }
 
-    // Add to current brain dump or create new one
-    if (currentEntry) {
-      addNode(newNode)
-    } else {
-      // Create a new brain dump entry if none exists
-      // This would typically create a new brain dump, but for now just add to store
-      addNode(newNode)
-    }
-
-    return newNode
+    // Create node in Firebase
+    const createdNode = await createNode(newNode)
+    return createdNode
   }
 
   return {
     context: getContext(),
-    addTask,
+    addNode,
   }
 }

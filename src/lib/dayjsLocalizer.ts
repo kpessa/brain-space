@@ -15,19 +15,23 @@ dayjs.extend(isSameOrBefore)
 
 export function dayjsLocalizer(): DateLocalizer {
   const dateRangeFormat = (range: { start: Date; end: Date }, culture?: string, local?: any) => {
-    return dayjs(range.start).format('MMMM DD') + ' – ' + dayjs(range.end).format('MMMM DD, YYYY')
+    return `${dayjs(range.start).format('MMMM DD')} – ${dayjs(range.end).format('MMMM DD, YYYY')}`
   }
 
   const timeRangeFormat = (range: { start: Date; end: Date }, culture?: string, local?: any) => {
-    return dayjs(range.start).format('h:mm A') + ' – ' + dayjs(range.end).format('h:mm A')
+    return `${dayjs(range.start).format('h:mm A')} – ${dayjs(range.end).format('h:mm A')}`
   }
 
-  const timeRangeStartFormat = (range: { start: Date; end: Date }, culture?: string, local?: any) => {
-    return dayjs(range.start).format('h:mm A') + ' – '
+  const timeRangeStartFormat = (
+    range: { start: Date; end: Date },
+    culture?: string,
+    local?: any
+  ) => {
+    return `${dayjs(range.start).format('h:mm A')} – `
   }
 
   const timeRangeEndFormat = (range: { start: Date; end: Date }, culture?: string, local?: any) => {
-    return ' – ' + dayjs(range.end).format('h:mm A')
+    return ` – ${dayjs(range.end).format('h:mm A')}`
   }
 
   return new DateLocalizer({
@@ -108,7 +112,11 @@ export function dayjsLocalizer(): DateLocalizer {
       return dayjs(a).isSameOrBefore(dayjs(b), unit)
     },
 
-    add: (value: Date, amount: number, unit: 'month' | 'week' | 'day' | 'date' | 'hour' | 'minute' | 'second') => {
+    add: (
+      value: Date,
+      amount: number,
+      unit: 'month' | 'week' | 'day' | 'date' | 'hour' | 'minute' | 'second'
+    ) => {
       return dayjs(value).add(amount, unit).toDate()
     },
 

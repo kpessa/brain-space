@@ -316,7 +316,8 @@ export function useFlowEventHandlers({
       text: string,
       type: 'thought' | 'category',
       position: { x: number; y: number },
-      parentNodeId?: string
+      parentNodeId?: string,
+      nodeData?: any
     ) => {
       if (!currentEntry) return
 
@@ -345,18 +346,22 @@ export function useFlowEventHandlers({
 
         const newNodeId = crypto.randomUUID()
 
+        // Merge AI-enhanced nodeData with default data
+        const nodeDataToStore = {
+          label: text,
+          category: nodeType === 'thought' ? category : text.toLowerCase(),
+          thoughts: nodeType === 'category' ? [] : undefined,
+          layoutMode: 'freeform',
+          parentLayoutMode: 'freeform',
+          isCollapsed: false,
+          ...(nodeData || {}), // AI-enhanced data (title, description, type, tags, urgency, etc.)
+        }
+
         await addNode({
           id: newNodeId,
           type: nodeType,
           position: nodePosition,
-          data: {
-            label: text,
-            category: nodeType === 'thought' ? category : text.toLowerCase(),
-            thoughts: nodeType === 'category' ? [] : undefined,
-            layoutMode: 'freeform',
-            parentLayoutMode: 'freeform',
-            isCollapsed: false,
-          },
+          data: nodeDataToStore,
         })
 
         // If there's a parent node, create an edge from parent to child

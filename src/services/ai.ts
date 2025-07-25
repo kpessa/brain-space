@@ -1,5 +1,6 @@
-interface AIProvider {
+export interface AIProvider {
   categorizeThoughts(text: string): Promise<CategorizationResult>
+  enhanceNode(text: string): Promise<{ nodeData: any }>
 }
 
 export interface CategorizationResult {
@@ -21,6 +22,12 @@ interface ThoughtAnalysis {
   confidence: number
   keywords: string[]
   sentiment: 'positive' | 'negative' | 'neutral'
+  urgency?: 'low' | 'medium' | 'high'
+  importance?: 'low' | 'medium' | 'high'
+  dueDate?: string
+  reasoning?: string
+  nodeType?: string
+  metadata?: Record<string, any>
 }
 
 interface ThoughtRelationship {
@@ -32,6 +39,36 @@ interface ThoughtRelationship {
 
 // Mock AI service for now - replace with real API calls
 export class MockAIService implements AIProvider {
+  async enhanceNode(text: string): Promise<{ nodeData: any }> {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500))
+    
+    // Simple mock enhancement
+    const nodeData: any = {
+      title: text.substring(0, 60),
+      type: 'thought',
+      description: text.length > 60 ? text : undefined,
+      tags: ['unprocessed'],
+    }
+    
+    // Detect type based on keywords
+    const lower = text.toLowerCase()
+    if (lower.includes('todo') || lower.includes('need to') || lower.includes('task')) {
+      nodeData.type = 'task'
+      nodeData.urgency = 5
+      nodeData.importance = 5
+    } else if (lower.includes('idea') || lower.includes('what if')) {
+      nodeData.type = 'idea'
+    } else if (lower.includes('?')) {
+      nodeData.type = 'question'
+    } else if (lower.includes('problem') || lower.includes('issue')) {
+      nodeData.type = 'problem'
+      nodeData.urgency = 7
+    }
+    
+    return { nodeData }
+  }
+
   async categorizeThoughts(text: string): Promise<CategorizationResult> {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 1500))
@@ -310,9 +347,130 @@ export class MockAIService implements AIProvider {
   }
 }
 
+// Firebase Functions implementation
+class FirebaseFunctionService implements AIProvider {
+  private provider: 'openai' | 'anthropic' | 'gemini'
+
+  constructor(provider: 'openai' | 'anthropic' | 'gemini') {
+    this.provider = provider
+  }
+
+  async enhanceNode(text: string): Promise<{ nodeData: any }> {
+    try {
+      // Get the current user's ID token
+      const { auth } = await import('@/lib/firebase')
+      const user = auth.currentUser
+      if (!user) {
+        throw new Error('User not authenticated')
+      }
+
+      const idToken = await user.getIdToken()
+
+      // Determine the function URL based on environment
+      const isDevelopment = import.meta.env.DEV
+      const functionUrl = isDevelopment
+        ? 'http://localhost:5001/brain-space-5d787/us-central1/enhanceNode'
+        : `https://us-central1-${import.meta.env.VITE_FIREBASE_PROJECT_ID}.cloudfunctions.net/enhanceNode`
+
+      const response = await fetch(functionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({
+          text,
+          provider: this.provider,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Function response error:', errorText)
+        try {
+          const error = JSON.parse(errorText)
+          throw new Error(error.error || error.message || `API error: ${response.statusText}`)
+        } catch (e) {
+          throw new Error(`API error: ${response.statusText} - ${errorText}`)
+        }
+      }
+
+      const result = await response.json()
+      return result
+    } catch (error) {
+      console.error('Firebase Function error:', error)
+      throw error
+    }
+  }
+
+  async categorizeThoughts(text: string): Promise<CategorizationResult> {
+    try {
+      // Get the current user's ID token
+      const { auth } = await import('@/lib/firebase')
+      const user = auth.currentUser
+      if (!user) {
+        throw new Error('User not authenticated')
+      }
+
+      const idToken = await user.getIdToken()
+
+      // Determine the function URL based on environment
+      const isDevelopment = import.meta.env.DEV
+      const functionUrl = isDevelopment
+        ? 'http://localhost:5001/brain-space-5d787/us-central1/categorizeThoughts'
+        : `https://us-central1-${import.meta.env.VITE_FIREBASE_PROJECT_ID}.cloudfunctions.net/categorizeThoughts`
+
+      const response = await fetch(functionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({
+          text,
+          provider: this.provider,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Function response error:', errorText)
+        try {
+          const error = JSON.parse(errorText)
+          throw new Error(error.error || error.message || `API error: ${response.statusText}`)
+        } catch (e) {
+          throw new Error(`API error: ${response.statusText} - ${errorText}`)
+        }
+      }
+
+      const result = await response.json()
+      return result
+    } catch (error) {
+      console.error('Firebase Function error:', error)
+      // Fallback to mock service
+      return new MockAIService().categorizeThoughts(text)
+    }
+  }
+}
+
 // Factory to create AI service based on provider
 export function createAIService(provider?: string): AIProvider {
-  // For now, always return mock service
-  // In future, switch based on provider (openai, anthropic, etc.)
+  const aiProvider = provider || import.meta.env.VITE_AI_PROVIDER
+
+  // If using Firebase auth, always use Firebase Functions
+  if (import.meta.env.VITE_USE_FIREBASE_AUTH === 'true') {
+    switch (aiProvider) {
+      case 'openai':
+        return new FirebaseFunctionService('openai')
+      case 'anthropic':
+        return new FirebaseFunctionService('anthropic')
+      case 'gemini':
+        return new FirebaseFunctionService('gemini')
+      default:
+        return new MockAIService()
+    }
+  }
+
+  // Otherwise fallback to mock service
   return new MockAIService()
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { googleCalendarService } from '../services/googleCalendar'
+import { googleCalendarService } from '../services/googleCalendarWrapper'
 import { useCalendarStore } from '../store/calendarStore'
 
 interface Calendar {
@@ -41,8 +41,10 @@ export const GoogleCalendarTest: React.FC = () => {
     setLoading(true)
     setError(null)
     try {
-      await googleCalendarService.initialize()
-      await googleCalendarService.authenticate()
+      const authorized = await googleCalendarService.authorize()
+      if (!authorized) {
+        throw new Error('Authorization failed')
+      }
       setIsAuthenticated(true)
       await loadCalendars()
     } catch (err) {
@@ -199,7 +201,7 @@ export const GoogleCalendarTest: React.FC = () => {
             <h2 className="text-xl font-semibold">Connected to Google Calendar</h2>
             <button
               onClick={() => {
-                googleCalendarService.disconnect()
+                googleCalendarService.signOut()
                 setIsAuthenticated(false)
                 setCalendars([])
                 setEvents([])

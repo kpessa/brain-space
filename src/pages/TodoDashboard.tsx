@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuthWrapper } from '@/hooks/useAuthWrapper'
 import { useTodoStore } from '@/store/todos'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/Card'
 import { Button } from '@/components/Button'
@@ -172,7 +172,7 @@ function FilterBar({
 
 // Main Dashboard Component
 export default function TodoDashboard() {
-  const { user } = useAuth()
+  const { user } = useAuthWrapper()
   const {
     todos,
     isLoading,

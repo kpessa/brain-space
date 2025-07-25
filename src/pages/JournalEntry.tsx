@@ -4,12 +4,12 @@ import { Button } from '../components/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/Card'
 import { Heart, Sword, Shield, Users, ScrollText, Save, X } from 'lucide-react'
 import { useJournalStore } from '../store/journal'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuthWrapper } from '../hooks/useAuthWrapper'
 
 export default function JournalEntry() {
   const navigate = useNavigate()
   const addEntry = useJournalStore(state => state.addEntry)
-  const { user } = useAuth()
+  const { user } = useAuthWrapper()
   const [gratitude, setGratitude] = useState<string[]>([])
   const [dailyQuest, setDailyQuest] = useState('')
   const [threats, setThreats] = useState('')

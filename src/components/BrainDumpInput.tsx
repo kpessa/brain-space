@@ -19,6 +19,16 @@ export function BrainDumpInput({
   const [text, setText] = useState('')
   const [title, setTitle] = useState('')
 
+  // Get AI provider from environment
+  const aiProvider = import.meta.env.VITE_AI_PROVIDER || 'mock'
+  const providerLabel =
+    {
+      openai: 'OpenAI GPT-4',
+      anthropic: 'Claude AI',
+      gemini: 'Google Gemini',
+      mock: 'Mock AI (Demo)',
+    }[aiProvider] || 'Mock AI'
+
   const handleSubmit = () => {
     if (text.trim()) {
       onProcess(text.trim())
@@ -90,6 +100,7 @@ Examples:
               />
               <span className="text-sm font-medium">Use AI categorization</span>
             </label>
+            {useAI && <span className="text-xs text-gray-500 ml-2">({providerLabel})</span>}
           </div>
 
           <div className="flex gap-3">

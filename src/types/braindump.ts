@@ -128,6 +128,15 @@ export interface ProcessedThought {
   category: string
   confidence: number
   relatedThoughts: string[]
+  // Additional fields from AI
+  keywords?: string[]
+  sentiment?: 'positive' | 'negative' | 'neutral'
+  urgency?: 'low' | 'medium' | 'high'
+  importance?: 'low' | 'medium' | 'high'
+  dueDate?: string
+  reasoning?: string
+  nodeType?: string
+  metadata?: Record<string, any>
 }
 
 export interface BrainDumpProcessingResult {

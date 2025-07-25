@@ -108,7 +108,10 @@ export const SpanningEventsSection: React.FC<SpanningEventsSectionProps> = ({
       {/* Overflow indicator for spanning events */}
       {(allDaySpanningEvents.length > 3 || timedSpanningEvents.length > 2) && (
         <div className="text-xs text-gray-600 font-medium bg-white px-2 py-0.5 rounded text-center mb-1">
-          +{Math.max(0, allDaySpanningEvents.length - 3) + Math.max(0, timedSpanningEvents.length - 2)} more spanning events
+          +
+          {Math.max(0, allDaySpanningEvents.length - 3) +
+            Math.max(0, timedSpanningEvents.length - 2)}{' '}
+          more spanning events
         </div>
       )}
     </div>

@@ -1,0 +1,22 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Test mode rules - allows all reads and writes
+    // WARNING: These rules are insecure. Update before going to production!
+    // This will work until 30 days from when you created the database
+    
+    // Allow read/write access on all documents to any user
+    match /{document=**} {
+      allow read, write: if true;
+    }
+    
+    // Production rules example (commented out):
+    // Only authenticated users can read/write their own data
+    /*
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    */
+  }
+}

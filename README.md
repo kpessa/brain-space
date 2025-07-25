@@ -41,6 +41,20 @@ pnpm run storybook
 - `pnpm run format` - Format code with Prettier
 - `pnpm run type-check` - Run TypeScript type checking
 
+## Firebase Deployment
+
+### Deploy Firebase Functions
+```bash
+# Quick deployment
+./deploy-functions.sh
+
+# Manual deployment
+cd functions && npm install && npm run build && cd ..
+firebase deploy --only functions
+```
+
+See [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) for detailed instructions.
+
 ## Project Structure
 
 ```

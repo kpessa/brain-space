@@ -58,6 +58,7 @@ interface NodeContextMenuProps {
   onNodeTypeChange?: (nodeId: string, newType: string) => void
   onUpdateNode?: (nodeId: string, data: any) => void
   onMakeRecurring?: (nodeId: string) => void
+  onEditJson?: (nodeId: string) => void
   type?: 'node' | 'pane'
 }
 
@@ -91,6 +92,7 @@ export default function NodeContextMenu({
   onNodeTypeChange,
   onUpdateNode,
   onMakeRecurring,
+  onEditJson,
 }: NodeContextMenuProps) {
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     appearance: true,
@@ -931,6 +933,20 @@ export default function NodeContextMenu({
                   >
                     <Ghost className="w-4 h-4" />
                     Copy as Reference
+                  </button>
+                )}
+
+                {/* Edit JSON */}
+                {onEditJson && (
+                  <button
+                    onClick={() => {
+                      onEditJson(nodeId)
+                      onClose()
+                    }}
+                    className="w-full px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 text-sm"
+                  >
+                    <FileText className="w-4 h-4" />
+                    View/Edit JSON
                   </button>
                 )}
 

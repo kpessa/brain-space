@@ -121,8 +121,8 @@ export const EightWeekViewComponent: React.FC<EightWeekViewComponentProps> = ({
 
   // Memoize expensive event processing
   const { eventsByDate, isAllDayEvent } = useMemo(() => {
-    const eventsByDate: { [dateKey: string]: { allDay: any[], timed: any[] } } = {}
-    
+    const eventsByDate: { [dateKey: string]: { allDay: any[]; timed: any[] } } = {}
+
     const isAllDayEvent = (event: any) => {
       // Check multiple ways to detect all-day events
       // 1. Original Google Calendar structure (from originalEvent)
@@ -157,7 +157,7 @@ export const EightWeekViewComponent: React.FC<EightWeekViewComponentProps> = ({
       let currentDay = eventStart
       while (currentDay.isSameOrBefore(eventEnd)) {
         const dateKey = currentDay.format('YYYY-MM-DD')
-        
+
         if (!eventsByDate[dateKey]) {
           eventsByDate[dateKey] = { allDay: [], timed: [] }
         }
@@ -261,10 +261,10 @@ export const EightWeekViewComponent: React.FC<EightWeekViewComponentProps> = ({
 
     const deltaX = touchStart.x - touchEnd.x
     const deltaY = touchStart.y - touchEnd.y
-    
+
     // Minimum swipe distance (in pixels)
     const minSwipeDistance = 50
-    
+
     // Check if this is a horizontal swipe (not vertical scroll)
     if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
       if (deltaX > 0) {
@@ -277,29 +277,26 @@ export const EightWeekViewComponent: React.FC<EightWeekViewComponentProps> = ({
         onNavigate(prevDate)
       }
     }
-    
+
     setTouchStart(null)
     setTouchEnd(null)
   }, [touchStart, touchEnd, date, onNavigate])
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className="eight-week-view h-full overflow-auto touch-pan-y"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      style={{ 
+      style={{
         touchAction: 'pan-y',
-        WebkitOverflowScrolling: 'touch'
+        WebkitOverflowScrolling: 'touch',
       }}
     >
       <div className="week-headers grid grid-cols-7 gap-0.5 mb-2 sticky top-0 bg-white/95 backdrop-blur-sm z-20 py-1 border-b border-gray-100">
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-          <div
-            key={day}
-            className="text-center text-xs font-medium text-gray-600 py-1 px-1"
-          >
+          <div key={day} className="text-center text-xs font-medium text-gray-600 py-1 px-1">
             {day}
           </div>
         ))}

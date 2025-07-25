@@ -39,14 +39,21 @@ import type { BrainDumpNode } from '../types/braindump'
 import { useFullscreen } from '../hooks/useFullscreen'
 import { ConfirmDialog } from './ConfirmDialog'
 import { InputDialog } from './InputDialog'
+import { EnhancedInputDialog } from './EnhancedInputDialog'
 import NodeContextMenu from './NodeContextMenu'
 import { PaneContextMenu } from './PaneContextMenu'
 import { SynonymMatchDialog } from './SynonymMatchDialog'
 import { TopicBrainDumpDialog } from './TopicBrainDumpDialog'
 import { EdgeClickMenu } from './EdgeClickMenu'
+import { NodeJsonEditor } from './NodeJsonEditor'
 import { debounce } from '../lib/debounce'
 import { calculateHorizontalLayout, getNewNodePosition } from '../lib/mindMapLayout'
 import { cn } from '../lib/utils'
+import {
+  transformNodeForStorage,
+  transformNodeForReactFlow,
+  transformNodesForStorage,
+} from '../lib/nodeTransform'
 // Custom node components
 import { CategoryNode } from './nodes/CategoryNode'
 import { ThoughtNode } from './nodes/ThoughtNode'
@@ -144,7 +151,7 @@ function BrainDumpFlowInner() {
         try {
           setSaveStatus('saving')
           await updateEntry(entryId, {
-            nodes: nodesRef.current as BrainDumpNode[] || [],
+            nodes: (nodesRef.current as BrainDumpNode[]) || [],
             edges: edgesRef.current || [],
           })
           setSaveStatus('saved')
@@ -257,7 +264,7 @@ function BrainDumpFlowInner() {
     try {
       setSaveStatus('saving')
       await updateEntry(currentEntry.id, {
-        nodes: nodesRef.current as BrainDumpNode[] || [],
+        nodes: (nodesRef.current as BrainDumpNode[]) || [],
         edges: edgesRef.current || [],
       })
       setSaveStatus('saved')
@@ -438,7 +445,9 @@ function BrainDumpFlowInner() {
         }
 
         // Update nodes - replace original with ghost
-        const updatedNodes = (nodes as BrainDumpNode[]).map(n => (n.id === topicDumpDialog.node!.id ? ghostNode : n))
+        const updatedNodes = (nodes as BrainDumpNode[]).map(n =>
+          n.id === topicDumpDialog.node!.id ? ghostNode : n
+        )
         setNodes(updatedNodes)
 
         // Persist the changes
@@ -531,7 +540,7 @@ function BrainDumpFlowInner() {
             animated: true,
             markerEnd: undefined,
           }}
-          connectionMode={"loose" as any}
+          connectionMode={'loose' as any}
           className="bg-white"
           fitView
           fitViewOptions={{
@@ -1001,6 +1010,45 @@ function BrainDumpFlowInner() {
               <Download className="w-4 h-4" />
               Export
             </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                if (!currentEntry || !user) return
+
+                try {
+                  setSaveStatus('saving')
+                  const { firebaseService } = await import('../services/firebase')
+
+                  // Save all non-root nodes to Firestore
+                  const nodesToSave = nodes.filter(n => n.type !== 'root')
+                  const transformedNodes = transformNodesForStorage(nodesToSave)
+
+                  for (const node of transformedNodes) {
+                    await firebaseService.saveUnifiedNode(user.id, {
+                      ...node,
+                      brainDumpId: currentEntry.id,
+                      brainDumpTitle: currentEntry.title,
+                    })
+                  }
+
+                  setSaveStatus('saved')
+                  setLastSaved(new Date())
+                  setTimeout(() => setSaveStatus('idle'), 2000)
+                } catch (error) {
+                  console.error('Failed to save to Firestore:', error)
+                  setSaveStatus('error')
+                  setTimeout(() => setSaveStatus('idle'), 3000)
+                }
+              }}
+              disabled={!currentEntry || nodes.length === 0}
+              className="flex items-center gap-1"
+              title="Save nodes to Firebase Firestore"
+            >
+              <CloudUpload className="w-4 h-4" />
+              Save to DB
+            </Button>
           </div>
         )}
 
@@ -1018,19 +1066,28 @@ function BrainDumpFlowInner() {
 
       {/* Dialogs */}
 
-      <InputDialog
+      <EnhancedInputDialog
         isOpen={dialogManager.nodeInputDialog.isOpen}
-        title="Add Node"
-        placeholder="Enter node text..."
-        onSubmit={(text: string) => {
-          if (dialogManager.nodeInputDialog.position) {
-            eventHandlers.handleNodeInputSubmit(
-              text,
-              'thought',
-              dialogManager.nodeInputDialog.position,
-              dialogManager.nodeInputDialog.parentNodeId
-            )
+        title="Quick Add"
+        placeholder="What's on your mind?"
+        onSubmit={(text: string, nodeData?: any) => {
+          // Use provided position or calculate center of viewport
+          let position = dialogManager.nodeInputDialog.position
+          if (!position) {
+            // Get center of viewport in flow coordinates
+            const viewportCenter = screenToFlowPosition({
+              x: window.innerWidth / 2,
+              y: window.innerHeight / 2,
+            })
+            position = viewportCenter
           }
+          eventHandlers.handleNodeInputSubmit(
+            text,
+            'thought',
+            position,
+            dialogManager.nodeInputDialog.parentNodeId,
+            nodeData
+          )
         }}
         onCancel={() =>
           dialogManager.setNodeInputDialog({
@@ -1059,7 +1116,9 @@ function BrainDumpFlowInner() {
             },
           } as BrainDumpNode
 
-          const updatedNodes = (nodes as BrainDumpNode[]).map(n => (n.id === nodeId ? updatedNode : n))
+          const updatedNodes = (nodes as BrainDumpNode[]).map(n =>
+            n.id === nodeId ? updatedNode : n
+          )
           setNodes(updatedNodes)
 
           // Persist the changes
@@ -1216,7 +1275,9 @@ function BrainDumpFlowInner() {
             },
           }
 
-          const updatedNodes = (nodes as BrainDumpNode[]).map(n => (n.id === nodeId ? updatedNode : n))
+          const updatedNodes = (nodes as BrainDumpNode[]).map(n =>
+            n.id === nodeId ? updatedNode : n
+          )
           setNodes(updatedNodes)
 
           // Persist the changes
@@ -1239,6 +1300,18 @@ function BrainDumpFlowInner() {
         onMakeRecurring={(nodeId: string) => {
           setRecurrenceDialog({ isOpen: true, nodeId })
         }}
+        onEditJson={(nodeId: string) => {
+          const node = nodes.find(n => n.id === nodeId)
+          if (node) {
+            // Transform node to have React Flow properties nested
+            const transformedNode = transformNodeForStorage(node)
+            dialogManager.setJsonEditor({
+              isOpen: true,
+              node: transformedNode,
+              nodeId,
+            })
+          }
+        }}
         onClose={() =>
           dialogManager.setContextMenu({ ...dialogManager.contextMenu, isOpen: false })
         }
@@ -1252,9 +1325,10 @@ function BrainDumpFlowInner() {
           text: string,
           type: string,
           category: string,
-          position: { x: number; y: number }
+          position: { x: number; y: number },
+          nodeData?: any
         ) => {
-          eventHandlers.handleNodeInputSubmit(text, type as 'thought' | 'category', position)
+          eventHandlers.handleNodeInputSubmit(text, type as 'thought' | 'category', position, undefined, nodeData)
         }}
         onApplyAutoLayout={handleAutoLayout}
         onClose={() =>
@@ -1403,7 +1477,9 @@ function BrainDumpFlowInner() {
                   },
                 } as BrainDumpNode
 
-                const updatedNodes = (nodes as BrainDumpNode[]).map(n => (n.id === taskId ? updatedNode : n))
+                const updatedNodes = (nodes as BrainDumpNode[]).map(n =>
+                  n.id === taskId ? updatedNode : n
+                )
                 setNodes(updatedNodes)
 
                 // Persist the changes
@@ -1429,6 +1505,43 @@ function BrainDumpFlowInner() {
             />
           )
         })()}
+
+      {/* JSON Editor Dialog */}
+      <NodeJsonEditor
+        node={dialogManager.jsonEditor.node}
+        isOpen={dialogManager.jsonEditor.isOpen}
+        onClose={() => dialogManager.setJsonEditor({ isOpen: false, node: null, nodeId: null })}
+        onSave={async updatedNode => {
+          const nodeId = dialogManager.jsonEditor.nodeId
+          if (!nodeId) return
+
+          // Transform the edited node back to React Flow format
+          const reactFlowNode = transformNodeForReactFlow(updatedNode)
+
+          // Update the node in the flow
+          const updatedNodes = (nodes as BrainDumpNode[]).map(n =>
+            n.id === nodeId ? reactFlowNode : n
+          )
+          setNodes(updatedNodes)
+
+          // Persist the changes
+          if (currentEntry) {
+            setSaveStatus('saving')
+            try {
+              await updateEntry(currentEntry.id, { nodes: updatedNodes })
+              setSaveStatus('saved')
+              setLastSaved(new Date())
+              setTimeout(() => setSaveStatus('idle'), 2000)
+            } catch (error) {
+              logger.error('JSON_EDITOR_SAVE', 'Failed to save node:', error)
+              setSaveStatus('error')
+              setTimeout(() => setSaveStatus('idle'), 3000)
+            }
+          }
+
+          dialogManager.setJsonEditor({ isOpen: false, node: null, nodeId: null })
+        }}
+      />
     </div>
   )
 }

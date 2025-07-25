@@ -671,20 +671,53 @@ export const useBrainDumpStore = create<BrainDumpState>((set, get) => ({
 
   processWithAI: async (text: string) => {
     const aiService = createAIService()
+    console.log('Calling AI service to categorize thoughts...')
     const result = await aiService.categorizeThoughts(text)
+    console.log('AI service response:', result)
 
-    // Convert AI results to ProcessedThought format
+    // Convert AI results to ProcessedThought format with all fields
     const thoughts: ProcessedThought[] = []
     let thoughtId = 0
 
+    // Handle the new format where thoughts are in categories
+    if (!result.categories || !Array.isArray(result.categories)) {
+      console.error('Unexpected AI response format:', result)
+      throw new Error('Invalid AI response format')
+    }
+
     result.categories.forEach(category => {
       category.thoughts.forEach(thought => {
+        // Extract GenAiNodeInput data from the AI response
+        const nodeData = thought.nodeData || {}
+        
         thoughts.push({
           id: `thought-ai-${Date.now()}-${thoughtId++}`,
-          text: thought.text,
-          category: thought.category,
-          confidence: thought.confidence,
-          relatedThoughts: result.relationships.filter(r => r.from === thought.text).map(r => r.to),
+          text: thought.text, // Original thought text preserved by AI
+          category: category.name,
+          confidence: thought.confidence || category.confidence || 0.8,
+          relatedThoughts: result.relationships
+            ?.filter(r => r.from === nodeData.title || r.from === thought.text)
+            ?.map(r => r.to) || [],
+          // Map from GenAiNodeInput fields
+          keywords: nodeData.aliases || nodeData.tags || [],
+          sentiment: 'neutral', // Not provided by GenAiNodeInput
+          urgency: nodeData.urgency,
+          importance: nodeData.importance,
+          dueDate: nodeData.dueDate ? 
+            (nodeData.dueDate.type === 'exact' ? nodeData.dueDate.date : undefined) : undefined,
+          reasoning: thought.reasoning || category.reasoning,
+          nodeType: nodeData.type || 'thought',
+          metadata: {
+            title: nodeData.title,
+            description: nodeData.description,
+            tags: nodeData.tags,
+            priority: nodeData.priority,
+            completed: nodeData.completed,
+            children: nodeData.children,
+            logicType: nodeData.logicType,
+            attempts: nodeData.attempts,
+            recurrence: nodeData.recurrence,
+          },
         })
       })
     })

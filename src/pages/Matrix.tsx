@@ -63,19 +63,7 @@ export function Matrix() {
     taskType?: 'one-time' | 'recurring' | 'habit'
   } | null>(null)
 
-  // Show loading state if no entry is selected
-  if (!currentEntry) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold mb-4">No Brain Dump Selected</h2>
-          <p className="text-gray-600">Please select or create a brain dump to view the matrix.</p>
-        </div>
-      </div>
-    )
-  }
-
-  // Get nodes from current entry
+  // Get nodes from current entry (empty array if no entry selected)
   const nodes = currentEntry?.nodes || []
   const edges = currentEntry?.edges || []
 

@@ -31,6 +31,11 @@ interface DialogStates {
     edge: Edge | null
     position: { x: number; y: number }
   }
+  jsonEditor: {
+    isOpen: boolean
+    node: any | null
+    nodeId: string | null
+  }
 }
 
 export function useDialogManager() {
@@ -78,6 +83,12 @@ export function useDialogManager() {
     position: { x: 0, y: 0 },
   })
 
+  const [jsonEditor, setJsonEditor] = useState<DialogStates['jsonEditor']>({
+    isOpen: false,
+    node: null,
+    nodeId: null,
+  })
+
   return {
     // State
     deleteEdgeDialog,
@@ -87,6 +98,7 @@ export function useDialogManager() {
     topicDumpDialog,
     contextMenu,
     edgeHoverMenu,
+    jsonEditor,
 
     // Setters
     setDeleteEdgeDialog,
@@ -96,5 +108,6 @@ export function useDialogManager() {
     setTopicDumpDialog,
     setContextMenu,
     setEdgeHoverMenu,
+    setJsonEditor,
   }
 }
