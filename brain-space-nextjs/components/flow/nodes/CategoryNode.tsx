@@ -100,7 +100,7 @@ export function CategoryNode({ id, data, selected }: CategoryNodeProps) {
       const topicEntry = entries.find(e => e.id === data.topicBrainDumpId)
       if (topicEntry) {
         setCurrentEntry(topicEntry)
-        router.push('/dashboard/braindump')
+        router.push('/braindump')
         return
       }
     }

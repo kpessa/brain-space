@@ -125,7 +125,7 @@ export function ThoughtNode({ id, data, selected }: ThoughtNodeProps) {
       const topicEntry = entries.find(e => e.id === data.topicBrainDumpId)
       if (topicEntry) {
         setCurrentEntry(topicEntry)
-        router.push('/dashboard/braindump')
+        router.push('/braindump')
         return
       }
     }

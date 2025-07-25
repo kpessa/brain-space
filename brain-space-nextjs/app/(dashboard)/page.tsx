@@ -40,7 +40,7 @@ export default function Dashboard() {
               <p className="text-sm text-gray-600 mb-4">
                 View and manage todos from your journal, nodes, brain dumps, and routines all in one dashboard.
               </p>
-              <Link href="/dashboard/todos">
+              <Link href="/todos">
                 <Button variant="primary" className="w-full">
                   Manage All Tasks
                 </Button>
@@ -63,7 +63,7 @@ export default function Dashboard() {
                 Transform your daily reflections into epic adventures with guided prompts and
                 AI-powered insights.
               </p>
-              <Link href="/dashboard/journal">
+              <Link href="/journal">
                 <Button variant="primary" className="w-full">
                   Begin Your Quest
                 </Button>
@@ -85,7 +85,7 @@ export default function Dashboard() {
               <p className="text-sm text-gray-600 mb-4">
                 Transform scattered thoughts into organized, AI-categorized mindmaps for better clarity.
               </p>
-              <Link href="/dashboard/braindump">
+              <Link href="/braindump">
                 <Button variant="primary" className="w-full">
                   Explore Ideas
                 </Button>
@@ -107,7 +107,7 @@ export default function Dashboard() {
               <p className="text-sm text-gray-600 mb-4">
                 Organize your tasks into four quadrants to focus on what matters most.
               </p>
-              <Link href="/dashboard/matrix">
+              <Link href="/matrix">
                 <Button variant="primary" className="w-full">
                   Prioritize Tasks
                 </Button>
@@ -129,7 +129,7 @@ export default function Dashboard() {
               <p className="text-sm text-gray-600 mb-4">
                 Set up daily, weekly, or monthly tasks and track your completion streaks.
               </p>
-              <Link href="/dashboard/recurring">
+              <Link href="/recurring">
                 <Button variant="primary" className="w-full">
                   Manage Recurring Tasks
                 </Button>
@@ -151,7 +151,7 @@ export default function Dashboard() {
               <p className="text-sm text-gray-600 mb-4">
                 Watch your character grow as you complete quests and overcome challenges.
               </p>
-              <Link href="/dashboard/progress">
+              <Link href="/progress">
                 <Button variant="secondary" className="w-full">
                   View Achievements
                 </Button>
@@ -173,7 +173,7 @@ export default function Dashboard() {
               <p className="text-sm text-gray-600 mb-4">
                 Drag and drop tasks from your brain dumps into 2-hour time blocks throughout your day.
               </p>
-              <Link href="/dashboard/timebox">
+              <Link href="/timebox">
                 <Button variant="primary" className="w-full">
                   Plan Your Day
                 </Button>
@@ -195,7 +195,7 @@ export default function Dashboard() {
               <p className="text-sm text-gray-600 mb-4">
                 Join a 66-day journey to wake up earlier and create powerful daily routines.
               </p>
-              <Link href="/dashboard/routines">
+              <Link href="/routines">
                 <Button variant="primary" className="w-full">
                   Start Your Journey
                 </Button>
@@ -217,7 +217,7 @@ export default function Dashboard() {
               <p className="text-sm text-gray-600 mb-4">
                 Integrate your calendar events with your productivity workflow.
               </p>
-              <Link href="/dashboard/calendar">
+              <Link href="/calendar">
                 <Button variant="secondary" className="w-full">
                   View Calendar
                 </Button>
@@ -238,7 +238,7 @@ export default function Dashboard() {
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
-            <Link href="/dashboard/journal/new">
+            <Link href="/journal/new">
               <Button size="lg" variant="primary" className="animate-pulse-subtle">
                 Create Your First Entry
               </Button>
