@@ -13,6 +13,27 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 }
 
+// Suppress expected Firebase errors that don't affect functionality
+if (typeof window !== 'undefined') {
+  const originalError = console.error
+  console.error = (...args) => {
+    const errorString = args[0]?.toString?.() || ''
+    
+    // Suppress these expected errors
+    if (
+      errorString.includes('Failed to load resource') ||
+      errorString.includes('Fetch API cannot load') ||
+      errorString.includes('__/firebase/init.json') || // Firebase looking for hosted config
+      errorString.includes('__/firebase/init.js') // Alternative Firebase config file
+    ) {
+      // These errors are expected when not using Firebase Hosting
+      return
+    }
+    
+    originalError.apply(console, args)
+  }
+}
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig)
 
