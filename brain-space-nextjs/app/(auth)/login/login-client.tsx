@@ -1,57 +1,54 @@
 'use client'
 
 import { useState } from 'react'
-import { signInWithPopup, signInWithRedirect, GoogleAuthProvider, onAuthStateChanged } from 'firebase/auth'
+import { signInWithPopup, signInWithRedirect, GoogleAuthProvider } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 import { Brain, Sparkles } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
-import { useEffect } from 'react'
 
 export default function LoginClient() {
   const [isSigningIn, setIsSigningIn] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const searchParams = useSearchParams()
-
-  // Handle auth state changes and redirect results
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        // User is signed in, set cookie and redirect
-        const idToken = await user.getIdToken()
-        
-        const response = await fetch('/api/auth/session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: idToken }),
-        })
-        
-        if (response.ok) {
-          const redirect = searchParams.get('redirect') || '/journal'
-          window.location.href = redirect
-        }
-      }
-    })
-
-    return () => unsubscribe()
-  }, [searchParams])
 
   const handleSignIn = async () => {
     setIsSigningIn(true)
+    setError(null)
+    
+    console.log('[Login] Starting sign in process', {
+      timestamp: new Date().toISOString(),
+      isProduction: process.env.NODE_ENV === 'production',
+    })
+    
     try {
       const provider = new GoogleAuthProvider()
       
       // Check if we're in production and should use redirect instead of popup
       const isProduction = process.env.NODE_ENV === 'production'
-      const shouldUseRedirect = isProduction && typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')
+      const shouldUseRedirect = isProduction && typeof window !== 'undefined' && 
+        (window.location.hostname.includes('vercel.app') || 
+         window.location.hostname !== 'localhost')
+
+      console.log('[Login] Auth method:', shouldUseRedirect ? 'redirect' : 'popup')
 
       if (shouldUseRedirect) {
-        // Use redirect flow in production to avoid COOP issues
+        // Store redirect URL in sessionStorage for after auth
+        const redirect = searchParams.get('redirect') || '/journal'
+        sessionStorage.setItem('auth_redirect', redirect)
+        
+        // Use redirect flow in production
+        console.log('[Login] Using redirect flow for production')
         await signInWithRedirect(auth, provider)
+        // This won't return - browser will redirect
         return
       }
 
       try {
         // Try popup first in development
+        console.log('[Login] Attempting popup sign in')
         const result = await signInWithPopup(auth, provider)
+        
+        console.log('[Login] Popup sign in successful, setting cookie')
         
         // Get the ID token
         const idToken = await result.user.getIdToken()
@@ -63,25 +60,36 @@ export default function LoginClient() {
           body: JSON.stringify({ token: idToken }),
         })
         
+        console.log('[Login] Cookie response:', response.ok ? 'success' : 'failed')
+        
         if (response.ok) {
           // Redirect to intended page or journal
           const redirect = searchParams.get('redirect') || '/journal'
+          console.log('[Login] Redirecting to:', redirect)
           window.location.href = redirect
+        } else {
+          const data = await response.json()
+          throw new Error(data.error || 'Failed to set session')
         }
       } catch (popupError: any) {
         // If popup blocked or COOP error, fall back to redirect
         if (popupError.code === 'auth/popup-blocked' || 
             popupError.code === 'auth/popup-closed-by-user' ||
             popupError.message?.includes('Cross-Origin-Opener-Policy')) {
-          console.log('Popup blocked, using redirect instead')
+          console.log('[Login] Popup blocked, falling back to redirect')
+          
+          // Store redirect URL for after auth
+          const redirect = searchParams.get('redirect') || '/journal'
+          sessionStorage.setItem('auth_redirect', redirect)
+          
           await signInWithRedirect(auth, provider)
         } else {
           throw popupError
         }
       }
     } catch (error) {
-      console.error('Sign in failed:', error)
-    } finally {
+      console.error('[Login] Sign in failed:', error)
+      setError(error instanceof Error ? error.message : 'Failed to sign in')
       setIsSigningIn(false)
     }
   }
@@ -99,6 +107,12 @@ export default function LoginClient() {
             Capture, organize, and explore your thoughts with AI
           </p>
         </div>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-sm text-red-600">{error}</p>
+          </div>
+        )}
 
         <button
           onClick={handleSignIn}

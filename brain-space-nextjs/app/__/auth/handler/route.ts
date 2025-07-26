@@ -17,14 +17,22 @@ export async function GET(request: NextRequest) {
     hasOobCode: !!oobCode,
     hasApiKey: !!apiKey,
     continueUrl,
+    timestamp: new Date().toISOString(),
   })
   
-  // For sign-in redirects, Firebase handles the auth state internally
-  // We just need to redirect back to the app
+  // For sign-in redirects, we need to let the client-side handle the auth completion
+  // Redirect to a special auth completion page that will handle cookie setting
   const origin = request.nextUrl.origin
   
-  // Redirect to the home page which will handle routing based on auth state
-  return NextResponse.redirect(new URL('/', origin))
+  // Create a response that will load the auth handler page
+  const response = NextResponse.redirect(new URL('/__/auth/handler', origin))
+  
+  // Set headers to prevent caching
+  response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+  response.headers.set('Pragma', 'no-cache')
+  response.headers.set('Expires', '0')
+  
+  return response
 }
 
 export async function POST(request: NextRequest) {

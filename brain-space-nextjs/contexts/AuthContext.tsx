@@ -61,43 +61,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    // Check for redirect result first
-    getRedirectResult(auth)
-      .then(async (result) => {
-        if (result && result.user) {
-          console.log('Redirect sign-in successful:', result.user.email)
-          
-          // Set auth cookie for server-side auth
-          await setAuthCookie(result.user)
-          
-          // Handle successful redirect sign-in
-          const userRef = doc(db, 'users', result.user.uid, 'profile', 'data')
-          const userDoc = await getDoc(userRef)
+    console.log('[AuthContext] Initializing auth context', {
+      timestamp: new Date().toISOString(),
+      pathname: typeof window !== 'undefined' ? window.location.pathname : 'SSR',
+    })
 
-          if (!userDoc.exists()) {
-            await setDoc(userRef, {
-              id: result.user.uid,
-              email: result.user.email,
-              displayName: result.user.displayName,
-              photoURL: result.user.photoURL,
-              createdAt: new Date(),
-              updatedAt: new Date(),
+    // Skip redirect check if we're on the auth handler page
+    // The handler page will manage its own auth flow
+    const isAuthHandlerPage = typeof window !== 'undefined' && 
+      window.location.pathname === '/__/auth/handler'
+    
+    if (!isAuthHandlerPage) {
+      // Check for redirect result only if we're NOT on the auth handler page
+      getRedirectResult(auth)
+        .then(async (result) => {
+          if (result && result.user) {
+            console.log('[AuthContext] Redirect result found:', {
+              userEmail: result.user.email,
+              timestamp: new Date().toISOString(),
             })
+            
+            // Don't handle the redirect result here - let onAuthStateChanged handle it
+            // This prevents duplicate cookie setting and profile creation
           }
-          
-          // After successful redirect auth, reload page to ensure server-side auth is checked
-          const urlParams = new URLSearchParams(window.location.search)
-          const redirect = urlParams.get('redirect') || '/journal'
-          window.location.href = redirect
-        }
-      })
-      .catch((error) => {
-        console.error('Redirect result error:', error)
-        // Clear any redirect errors to prevent loops
-        if (error.code === 'auth/redirect-cancelled-by-user') {
-          console.log('User cancelled the sign-in')
-        }
-      })
+        })
+        .catch((error) => {
+          console.error('[AuthContext] Redirect result error:', error)
+          // Clear any redirect errors to prevent loops
+          if (error.code === 'auth/redirect-cancelled-by-user') {
+            console.log('[AuthContext] User cancelled the sign-in')
+          }
+        })
+    }
 
     // Check offline status
     const handleOnline = () => setIsOfflineMode(false)
@@ -110,41 +105,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsOfflineMode(!navigator.onLine)
 
     let unsubscribe: () => void = () => {}
+    let hasSetCookie = false // Track if we've already set the cookie
 
     try {
       // Listen for auth changes
       unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        setUser(firebaseUser)
-        
-        // Set auth cookie for server-side auth
-        await setAuthCookie(firebaseUser)
+        console.log('[AuthContext] Auth state changed:', {
+          hasUser: !!firebaseUser,
+          userEmail: firebaseUser?.email,
+          hasSetCookie,
+          timestamp: new Date().toISOString(),
+        })
 
-        // Create or update user profile in Firestore
-        const userRef = doc(db, 'users', firebaseUser.uid, 'profile', 'data')
-        const userDoc = await getDoc(userRef)
+        if (firebaseUser) {
+          setUser(firebaseUser)
+          
+          // Only set cookie if we haven't already done so
+          // This prevents duplicate cookie setting from redirect flow
+          if (!hasSetCookie && !isAuthHandlerPage) {
+            hasSetCookie = true
+            console.log('[AuthContext] Setting auth cookie')
+            await setAuthCookie(firebaseUser)
 
-        if (!userDoc.exists()) {
-          await setDoc(userRef, {
-            id: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName,
-            photoURL: firebaseUser.photoURL,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          })
+            // Create or update user profile in Firestore
+            try {
+              const userRef = doc(db, 'users', firebaseUser.uid, 'profile', 'data')
+              const userDoc = await getDoc(userRef)
+
+              if (!userDoc.exists()) {
+                await setDoc(userRef, {
+                  id: firebaseUser.uid,
+                  email: firebaseUser.email,
+                  displayName: firebaseUser.displayName,
+                  photoURL: firebaseUser.photoURL,
+                  createdAt: new Date(),
+                  updatedAt: new Date(),
+                })
+                console.log('[AuthContext] Created user profile')
+              }
+            } catch (error) {
+              console.error('[AuthContext] Error creating user profile:', error)
+            }
+          }
+        } else {
+          setUser(null)
+          hasSetCookie = false
+          // Clear auth cookie when user signs out
+          await clearAuthCookie()
         }
-      } else {
-        setUser(null)
-        // Clear auth cookie when user signs out
-        await clearAuthCookie()
-      }
-      setLoading(false)
-      setStoreUser(firebaseUser)
-      setStoreLoading(false)
-    })
+        
+        setLoading(false)
+        setStoreUser(firebaseUser)
+        setStoreLoading(false)
+      })
     } catch (error) {
-      console.error('Error setting up auth listener:', error)
+      console.error('[AuthContext] Error setting up auth listener:', error)
       setLoading(false)
       setStoreLoading(false)
     }
@@ -185,6 +200,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signInWithGoogle = async () => {
+    console.log('[AuthContext] Starting Google sign in', {
+      timestamp: new Date().toISOString(),
+      isProduction: process.env.NODE_ENV === 'production',
+    })
+    
     try {
       const provider = new GoogleAuthProvider()
       // Only request basic profile scope for now
@@ -194,57 +214,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Check if we're in production and should use redirect instead of popup
       const isProduction = process.env.NODE_ENV === 'production'
-      const shouldUseRedirect = isProduction && typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')
+      const shouldUseRedirect = isProduction && typeof window !== 'undefined' && 
+        (window.location.hostname.includes('vercel.app') || 
+         window.location.hostname !== 'localhost')
+
+      console.log('[AuthContext] Auth method:', shouldUseRedirect ? 'redirect' : 'popup')
 
       if (shouldUseRedirect) {
         // Use redirect flow in production to avoid COOP issues
+        console.log('[AuthContext] Using redirect flow for production')
         await signInWithRedirect(auth, provider)
         return
       }
 
       try {
         // Try popup first in development
+        console.log('[AuthContext] Attempting popup sign in')
         const result = await signInWithPopup(auth, provider)
         
-        // Set auth cookie for server-side auth
-        await setAuthCookie(result.user)
-
-        // Create or update user profile
-        const userRef = doc(db, 'users', result.user.uid, 'profile', 'data')
-        const userDoc = await getDoc(userRef)
-
-        if (!userDoc.exists()) {
-          await setDoc(userRef, {
-            id: result.user.uid,
-            email: result.user.email,
-            displayName: result.user.displayName,
-            photoURL: result.user.photoURL,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          })
-        } else {
-          await setDoc(
-            userRef,
-            {
-              ...userDoc.data(),
-              updatedAt: new Date(),
-            },
-            { merge: true }
-          )
-        }
+        console.log('[AuthContext] Popup sign in successful:', {
+          userEmail: result.user.email,
+          timestamp: new Date().toISOString(),
+        })
+        
+        // Don't set cookie here - let onAuthStateChanged handle it
+        // This prevents duplicate cookie setting
       } catch (popupError: any) {
         // If popup blocked or COOP error, fall back to redirect
         if (popupError.code === 'auth/popup-blocked' || 
             popupError.code === 'auth/popup-closed-by-user' ||
             popupError.message?.includes('Cross-Origin-Opener-Policy')) {
-          console.log('Popup blocked, using redirect instead')
+          console.log('[AuthContext] Popup blocked, falling back to redirect')
           await signInWithRedirect(auth, provider)
         } else {
           throw popupError
         }
       }
     } catch (error) {
-      console.error('Google sign in error:', error)
+      console.error('[AuthContext] Google sign in error:', error)
       throw error
     }
   }
