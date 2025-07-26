@@ -1,12 +1,15 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { clearAuthCookie } from '@/lib/auth-helpers'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     clearAuthCookie()
     
-    // Redirect to login page
-    return NextResponse.redirect(new URL('/login', process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'))
+    // Get the origin from the request
+    const origin = request.nextUrl.origin
+    
+    // Redirect to login page using the request origin
+    return NextResponse.redirect(new URL('/login', origin))
   } catch (error) {
     console.error('Logout error:', error)
     return NextResponse.json(

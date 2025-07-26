@@ -21,12 +21,10 @@ export async function GET(request: NextRequest) {
   
   // For sign-in redirects, Firebase handles the auth state internally
   // We just need to redirect back to the app
-  const baseUrl = process.env.NODE_ENV === 'production' 
-    ? `https://${request.headers.get('host')}` 
-    : 'http://localhost:3000'
+  const origin = request.nextUrl.origin
   
   // Redirect to the home page which will handle routing based on auth state
-  return NextResponse.redirect(new URL('/', baseUrl))
+  return NextResponse.redirect(new URL('/', origin))
 }
 
 export async function POST(request: NextRequest) {

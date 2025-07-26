@@ -50,12 +50,12 @@ export function isPublicPath(pathname: string): boolean {
  */
 export function getAuthRedirectUrl(currentPath: string): string {
   // Store the attempted URL to redirect back after login
-  const redirectUrl = new URL('/login', process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000')
+  const loginPath = '/login'
   
   // Don't redirect back to login or auth pages
   if (!isPublicPath(currentPath) && currentPath !== '/') {
-    redirectUrl.searchParams.set('redirect', currentPath)
+    return `${loginPath}?redirect=${encodeURIComponent(currentPath)}`
   }
   
-  return redirectUrl.toString()
+  return loginPath
 }
