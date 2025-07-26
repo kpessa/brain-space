@@ -22,15 +22,17 @@ if (typeof window !== 'undefined') {
     hasAppId: !!firebaseConfig.appId,
   })
 
-  // Suppress CORS errors in development (they don't affect functionality)
+  // Suppress expected errors that don't affect functionality
   const originalError = console.error
   console.error = (...args) => {
+    const errorString = args[0]?.toString?.() || ''
     if (
-      args[0]?.toString?.().includes('Failed to load resource') ||
-      args[0]?.toString?.().includes('Fetch API cannot load') ||
-      args[0]?.toString?.().includes('firestore.googleapis.com')
+      errorString.includes('Failed to load resource') ||
+      errorString.includes('Fetch API cannot load') ||
+      errorString.includes('firestore.googleapis.com') ||
+      errorString.includes('__/firebase/init.json') // Firebase looking for hosted config
     ) {
-      // Suppress Firestore CORS errors - they're expected in development
+      // Suppress these errors - they're expected when not using Firebase Hosting
       return
     }
     originalError.apply(console, args)
