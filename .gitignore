@@ -39,3 +39,10 @@ supabase/.env
 # Windows Zone.Identifier files
 *.Zone.Identifier
 .vercel
+
+# Test files
+test-*.html
+test-*.js
+
+# Claude settings
+.claude/
