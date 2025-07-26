@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { adminAuth } from '@/lib/firebase-admin'
+import { verifyAuth } from '@/lib/auth-helpers'
 
 interface ThoughtAnalysis {
   text: string
@@ -168,18 +168,18 @@ async function mockCategorize(text: string) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { text, provider = 'mock' } = await request.json()
-
-    // Optional: Verify Firebase auth token
+    // Verify authentication
     const authHeader = request.headers.get('authorization')
-    if (authHeader && process.env.NODE_ENV === 'production' && adminAuth) {
-      try {
-        const token = authHeader.replace('Bearer ', '')
-        await adminAuth.verifyIdToken(token)
-      } catch (error) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-      }
+    const { user, error } = await verifyAuth(authHeader)
+    
+    if (error || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
     }
+
+    const { text, provider = 'mock' } = await request.json()
 
     // Validate input
     if (!text || typeof text !== 'string') {

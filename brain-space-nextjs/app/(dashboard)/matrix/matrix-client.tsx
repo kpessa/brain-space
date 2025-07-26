@@ -1,0 +1,311 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import dynamic from 'next/dynamic'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
+import { useNodesStore } from '@/store/nodeStore'
+import { Plus, AlertCircle, Star, Clock, Calendar } from 'lucide-react'
+import { InputDialog } from '@/components/ui/InputDialog'
+
+// Dynamic import for drag and drop to avoid SSR issues
+const DragDropContext = dynamic(() => import('@hello-pangea/dnd').then(mod => ({ default: mod.DragDropContext })), { ssr: false })
+const Droppable = dynamic(() => import('@hello-pangea/dnd').then(mod => ({ default: mod.Droppable })), { ssr: false })
+const Draggable = dynamic(() => import('@hello-pangea/dnd').then(mod => ({ default: mod.Draggable })), { ssr: false })
+import type { DropResult } from '@hello-pangea/dnd'
+
+interface Quadrant {
+  id: string
+  title: string
+  description: string
+  icon: React.ReactNode
+  color: string
+  bgColor: string
+}
+
+const quadrants: Quadrant[] = [
+  {
+    id: 'urgent-important',
+    title: 'Do First',
+    description: 'Urgent & Important',
+    icon: <AlertCircle className="w-5 h-5" />,
+    color: 'text-red-600',
+    bgColor: 'bg-red-50',
+  },
+  {
+    id: 'not-urgent-important',
+    title: 'Schedule',
+    description: 'Not Urgent & Important',
+    icon: <Star className="w-5 h-5" />,
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-50',
+  },
+  {
+    id: 'urgent-not-important',
+    title: 'Delegate',
+    description: 'Urgent & Not Important',
+    icon: <Clock className="w-5 h-5" />,
+    color: 'text-yellow-600',
+    bgColor: 'bg-yellow-50',
+  },
+  {
+    id: 'not-urgent-not-important',
+    title: 'Eliminate',
+    description: 'Not Urgent & Not Important',
+    icon: <Calendar className="w-5 h-5" />,
+    color: 'text-gray-600',
+    bgColor: 'bg-gray-50',
+  },
+]
+
+export default function MatrixClient({ userId }: { userId: string }) {
+  const { nodes, isLoading: loading, error, loadNodes, updateNode, createNode } = useNodesStore()
+  const [quadrantNodes, setQuadrantNodes] = useState<Record<string, any[]>>({
+    'urgent-important': [],
+    'not-urgent-important': [],
+    'urgent-not-important': [],
+    'not-urgent-not-important': [],
+  })
+  const [showAddDialog, setShowAddDialog] = useState(false)
+  const [selectedQuadrant, setSelectedQuadrant] = useState<string>('')
+
+  useEffect(() => {
+    loadNodes(userId)
+  }, [userId, loadNodes])
+
+  useEffect(() => {
+    // Organize nodes into quadrants based on urgency and importance
+    const organized: Record<string, any[]> = {
+      'urgent-important': [],
+      'not-urgent-important': [],
+      'urgent-not-important': [],
+      'not-urgent-not-important': [],
+    }
+
+    nodes.forEach(node => {
+      const urgency = node.urgency || 5
+      const importance = node.importance || 5
+      
+      if (urgency >= 7 && importance >= 7) {
+        organized['urgent-important'].push(node)
+      } else if (urgency < 7 && importance >= 7) {
+        organized['not-urgent-important'].push(node)
+      } else if (urgency >= 7 && importance < 7) {
+        organized['urgent-not-important'].push(node)
+      } else {
+        organized['not-urgent-not-important'].push(node)
+      }
+    })
+
+    setQuadrantNodes(organized)
+  }, [nodes])
+
+  const handleDragEnd = async (result: DropResult) => {
+    if (!result.destination) return
+
+    const sourceQuadrant = result.source.droppableId
+    const destQuadrant = result.destination.droppableId
+    const nodeId = result.draggableId
+
+    if (sourceQuadrant === destQuadrant) return
+
+    // Find the node
+    const node = nodes.find(n => n.id === nodeId)
+    if (!node) return
+
+    // Calculate new urgency and importance based on destination quadrant
+    let newUrgency = node.urgency || 5
+    let newImportance = node.importance || 5
+
+    switch (destQuadrant) {
+      case 'urgent-important':
+        newUrgency = 8
+        newImportance = 8
+        break
+      case 'not-urgent-important':
+        newUrgency = 3
+        newImportance = 8
+        break
+      case 'urgent-not-important':
+        newUrgency = 8
+        newImportance = 3
+        break
+      case 'not-urgent-not-important':
+        newUrgency = 3
+        newImportance = 3
+        break
+    }
+
+    // Update the node
+    await updateNode(nodeId, {
+      urgency: newUrgency,
+      importance: newImportance,
+    })
+  }
+
+  const handleAddTask = async (title: string) => {
+    if (!selectedQuadrant) return
+
+    // Set urgency and importance based on quadrant
+    let urgency = 5
+    let importance = 5
+
+    switch (selectedQuadrant) {
+      case 'urgent-important':
+        urgency = 8
+        importance = 8
+        break
+      case 'not-urgent-important':
+        urgency = 3
+        importance = 8
+        break
+      case 'urgent-not-important':
+        urgency = 8
+        importance = 3
+        break
+      case 'not-urgent-not-important':
+        urgency = 3
+        importance = 3
+        break
+    }
+
+    await createNode({
+      userId: userId,
+      title,
+      type: 'task',
+      urgency,
+      importance,
+    })
+
+    setShowAddDialog(false)
+    setSelectedQuadrant('')
+  }
+
+  if (loading) {
+    return (
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brain-600"></div>
+        </div>
+    )
+  }
+
+  if (error) {
+    return (
+        <div className="flex items-center justify-center h-64">
+          <div className="text-red-600">Error: {error}</div>
+        </div>
+    )
+  }
+
+  return (
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <div className="bg-gradient-to-br from-brain-600 via-space-600 to-brain-700 -m-8 p-8 min-h-[calc(100vh-4rem)]">
+          <div className="max-w-7xl mx-auto">
+            <header className="mb-8 text-center">
+              <h1 className="text-4xl font-bold text-white mb-2">Eisenhower Matrix</h1>
+              <p className="text-white/80 text-lg">
+                Prioritize your tasks by urgency and importance
+              </p>
+            </header>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {quadrants.map((quadrant) => (
+              <Droppable key={quadrant.id} droppableId={quadrant.id}>
+                {(provided, snapshot) => (
+                  <Card
+                    className={`h-full min-h-[300px] transition-all ${
+                      snapshot.isDraggingOver ? 'ring-2 ring-brain-500 shadow-lg' : ''
+                    }`}
+                  >
+                    <CardHeader className={quadrant.bgColor}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className={quadrant.color}>{quadrant.icon}</div>
+                          <div>
+                            <CardTitle className={quadrant.color}>
+                              {quadrant.title}
+                            </CardTitle>
+                            <CardDescription>{quadrant.description}</CardDescription>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedQuadrant(quadrant.id)
+                            setShowAddDialog(true)
+                          }}
+                        >
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className="p-4 space-y-2"
+                    >
+                      {quadrantNodes[quadrant.id].map((node, index) => (
+                        <Draggable key={node.id} draggableId={node.id} index={index}>
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              className={`p-3 bg-white rounded-lg shadow-sm border transition-all cursor-move ${
+                                snapshot.isDragging
+                                  ? 'shadow-lg ring-2 ring-brain-500 opacity-90'
+                                  : 'hover:shadow-md'
+                              }`}
+                            >
+                              <h4 className="font-medium text-gray-900">{node.title}</h4>
+                              {node.description && (
+                                <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                                  {node.description}
+                                </p>
+                              )}
+                              {node.tags && node.tags.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-2">
+                                  {node.tags.slice(0, 3).map((tag: string, i: number) => (
+                                    <span
+                                      key={i}
+                                      className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded"
+                                    >
+                                      {tag}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                      {quadrantNodes[quadrant.id].length === 0 && (
+                        <div className="text-center py-8 text-gray-400">
+                          <p className="text-sm">No tasks yet</p>
+                          <p className="text-xs mt-1">Drop tasks here or click + to add</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+              </Droppable>
+            ))}
+          </div>
+
+          <InputDialog
+            isOpen={showAddDialog}
+            title="Add New Task"
+            placeholder="Enter task title..."
+            onSubmit={handleAddTask}
+            onCancel={() => {
+              setShowAddDialog(false)
+              setSelectedQuadrant('')
+            }}
+          />
+          </div>
+        </div>
+      </DragDropContext>
+  )
+}

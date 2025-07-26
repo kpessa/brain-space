@@ -1,20 +1,21 @@
-import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 import { verifyAuth } from '@/lib/auth-helpers'
+import LoginClient from './login-client'
 
-export default async function Home() {
-  // Check authentication server-side
+export default async function LoginPage() {
+  // Check if already authenticated server-side
   const cookieStore = cookies()
   const token = cookieStore.get('firebase-auth-token')?.value
   
   if (token) {
     const { user } = await verifyAuth(`Bearer ${token}`)
     if (user) {
-      // User is authenticated, redirect to journal
+      // Already authenticated, redirect to journal
       redirect('/journal')
     }
   }
-  
-  // Not authenticated, redirect to login
-  redirect('/login')
+
+  // Not authenticated, show login form
+  return <LoginClient />
 }

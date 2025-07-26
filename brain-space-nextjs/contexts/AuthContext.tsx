@@ -37,12 +37,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Sync with Zustand store
   const { setUser: setStoreUser, setLoading: setStoreLoading } = useAuthStore()
 
+  // Helper function to set auth cookie
+  const setAuthCookie = async (user: User) => {
+    try {
+      const idToken = await user.getIdToken()
+      await fetch('/api/auth/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: idToken }),
+      })
+    } catch (error) {
+      console.error('Failed to set auth cookie:', error)
+    }
+  }
+
+  // Helper function to clear auth cookie
+  const clearAuthCookie = async () => {
+    try {
+      await fetch('/api/auth/session', { method: 'DELETE' })
+    } catch (error) {
+      console.error('Failed to clear auth cookie:', error)
+    }
+  }
+
   useEffect(() => {
     // Check for redirect result first
     getRedirectResult(auth)
       .then(async (result) => {
         if (result && result.user) {
           console.log('Redirect sign-in successful:', result.user.email)
+          
+          // Set auth cookie for server-side auth
+          await setAuthCookie(result.user)
+          
           // Handle successful redirect sign-in
           const userRef = doc(db, 'users', result.user.uid, 'profile', 'data')
           const userDoc = await getDoc(userRef)
@@ -57,6 +84,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               updatedAt: new Date(),
             })
           }
+          
+          // After successful redirect auth, reload page to ensure server-side auth is checked
+          const urlParams = new URLSearchParams(window.location.search)
+          const redirect = urlParams.get('redirect') || '/journal'
+          window.location.href = redirect
         }
       })
       .catch((error) => {
@@ -84,6 +116,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         setUser(firebaseUser)
+        
+        // Set auth cookie for server-side auth
+        await setAuthCookie(firebaseUser)
 
         // Create or update user profile in Firestore
         const userRef = doc(db, 'users', firebaseUser.uid, 'profile', 'data')
@@ -101,6 +136,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } else {
         setUser(null)
+        // Clear auth cookie when user signs out
+        await clearAuthCookie()
       }
       setLoading(false)
       setStoreUser(firebaseUser)
@@ -168,6 +205,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         // Try popup first in development
         const result = await signInWithPopup(auth, provider)
+        
+        // Set auth cookie for server-side auth
+        await setAuthCookie(result.user)
 
         // Create or update user profile
         const userRef = doc(db, 'users', result.user.uid, 'profile', 'data')
@@ -212,6 +252,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     try {
       await firebaseSignOut(auth)
+      // Clear auth cookie
+      await clearAuthCookie()
     } catch (error) {
       console.error('Sign out error:', error)
       throw error

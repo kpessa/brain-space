@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { useNodesStore } from '@/store/nodeStore'
-import { useAuth } from '@/contexts/AuthContext'
 import { createAIService } from '@/services/ai'
 import type { Node, NodeType } from '@/types/node'
 import { 
@@ -27,6 +26,7 @@ import {
 interface QuickAddModalProps {
   isOpen: boolean
   onClose: () => void
+  userId?: string
 }
 
 const NODE_TYPE_ICONS: Record<NodeType, React.ReactNode> = {
@@ -42,7 +42,7 @@ const NODE_TYPE_ICONS: Record<NodeType, React.ReactNode> = {
   concern: <AlertTriangle className="w-4 h-4" />
 }
 
-export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
+export function QuickAddModal({ isOpen, onClose, userId }: QuickAddModalProps) {
   const [input, setInput] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
   const [useAI, setUseAI] = useState(true)
@@ -51,7 +51,6 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
   const inputRef = useRef<HTMLTextAreaElement>(null)
   
   const { createNode } = useNodesStore()
-  const { user } = useAuth()
   const aiService = createAIService()
 
   // Focus input when modal opens
@@ -74,7 +73,7 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault()
-    if (!input.trim() || !user || isProcessing) return
+    if (!input.trim() || !userId || isProcessing) return
 
     setIsProcessing(true)
     setError(null)
@@ -87,7 +86,7 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
         tags: ['quick-add'],
         urgency: 5,
         importance: 5,
-        userId: user.uid,
+        userId: userId || 'anonymous',
       }
 
       if (useAI) {
@@ -129,12 +128,12 @@ export function QuickAddModal({ isOpen, onClose }: QuickAddModalProps) {
   }
 
   const handleConfirmPreview = async () => {
-    if (!preview || !user) return
+    if (!preview || !userId) return
 
     try {
       await createNode({
         ...preview,
-        userId: user.uid,
+        userId: userId || 'anonymous',
       })
       onClose()
     } catch (error) {

@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { decodeAuthToken, isPublicPath, getAuthRedirectUrl, AUTH_COOKIE_NAME } from './lib/auth-helpers-edge'
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+  
   // Clone the request headers
   const requestHeaders = new Headers(request.headers)
-  
-  // Public routes that don't require authentication
-  const publicRoutes = ['/login', '/api/ai', '/__/auth/handler']
-  
-  const { pathname } = request.nextUrl
   
   // Create response with COOP headers for Firebase Auth
   const response = NextResponse.next({
@@ -20,19 +18,54 @@ export function middleware(request: NextRequest) {
   response.headers.set('Cross-Origin-Opener-Policy', 'same-origin-allow-popups')
   response.headers.set('Cross-Origin-Embedder-Policy', 'unsafe-none')
   
-  // Allow access to public routes and API routes
-  if (publicRoutes.some(route => pathname.startsWith(route)) || pathname.startsWith('/api/')) {
+  // Skip auth check for public paths
+  if (isPublicPath(pathname)) {
     return response
   }
   
-  // For now, allow all routes (remove this in production)
-  return response
+  // Special handling for API routes
+  if (pathname.startsWith('/api/')) {
+    // Some API routes are public (like auth endpoints)
+    if (pathname.startsWith('/api/auth/')) {
+      return response
+    }
+    
+    // For other API routes, we'll check auth in the route handlers
+    // This allows for more flexible auth handling per endpoint
+    return response
+  }
   
-  // TODO: Add actual Firebase auth verification
-  // const token = request.cookies.get('auth-token')
-  // if (!token) {
-  //   return NextResponse.redirect(new URL('/login', request.url))
-  // }
+  // For protected pages, verify authentication
+  const token = request.cookies.get(AUTH_COOKIE_NAME)?.value
+  
+  if (!token) {
+    // No token, redirect to login
+    return NextResponse.redirect(new URL(getAuthRedirectUrl(pathname), request.url))
+  }
+  
+  // Decode the token (basic validation in Edge runtime)
+  const decoded = decodeAuthToken(token)
+  
+  if (!decoded) {
+    // Invalid or expired token, clear it and redirect to login
+    const redirectResponse = NextResponse.redirect(
+      new URL(getAuthRedirectUrl(pathname), request.url)
+    )
+    redirectResponse.cookies.delete(AUTH_COOKIE_NAME)
+    return redirectResponse
+  }
+  
+  // Valid auth, proceed with request
+  // Add user info to headers for server components
+  requestHeaders.set('x-user-id', decoded.uid)
+  requestHeaders.set('x-user-email', decoded.email || '')
+  requestHeaders.set('x-pathname', pathname)
+  
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  })
 }
 
 export const config = {

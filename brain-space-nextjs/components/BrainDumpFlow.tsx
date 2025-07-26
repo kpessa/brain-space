@@ -32,7 +32,6 @@ import { CategoryNode } from './flow/nodes/CategoryNode'
 import { ThoughtNode } from './flow/nodes/ThoughtNode'
 import { useBrainDumpStore, type BrainDumpNode, type BrainDumpEdge } from '@/store/braindumpStore'
 import { useNodesStore } from '@/store/nodeStore'
-import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import type { NodeType } from '@/types/node'
 
@@ -45,16 +44,16 @@ interface BrainDumpFlowProps {
   initialNodes?: BrainDumpNode[]
   initialEdges?: BrainDumpEdge[]
   onBack?: () => void
+  userId?: string
 }
 
-function BrainDumpFlowInner({ initialNodes = [], initialEdges = [], onBack }: BrainDumpFlowProps) {
+function BrainDumpFlowInner({ initialNodes = [], initialEdges = [], onBack, userId }: BrainDumpFlowProps) {
   const [nodes, setNodes] = useState<BrainDumpNode[]>(initialNodes)
   const [edges, setEdges] = useState<BrainDumpEdge[]>(initialEdges)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const { fitView } = useReactFlow()
   const { currentEntry, updateEntry } = useBrainDumpStore()
   const { createNode } = useNodesStore()
-  const { user } = useAuth()
   const router = useRouter()
 
   // Update nodes and edges when they change
@@ -133,7 +132,7 @@ function BrainDumpFlowInner({ initialNodes = [], initialEdges = [], onBack }: Br
   }
 
   const handleConvertToNodes = async () => {
-    if (!currentEntry || !user) return
+    if (!currentEntry || !userId) return
     
     // Extract thought nodes
     const thoughtNodes = nodes.filter(node => node.type === 'thought')
@@ -145,7 +144,7 @@ function BrainDumpFlowInner({ initialNodes = [], initialEdges = [], onBack }: Br
         
         // Convert to node in the nodes system
         await createNode({
-          userId: user.uid,
+          userId: userId || 'anonymous',
           title: nodeData.label,
           description: nodeData.description || nodeData.label,
           type: (nodeData.nodeType as NodeType) || 'thought',

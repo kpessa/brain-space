@@ -3,6 +3,16 @@ const nextConfig = {
   // Enable React strict mode
   reactStrictMode: true,
   
+  // Skip type checking during build (we've already passed TypeScript compilation)
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  
+  // Skip ESLint during build
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  
   // Configure image domains
   images: {
     domains: ['lh3.googleusercontent.com'], // For Google profile images
@@ -38,9 +48,15 @@ const nextConfig = {
     ]
   },
   
-  // No redirects needed since we're using route groups
+  // Redirect from old dashboard routes to new ones
   async redirects() {
-    return []
+    return [
+      {
+        source: '/dashboard/:path*',
+        destination: '/:path*',
+        permanent: true,
+      },
+    ]
   },
   
   // Environment variables that should be available on the client

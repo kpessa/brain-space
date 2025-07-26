@@ -2,11 +2,13 @@
 
 import { useState } from 'react'
 import { Brain, LogIn, UserPlus } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
 import { cn } from '@/lib/utils'
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth'
+import { auth } from '@/lib/firebase'
+import { useRouter } from 'next/navigation'
 
 export function FirebaseLogin() {
-  const { signIn, signUp, signInWithGoogle } = useAuth()
+  const router = useRouter()
   const [isSignUp, setIsSignUp] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -19,13 +21,16 @@ export function FirebaseLogin() {
     setLoading(true)
 
     try {
-      const result = isSignUp ? await signUp(email, password) : await signIn(email, password)
-
-      if (result.error) {
-        setError(result.error.message)
+      if (isSignUp) {
+        await createUserWithEmailAndPassword(auth, email, password)
+      } else {
+        await signInWithEmailAndPassword(auth, email, password)
       }
-    } catch (err) {
-      setError('An unexpected error occurred')
+      
+      // After successful auth, redirect to dashboard
+      router.push('/todos')
+    } catch (err: any) {
+      setError(err.message || 'An unexpected error occurred')
     } finally {
       setLoading(false)
     }
@@ -36,7 +41,11 @@ export function FirebaseLogin() {
     setLoading(true)
 
     try {
-      await signInWithGoogle()
+      const provider = new GoogleAuthProvider()
+      await signInWithPopup(auth, provider)
+      
+      // After successful auth, redirect to dashboard
+      router.push('/todos')
     } catch (err: any) {
       setError(err.message || 'Failed to sign in with Google')
     } finally {
