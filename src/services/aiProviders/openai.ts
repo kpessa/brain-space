@@ -1,26 +1,4 @@
-import type { AIProvider, CategorizationResult, ThoughtAnalysis } from '../ai'
-
-interface OpenAIResponse {
-  categories: Array<{
-    id: string
-    name: string
-    confidence: number
-    reasoning: string
-  }>
-  thoughts: Array<{
-    text: string
-    category: string
-    urgency: number
-    importance: number
-    dueDate?: string
-    reasoning?: string
-  }>
-  relationships?: Array<{
-    from: string
-    to: string
-    type: string
-  }>
-}
+import type { AIProvider, CategorizationResult, EnhanceNodeResult } from '../ai'
 
 export class OpenAIProvider implements AIProvider {
   private apiKey: string
@@ -29,223 +7,132 @@ export class OpenAIProvider implements AIProvider {
     this.apiKey = apiKey
   }
 
-  async categorizeThoughts(text: string): Promise<CategorizationResult> {
-    const prompt = this.buildPrompt(text)
-    const debugMode = localStorage.getItem('ai_debug') === 'true'
-    
-    if (debugMode) {
-      console.group('🤖 OpenAI API Call')
-      console.log('Input text:', text)
-      console.log('Generated prompt:', prompt)
-      console.time('OpenAI API call duration')
-    }
-    
+  async enhanceNode(text: string): Promise<EnhanceNodeResult> {
     try {
-      const requestBody = {
-        model: 'gpt-4-turbo-preview',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are an expert at analyzing brain dumps and extracting structured, actionable information. Always respond with valid JSON.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.3,
-        response_format: { type: 'json_object' }
-      }
-      
-      if (debugMode) {
-        console.log('Request body:', requestBody)
-      }
-      
-      // Use proxy to avoid CORS
-      const apiUrl = import.meta.env.DEV 
-        ? '/api/openai/v1/chat/completions'  // Vite proxy in development
-        : '/api/openai'                       // Vercel function in production
-      
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`
-      }
-      
-      const response = await fetch(apiUrl, {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
-        headers,
-        body: JSON.stringify(requestBody)
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify({
+          model: 'gpt-4-turbo-preview',
+          messages: [
+            {
+              role: 'system',
+              content: `You are an AI assistant that enhances and categorizes a single thought or task.
+              Analyze the provided text and return a JSON response with:
+              - type: The node type (thought, task, question, idea, note)
+              - title: A concise title (max 100 chars)
+              - description: The full enhanced description
+              - tags: Array of relevant tags/categories
+              - urgency: 1-10 scale (10 being most urgent)
+              - importance: 1-10 scale (10 being most important)
+              - dueDate: Object with date property (ISO string) if a deadline is mentioned`,
+            },
+            {
+              role: 'user',
+              content: text,
+            },
+          ],
+          temperature: 0.7,
+          response_format: { type: 'json_object' },
+        }),
       })
 
       if (!response.ok) {
-        const errorData = await response.text()
-        if (debugMode) {
-          console.error('API Error Response:', errorData)
-        }
-        throw new Error(`OpenAI API error: ${response.status} ${response.statusText} - ${errorData}`)
+        const error = await response.text()
+        throw new Error(`OpenAI API error: ${response.status} - ${error}`)
       }
 
       const data = await response.json()
-      
-      if (debugMode) {
-        console.log('Raw API response:', data)
-        console.log('Token usage:', data.usage)
+      const result = JSON.parse(data.choices[0].message.content)
+
+      return {
+        nodeData: {
+          type: result.type || 'thought',
+          title: result.title || text.substring(0, 100),
+          description: result.description,
+          tags: result.tags || [],
+          urgency: result.urgency || 5,
+          importance: result.importance || 5,
+          dueDate: result.dueDate,
+        },
       }
-      
-      const result: OpenAIResponse = JSON.parse(data.choices[0].message.content)
-      
-      if (debugMode) {
-        console.log('Parsed result:', result)
-        console.timeEnd('OpenAI API call duration')
+    } catch (error) {
+      console.error('OpenAI enhanceNode error:', error)
+      // Fallback to basic enhancement
+      return {
+        nodeData: {
+          type: 'thought',
+          title: text.substring(0, 100),
+          description: text,
+          tags: ['misc'],
+          urgency: 5,
+          importance: 5,
+        },
+      }
+    }
+  }
+
+  async categorizeThoughts(text: string): Promise<CategorizationResult> {
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify({
+          model: 'gpt-4-turbo-preview',
+          messages: [
+            {
+              role: 'system',
+              content: `You are an AI assistant that categorizes thoughts and tasks. 
+              Analyze the provided text and return a JSON response with:
+              - categories: Array of category objects with name, thoughts, confidence, and reasoning
+              - relationships: Array of thought relationships
+              - suggestions: Array of helpful suggestions
+              
+              For each thought, provide:
+              - text: The original or clarified text
+              - category: The category name
+              - confidence: 0-1 score
+              - keywords: Relevant keywords
+              - sentiment: positive, negative, or neutral
+              - urgency: 1-10 scale
+              - importance: 1-10 scale
+              - urgencyLevel: low, medium, or high
+              - importanceLevel: low, medium, or high
+              - dueDate: ISO date string if applicable
+              - reasoning: Your reasoning for the categorization`,
+            },
+            {
+              role: 'user',
+              content: text,
+            },
+          ],
+          temperature: 0.7,
+          response_format: { type: 'json_object' },
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.text()
+        throw new Error(`OpenAI API error: ${response.status} - ${error}`)
       }
 
-      const transformed = this.transformResponse(result)
-      
-      if (debugMode) {
-        console.log('Transformed result:', transformed)
-        console.groupEnd()
+      const data = await response.json()
+      const result = JSON.parse(data.choices[0].message.content)
+
+      return {
+        categories: result.categories || [],
+        relationships: result.relationships || [],
+        suggestions: result.suggestions || [],
       }
-      
-      return transformed
     } catch (error) {
-      if (debugMode) {
-        console.error('OpenAI categorization failed:', error)
-        console.groupEnd()
-      }
+      console.error('OpenAI categorization error:', error)
       throw error
     }
-  }
-
-  private buildPrompt(text: string): string {
-    return `Analyze this brain dump and extract structured information. Your response must be valid JSON.
-
-Instructions:
-1. Extract independent, actionable ideas from the text
-2. Remove ALL filler words (I need to, basically, kind of, really, just, etc.)
-3. Split compound ideas into separate thoughts
-4. Identify 3-5 main theme categories based on the actual content
-5. For each thought, determine:
-   - Urgency (1-10): How time-sensitive? Consider deadlines, consequences of delay
-   - Importance (1-10): How significant to goals, values, or long-term impact?
-   - Due date: Extract any mentioned dates, times, or deadlines
-   - Category: Assign to the most appropriate theme
-
-Urgency Guidelines:
-- 9-10: Today/tomorrow, critical deadline
-- 7-8: This week, significant time pressure
-- 5-6: This month, moderate time sensitivity
-- 3-4: This quarter, some flexibility
-- 1-2: Someday/maybe, no specific timeline
-
-Importance Guidelines:
-- 9-10: Critical to major goals, high impact
-- 7-8: Significant value, aligns with priorities
-- 5-6: Moderate value, worth doing
-- 3-4: Nice to have, minor impact
-- 1-2: Low priority, minimal impact
-
-Date Extraction:
-- "tomorrow" → next calendar day
-- "next week" → 7 days from today
-- "next month" → 30 days from today
-- "end of month" → last day of current month
-- Specific dates → parse to YYYY-MM-DD format
-
-Brain dump text:
-"${text}"
-
-Return JSON in this exact format:
-{
-  "categories": [
-    {
-      "id": "work",
-      "name": "Work",
-      "confidence": 0.9,
-      "reasoning": "Contains work-related tasks and meetings"
-    }
-  ],
-  "thoughts": [
-    {
-      "text": "Prepare client presentation",
-      "category": "work",
-      "urgency": 8,
-      "importance": 7,
-      "dueDate": "2024-01-15",
-      "reasoning": "Meeting tomorrow (high urgency), key client (high importance)"
-    }
-  ],
-  "relationships": [
-    {
-      "from": "Prepare client presentation",
-      "to": "Review sales figures",
-      "type": "depends_on"
-    }
-  ]
-}`
-  }
-
-  private transformResponse(response: OpenAIResponse): CategorizationResult {
-    const thoughts: ThoughtAnalysis[] = response.thoughts.map((thought, index) => ({
-      id: `thought-ai-${Date.now()}-${index}`,
-      text: thought.text,
-      category: thought.category,
-      confidence: 0.9,
-      keywords: [],
-      sentiment: 'neutral' as const,
-      urgency: thought.urgency,
-      importance: thought.importance,
-      dueDate: thought.dueDate,
-      reasoning: thought.reasoning
-    }))
-
-    const categoriesWithThoughts = response.categories.map(cat => ({
-      name: cat.name,
-      thoughts: thoughts.filter(t => t.category === cat.id),
-      confidence: cat.confidence,
-      reasoning: cat.reasoning
-    }))
-
-    const relationships = (response.relationships || []).map(rel => ({
-      from: rel.from,
-      to: rel.to,
-      type: rel.type as 'depends_on' | 'relates_to' | 'contradicts' | 'elaborates',
-      confidence: 0.8
-    }))
-
-    const suggestions = this.generateSuggestions(thoughts, categoriesWithThoughts)
-
-    return {
-      categories: categoriesWithThoughts,
-      relationships,
-      suggestions
-    }
-  }
-
-  private generateSuggestions(thoughts: ThoughtAnalysis[], categories: any[]): string[] {
-    const suggestions: string[] = []
-
-    // Check for urgent items without clear deadlines
-    const urgentWithoutDates = thoughts.filter(t => (t.urgency || 0) >= 7 && !t.dueDate)
-    if (urgentWithoutDates.length > 0) {
-      suggestions.push('Some urgent items lack specific deadlines - consider setting clear due dates')
-    }
-
-    // Check for low importance but high urgency items
-    const urgentButNotImportant = thoughts.filter(t => 
-      (t.urgency || 0) >= 7 && (t.importance || 0) <= 4
-    )
-    if (urgentButNotImportant.length > 0) {
-      suggestions.push('Some tasks are urgent but not important - consider delegating or eliminating')
-    }
-
-    // Check for important but not urgent items
-    const importantNotUrgent = thoughts.filter(t =>
-      (t.importance || 0) >= 7 && (t.urgency || 0) <= 4
-    )
-    if (importantNotUrgent.length > 0) {
-      suggestions.push('Important long-term items detected - schedule time to work on these before they become urgent')
-    }
-
-    return suggestions
   }
 }

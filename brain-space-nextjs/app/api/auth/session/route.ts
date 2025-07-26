@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { setAuthCookie, clearAuthCookie, verifyAuth } from '@/lib/auth-helpers'
 import { adminAuth } from '@/lib/firebase-admin'
 
+export const dynamic = 'force-dynamic'
+
 /**
  * POST /api/auth/session - Set auth cookie from client-side token
  */

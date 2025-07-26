@@ -3,10 +3,8 @@
 import { useState, useEffect } from 'react'
 import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
-import { useAuth } from '@/contexts/AuthContext'
 
 export default function AuthDebugPage() {
-  const { user: contextUser } = useAuth()
   const [firebaseUser, setFirebaseUser] = useState<any>(null)
   const [debugData, setDebugData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -106,25 +104,6 @@ export default function AuthDebugPage() {
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">Auth Debug Information</h1>
 
-        {/* Context User Info */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Auth Context User</h2>
-          {contextUser ? (
-            <pre className="bg-gray-100 p-4 rounded overflow-auto text-sm">
-              {JSON.stringify(
-                {
-                  uid: contextUser.uid,
-                  email: contextUser.email,
-                  displayName: contextUser.displayName,
-                },
-                null,
-                2
-              )}
-            </pre>
-          ) : (
-            <p className="text-gray-500">No user in auth context</p>
-          )}
-        </div>
 
         {/* Firebase User Info */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">

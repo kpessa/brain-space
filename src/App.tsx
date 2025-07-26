@@ -23,6 +23,7 @@ import { CalendarView } from './pages/CalendarView'
 import { CalendarSettings } from './pages/CalendarSettings'
 import UnifiedTodos from './pages/UnifiedTodos'
 import TodoDashboard from './pages/TodoDashboard'
+import Nodes from './pages/Nodes'
 
 function AppContent() {
   const { user, loading } = useAuth()
@@ -103,6 +104,7 @@ function AppContent() {
               <Route path="calendar-settings" element={<CalendarSettings />} />
               <Route path="todos" element={<UnifiedTodos />} />
               <Route path="todo-dashboard" element={<TodoDashboard />} />
+              <Route path="nodes" element={<Nodes />} />
             </Route>
           ) : (
             <>

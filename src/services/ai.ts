@@ -1,5 +1,18 @@
 export interface AIProvider {
   categorizeThoughts(text: string): Promise<CategorizationResult>
+  enhanceNode(text: string): Promise<EnhanceNodeResult>
+}
+
+export interface EnhanceNodeResult {
+  nodeData: {
+    type: string
+    title: string
+    description?: string
+    tags?: string[]
+    urgency?: number
+    importance?: number
+    dueDate?: { date: string }
+  }
 }
 
 export interface CategorizationResult {
@@ -41,6 +54,45 @@ interface ThoughtRelationship {
 
 // Mock AI service for now - replace with real API calls
 export class MockAIService implements AIProvider {
+  async enhanceNode(text: string): Promise<EnhanceNodeResult> {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500))
+    
+    // Basic text analysis
+    const isQuestion = text.includes('?')
+    const isUrgent = /urgent|asap|immediately|now/i.test(text)
+    const hasDueDate = /by |before |until |due |deadline/i.test(text)
+    
+    return {
+      nodeData: {
+        type: isQuestion ? 'question' : 'thought',
+        title: text.substring(0, 100),
+        description: text,
+        tags: this.extractTags(text),
+        urgency: isUrgent ? 8 : 5,
+        importance: 5,
+        dueDate: hasDueDate ? { date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() } : undefined
+      }
+    }
+  }
+  
+  private extractTags(text: string): string[] {
+    const tags: string[] = []
+    
+    // Extract hashtags
+    const hashtagMatches = text.match(/#\w+/g)
+    if (hashtagMatches) {
+      tags.push(...hashtagMatches.map(tag => tag.substring(1)))
+    }
+    
+    // Add category based on keywords
+    if (/work|project|task|meeting/i.test(text)) tags.push('work')
+    if (/personal|home|family/i.test(text)) tags.push('personal')
+    if (/idea|thought|consider/i.test(text)) tags.push('ideas')
+    
+    return tags.length > 0 ? tags : ['misc']
+  }
+  
   async categorizeThoughts(text: string): Promise<CategorizationResult> {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 1500))
@@ -608,8 +660,13 @@ export class MockAIService implements AIProvider {
   }
 }
 
+// Import providers at the top level to avoid dynamic import issues
+import { OpenAIProvider } from './aiProviders/openai'
+import { AnthropicProvider } from './aiProviders/anthropic'
+import { FirebaseAIProvider } from './aiProviders/firebase'
+
 // Factory to create AI service based on provider
-export async function createAIService(provider?: string): Promise<AIProvider> {
+export function createAIService(provider?: string): AIProvider {
   const debugMode = localStorage.getItem('ai_debug') === 'true'
   
   // Check environment variables for AI provider configuration
@@ -627,13 +684,18 @@ export async function createAIService(provider?: string): Promise<AIProvider> {
   }
   
   switch (configuredProvider) {
+    case 'firebase':
+      if (debugMode) {
+        console.log('✅ Creating Firebase AI provider')
+      }
+      return new FirebaseAIProvider()
+      
     case 'openai':
       const openaiKey = import.meta.env.VITE_OPENAI_API_KEY
       if (openaiKey && openaiKey !== 'your_openai_api_key_here') {
         if (debugMode) {
           console.log('✅ Creating OpenAI provider')
         }
-        const { OpenAIProvider } = await import('./aiProviders/openai')
         return new OpenAIProvider(openaiKey)
       }
       if (debugMode) {
@@ -647,7 +709,6 @@ export async function createAIService(provider?: string): Promise<AIProvider> {
         if (debugMode) {
           console.log('✅ Creating Anthropic provider')
         }
-        const { AnthropicProvider } = await import('./aiProviders/anthropic')
         return new AnthropicProvider(anthropicKey)
       }
       if (debugMode) {

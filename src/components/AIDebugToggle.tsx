@@ -1,26 +1,33 @@
-import { useState, useEffect } from 'react'
-import { Bug } from 'lucide-react'
+import React from 'react'
+import { useBrainDumpStore } from '../store/braindump'
 
-export function AIDebugToggle() {
-  const [debugMode, setDebugMode] = useState(() => 
-    localStorage.getItem('ai_debug') === 'true'
-  )
-
-  useEffect(() => {
-    localStorage.setItem('ai_debug', debugMode.toString())
-  }, [debugMode])
+export const AIDebugToggle: React.FC = () => {
+  const { isDebugMode, toggleDebugMode } = useBrainDumpStore()
 
   return (
-    <button
-      onClick={() => setDebugMode(!debugMode)}
-      className={`fixed bottom-4 right-4 p-2 rounded-full transition-colors ${
-        debugMode 
-          ? 'bg-yellow-500 text-white hover:bg-yellow-600' 
-          : 'bg-gray-300 text-gray-600 hover:bg-gray-400'
-      }`}
-      title={debugMode ? 'AI Debug ON' : 'AI Debug OFF'}
-    >
-      <Bug className="h-5 w-5" />
-    </button>
+    <div className="flex items-center space-x-2">
+      <label htmlFor="debug-toggle" className="text-sm font-medium text-gray-700">
+        AI Debug Mode
+      </label>
+      <button
+        id="debug-toggle"
+        type="button"
+        className={`
+          relative inline-flex h-6 w-11 items-center rounded-full
+          transition-colors focus:outline-none focus:ring-2 focus:ring-brain-500 focus:ring-offset-2
+          ${isDebugMode ? 'bg-brain-600' : 'bg-gray-200'}
+        `}
+        onClick={toggleDebugMode}
+        aria-pressed={isDebugMode}
+      >
+        <span className="sr-only">Toggle AI debug mode</span>
+        <span
+          className={`
+            inline-block h-4 w-4 transform rounded-full bg-white transition-transform
+            ${isDebugMode ? 'translate-x-6' : 'translate-x-1'}
+          `}
+        />
+      </button>
+    </div>
   )
 }

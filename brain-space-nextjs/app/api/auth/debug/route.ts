@@ -3,6 +3,8 @@ import { adminAuth } from '@/lib/firebase-admin'
 import { cookies } from 'next/headers'
 import { AUTH_COOKIE_NAME } from '@/lib/auth-helpers'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     // Check if Firebase Admin is initialized
