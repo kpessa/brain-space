@@ -57,12 +57,12 @@ export class MockAIService implements AIProvider {
   async enhanceNode(text: string): Promise<EnhanceNodeResult> {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 500))
-    
+
     // Basic text analysis
     const isQuestion = text.includes('?')
     const isUrgent = /urgent|asap|immediately|now/i.test(text)
     const hasDueDate = /by |before |until |due |deadline/i.test(text)
-    
+
     return {
       nodeData: {
         type: isQuestion ? 'question' : 'thought',
@@ -71,43 +71,45 @@ export class MockAIService implements AIProvider {
         tags: this.extractTags(text),
         urgency: isUrgent ? 8 : 5,
         importance: 5,
-        dueDate: hasDueDate ? { date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() } : undefined
-      }
+        dueDate: hasDueDate
+          ? { date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() }
+          : undefined,
+      },
     }
   }
-  
+
   private extractTags(text: string): string[] {
     const tags: string[] = []
-    
+
     // Extract hashtags
     const hashtagMatches = text.match(/#\w+/g)
     if (hashtagMatches) {
       tags.push(...hashtagMatches.map(tag => tag.substring(1)))
     }
-    
+
     // Add category based on keywords
     if (/work|project|task|meeting/i.test(text)) tags.push('work')
     if (/personal|home|family/i.test(text)) tags.push('personal')
     if (/idea|thought|consider/i.test(text)) tags.push('ideas')
-    
+
     return tags.length > 0 ? tags : ['misc']
   }
-  
+
   async categorizeThoughts(text: string): Promise<CategorizationResult> {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 1500))
 
     const lines = text.split('\n').filter(line => line.trim())
-    
+
     // Step 1: Break down verbose thoughts into concise nodes
     const conciseThoughts = this.breakDownThoughts(lines)
-    
+
     // Step 2: Identify main themes/categories from content
     const mainCategories = this.identifyMainCategories(conciseThoughts)
-    
+
     // Step 3: Assign thoughts to categories and create hierarchy
     const categorizedThoughts = this.assignToCategories(conciseThoughts, mainCategories)
-    
+
     // Step 4: Build category results with hierarchical structure
     const categories: CategoryResult[] = mainCategories.map(category => ({
       name: category.name,
@@ -132,34 +134,42 @@ export class MockAIService implements AIProvider {
   private breakDownThoughts(lines: string[]): ThoughtAnalysis[] {
     const thoughts: ThoughtAnalysis[] = []
     const processedIdeas = new Set<string>() // Track unique ideas
-    
+
     lines.forEach((line, index) => {
       // Extract independent ideas from the line
       const ideas = this.extractIndependentIdeas(line)
-      
+
       ideas.forEach((idea, ideaIndex) => {
         // Skip if we've already processed a very similar idea
         const normalizedIdea = idea.toLowerCase().trim()
         if (processedIdeas.has(normalizedIdea)) return
         processedIdeas.add(normalizedIdea)
-        
+
         thoughts.push(this.analyzeLine(idea, `thought-${Date.now()}-${index}-${ideaIndex}`))
       })
     })
-    
+
     return thoughts
   }
 
   private extractIndependentIdeas(text: string): string[] {
     const ideas: string[] = []
-    
+
     // Common separators that indicate multiple ideas
     const separators = [
-      '; ', ', and ', ', also ', ', plus ', ', then ',
-      ' and also ', ' as well as ', ' in addition to ',
-      '. ', '! ', '? '
+      '; ',
+      ', and ',
+      ', also ',
+      ', plus ',
+      ', then ',
+      ' and also ',
+      ' as well as ',
+      ' in addition to ',
+      '. ',
+      '! ',
+      '? ',
     ]
-    
+
     // Split by separators
     let segments = [text]
     for (const sep of separators) {
@@ -174,7 +184,7 @@ export class MockAIService implements AIProvider {
       })
       segments = newSegments
     }
-    
+
     // Process each segment to extract core idea
     segments.forEach(segment => {
       const coreIdea = this.extractCoreIdea(segment)
@@ -182,28 +192,57 @@ export class MockAIService implements AIProvider {
         ideas.push(coreIdea)
       }
     })
-    
+
     return ideas
   }
 
   private extractCoreIdea(text: string): string {
     let cleaned = text.trim()
-    
+
     // Remove common filler phrases at the beginning
     const fillerStarts = [
-      'i need to ', 'i have to ', 'i should ', 'i must ', 'i want to ',
-      'we need to ', 'we have to ', 'we should ', 'we must ',
-      'need to ', 'have to ', 'should ', 'must ', 'want to ',
-      'going to ', 'gonna ', 'gotta ',
-      'there is ', 'there are ', 'there\'s ',
-      'i think ', 'i feel ', 'i believe ',
-      'maybe ', 'perhaps ', 'probably ',
-      'also ', 'and ', 'then ', 'so ',
-      'like ', 'um ', 'uh ', 'well ',
-      'basically ', 'actually ', 'really ',
-      'kind of ', 'sort of ', 'a bit '
+      'i need to ',
+      'i have to ',
+      'i should ',
+      'i must ',
+      'i want to ',
+      'we need to ',
+      'we have to ',
+      'we should ',
+      'we must ',
+      'need to ',
+      'have to ',
+      'should ',
+      'must ',
+      'want to ',
+      'going to ',
+      'gonna ',
+      'gotta ',
+      'there is ',
+      'there are ',
+      "there's ",
+      'i think ',
+      'i feel ',
+      'i believe ',
+      'maybe ',
+      'perhaps ',
+      'probably ',
+      'also ',
+      'and ',
+      'then ',
+      'so ',
+      'like ',
+      'um ',
+      'uh ',
+      'well ',
+      'basically ',
+      'actually ',
+      'really ',
+      'kind of ',
+      'sort of ',
+      'a bit ',
     ]
-    
+
     // Remove filler from start
     let changed = true
     while (changed) {
@@ -216,107 +255,173 @@ export class MockAIService implements AIProvider {
         }
       }
     }
-    
+
     // Remove common filler words/phrases from anywhere
     const fillerPhrases = [
-      ' that i need to ', ' that we need to ',
-      ' i think ', ' i guess ', ' i suppose ',
-      ' kind of ', ' sort of ', ' a bit ',
-      ' like ', ' you know ', ' I mean ',
-      ' basically ', ' actually ', ' really ',
-      ' or something ', ' and stuff ', ' and things ',
-      ' and whatnot ', ' and so on ', ' etc'
+      ' that i need to ',
+      ' that we need to ',
+      ' i think ',
+      ' i guess ',
+      ' i suppose ',
+      ' kind of ',
+      ' sort of ',
+      ' a bit ',
+      ' like ',
+      ' you know ',
+      ' I mean ',
+      ' basically ',
+      ' actually ',
+      ' really ',
+      ' or something ',
+      ' and stuff ',
+      ' and things ',
+      ' and whatnot ',
+      ' and so on ',
+      ' etc',
     ]
-    
+
     for (const filler of fillerPhrases) {
       cleaned = cleaned.replace(new RegExp(filler, 'gi'), ' ')
     }
-    
+
     // Remove redundant words
     const redundantWords = [
-      'very ', 'quite ', 'rather ', 'pretty ',
-      'just ', 'only ', 'simply ',
-      'definitely ', 'certainly ', 'surely ',
-      'totally ', 'completely ', 'absolutely ',
-      'literally ', 'honestly ', 'frankly '
+      'very ',
+      'quite ',
+      'rather ',
+      'pretty ',
+      'just ',
+      'only ',
+      'simply ',
+      'definitely ',
+      'certainly ',
+      'surely ',
+      'totally ',
+      'completely ',
+      'absolutely ',
+      'literally ',
+      'honestly ',
+      'frankly ',
     ]
-    
+
     for (const word of redundantWords) {
-      cleaned = cleaned.replace(new RegExp('\\b' + word + '\\b', 'gi'), ' ')
+      cleaned = cleaned.replace(new RegExp(`\\b${word}\\b`, 'gi'), ' ')
     }
-    
+
     // Clean up extra spaces and punctuation
     cleaned = cleaned
       .replace(/\s+/g, ' ')
       .replace(/\s+([.,!?])/g, '$1')
       .trim()
-    
+
     // Capitalize first letter
     if (cleaned.length > 0) {
       cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1)
     }
-    
+
     // If the result is too short or just punctuation, return empty
     if (cleaned.length < 3 || /^[.,!?]+$/.test(cleaned)) {
       return ''
     }
-    
+
     return cleaned
   }
 
-  private identifyMainCategories(thoughts: ThoughtAnalysis[]): Array<{id: string, name: string, confidence: number, reasoning: string}> {
+  private identifyMainCategories(
+    thoughts: ThoughtAnalysis[]
+  ): Array<{ id: string; name: string; confidence: number; reasoning: string }> {
     // Analyze content to identify main themes
     const keywordAnalysis = this.analyzeContentThemes(thoughts)
-    const categories: Array<{id: string, name: string, confidence: number, reasoning: string}> = []
-    
+    const categories: Array<{ id: string; name: string; confidence: number; reasoning: string }> =
+      []
+
     // Look for work-related content
-    const workKeywords = ['work', 'job', 'meeting', 'project', 'team', 'office', 'boss', 'client', 'deadline', 'task']
+    const workKeywords = [
+      'work',
+      'job',
+      'meeting',
+      'project',
+      'team',
+      'office',
+      'boss',
+      'client',
+      'deadline',
+      'task',
+    ]
     const workCount = this.countKeywordMatches(thoughts, workKeywords)
     if (workCount > 0) {
       categories.push({
         id: 'work',
         name: 'Work',
         confidence: Math.min(0.9, workCount * 0.2),
-        reasoning: 'Contains work-related activities and responsibilities'
+        reasoning: 'Contains work-related activities and responsibilities',
       })
     }
-    
+
     // Look for travel/trips
-    const travelKeywords = ['trip', 'travel', 'vacation', 'flight', 'hotel', 'visit', 'go to', 'plane', 'airport']
+    const travelKeywords = [
+      'trip',
+      'travel',
+      'vacation',
+      'flight',
+      'hotel',
+      'visit',
+      'go to',
+      'plane',
+      'airport',
+    ]
     const travelCount = this.countKeywordMatches(thoughts, travelKeywords)
     if (travelCount > 0) {
       categories.push({
         id: 'travel',
         name: 'Trips & Travel',
         confidence: Math.min(0.9, travelCount * 0.3),
-        reasoning: 'Contains travel plans and trip-related items'
+        reasoning: 'Contains travel plans and trip-related items',
       })
     }
-    
+
     // Look for personal/life content
-    const personalKeywords = ['family', 'friend', 'personal', 'home', 'health', 'exercise', 'hobby', 'weekend']
+    const personalKeywords = [
+      'family',
+      'friend',
+      'personal',
+      'home',
+      'health',
+      'exercise',
+      'hobby',
+      'weekend',
+    ]
     const personalCount = this.countKeywordMatches(thoughts, personalKeywords)
     if (personalCount > 0) {
       categories.push({
         id: 'personal',
         name: 'Personal',
         confidence: Math.min(0.8, personalCount * 0.25),
-        reasoning: 'Contains personal life and family-related items'
+        reasoning: 'Contains personal life and family-related items',
       })
     }
-    
+
     // Look for projects/goals
-    const projectKeywords = ['project', 'goal', 'plan', 'build', 'create', 'develop', 'launch', 'idea']
+    const projectKeywords = [
+      'project',
+      'goal',
+      'plan',
+      'build',
+      'create',
+      'develop',
+      'launch',
+      'idea',
+    ]
     const projectCount = this.countKeywordMatches(thoughts, projectKeywords)
     if (projectCount > 0) {
       categories.push({
         id: 'projects',
         name: 'Projects & Goals',
         confidence: Math.min(0.8, projectCount * 0.2),
-        reasoning: 'Contains project ideas and goal-oriented activities'
+        reasoning: 'Contains project ideas and goal-oriented activities',
       })
     }
-    
+
     // Look for learning/education
     const learningKeywords = ['learn', 'study', 'course', 'book', 'research', 'understand', 'skill']
     const learningCount = this.countKeywordMatches(thoughts, learningKeywords)
@@ -325,18 +430,18 @@ export class MockAIService implements AIProvider {
         id: 'learning',
         name: 'Learning & Growth',
         confidence: Math.min(0.8, learningCount * 0.3),
-        reasoning: 'Contains learning activities and educational content'
+        reasoning: 'Contains learning activities and educational content',
       })
     }
-    
+
     // Always include a miscellaneous category for uncategorized items
     categories.push({
       id: 'misc',
       name: 'Miscellaneous',
       confidence: 0.5,
-      reasoning: 'General thoughts and uncategorized items'
+      reasoning: 'General thoughts and uncategorized items',
     })
-    
+
     // Return top 3-5 categories by confidence
     return categories.sort((a, b) => b.confidence - a.confidence).slice(0, 5)
   }
@@ -350,7 +455,7 @@ export class MockAIService implements AIProvider {
 
   private analyzeContentThemes(thoughts: ThoughtAnalysis[]): Map<string, number> {
     const themes = new Map<string, number>()
-    
+
     thoughts.forEach(thought => {
       const words = thought.text.toLowerCase().split(/\s+/)
       words.forEach(word => {
@@ -359,20 +464,45 @@ export class MockAIService implements AIProvider {
         }
       })
     })
-    
+
     return themes
   }
 
   private isStopWord(word: string): boolean {
-    const stopWords = ['the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'that', 'this', 'have', 'has', 'had', 'will', 'would', 'could', 'should']
+    const stopWords = [
+      'the',
+      'and',
+      'or',
+      'but',
+      'in',
+      'on',
+      'at',
+      'to',
+      'for',
+      'of',
+      'with',
+      'by',
+      'that',
+      'this',
+      'have',
+      'has',
+      'had',
+      'will',
+      'would',
+      'could',
+      'should',
+    ]
     return stopWords.includes(word)
   }
 
-  private assignToCategories(thoughts: ThoughtAnalysis[], categories: Array<{id: string, name: string, confidence: number, reasoning: string}>): ThoughtAnalysis[] {
+  private assignToCategories(
+    thoughts: ThoughtAnalysis[],
+    categories: Array<{ id: string; name: string; confidence: number; reasoning: string }>
+  ): ThoughtAnalysis[] {
     return thoughts.map(thought => {
       let bestCategory = 'misc'
       let bestScore = 0
-      
+
       // Test each category to see which fits best
       categories.forEach(category => {
         const score = this.scoreThoughtForCategory(thought, category.id)
@@ -381,39 +511,96 @@ export class MockAIService implements AIProvider {
           bestCategory = category.id
         }
       })
-      
+
       return {
         ...thought,
         category: bestCategory,
-        confidence: Math.max(thought.confidence, bestScore)
+        confidence: Math.max(thought.confidence, bestScore),
       }
     })
   }
 
   private scoreThoughtForCategory(thought: ThoughtAnalysis, categoryId: string): number {
     const text = thought.text.toLowerCase()
-    
+
     switch (categoryId) {
       case 'work':
-        const workKeywords = ['work', 'job', 'meeting', 'project', 'team', 'office', 'boss', 'client', 'deadline', 'task', 'email', 'call']
+        const workKeywords = [
+          'work',
+          'job',
+          'meeting',
+          'project',
+          'team',
+          'office',
+          'boss',
+          'client',
+          'deadline',
+          'task',
+          'email',
+          'call',
+        ]
         return this.calculateKeywordScore(text, workKeywords)
-      
+
       case 'travel':
-        const travelKeywords = ['trip', 'travel', 'vacation', 'flight', 'hotel', 'visit', 'go to', 'plane', 'airport', 'booking', 'pack']
+        const travelKeywords = [
+          'trip',
+          'travel',
+          'vacation',
+          'flight',
+          'hotel',
+          'visit',
+          'go to',
+          'plane',
+          'airport',
+          'booking',
+          'pack',
+        ]
         return this.calculateKeywordScore(text, travelKeywords)
-      
+
       case 'personal':
-        const personalKeywords = ['family', 'friend', 'personal', 'home', 'health', 'exercise', 'hobby', 'weekend', 'dinner', 'movie']
+        const personalKeywords = [
+          'family',
+          'friend',
+          'personal',
+          'home',
+          'health',
+          'exercise',
+          'hobby',
+          'weekend',
+          'dinner',
+          'movie',
+        ]
         return this.calculateKeywordScore(text, personalKeywords)
-      
+
       case 'projects':
-        const projectKeywords = ['project', 'goal', 'plan', 'build', 'create', 'develop', 'launch', 'idea', 'implement', 'design']
+        const projectKeywords = [
+          'project',
+          'goal',
+          'plan',
+          'build',
+          'create',
+          'develop',
+          'launch',
+          'idea',
+          'implement',
+          'design',
+        ]
         return this.calculateKeywordScore(text, projectKeywords)
-      
+
       case 'learning':
-        const learningKeywords = ['learn', 'study', 'course', 'book', 'research', 'understand', 'skill', 'tutorial', 'practice']
+        const learningKeywords = [
+          'learn',
+          'study',
+          'course',
+          'book',
+          'research',
+          'understand',
+          'skill',
+          'tutorial',
+          'practice',
+        ]
         return this.calculateKeywordScore(text, learningKeywords)
-      
+
       default:
         return 0.1 // Low score for misc category
     }
@@ -668,10 +855,10 @@ import { FirebaseAIProvider } from './aiProviders/firebase'
 // Factory to create AI service based on provider
 export function createAIService(provider?: string): AIProvider {
   const debugMode = localStorage.getItem('ai_debug') === 'true'
-  
+
   // Check environment variables for AI provider configuration
   const configuredProvider = provider || import.meta.env.VITE_AI_PROVIDER
-  
+
   if (debugMode) {
     console.log('🔧 AI Service Factory')
     console.log('Requested provider:', provider)
@@ -679,17 +866,17 @@ export function createAIService(provider?: string): AIProvider {
     console.log('Environment:', {
       VITE_AI_PROVIDER: import.meta.env.VITE_AI_PROVIDER,
       hasOpenAIKey: !!import.meta.env.VITE_OPENAI_API_KEY,
-      hasAnthropicKey: !!import.meta.env.VITE_ANTHROPIC_API_KEY
+      hasAnthropicKey: !!import.meta.env.VITE_ANTHROPIC_API_KEY,
     })
   }
-  
+
   switch (configuredProvider) {
     case 'firebase':
       if (debugMode) {
         console.log('✅ Creating Firebase AI provider')
       }
       return new FirebaseAIProvider()
-      
+
     case 'openai':
       const openaiKey = import.meta.env.VITE_OPENAI_API_KEY
       if (openaiKey && openaiKey !== 'your_openai_api_key_here') {
@@ -702,7 +889,7 @@ export function createAIService(provider?: string): AIProvider {
         console.log('❌ OpenAI key not configured properly')
       }
       break
-      
+
     case 'anthropic':
       const anthropicKey = import.meta.env.VITE_ANTHROPIC_API_KEY
       if (anthropicKey && anthropicKey !== 'your_anthropic_api_key_here') {
@@ -716,7 +903,7 @@ export function createAIService(provider?: string): AIProvider {
       }
       break
   }
-  
+
   // Fall back to mock service if no provider is configured
   if (debugMode) {
     console.log('⚠️ Falling back to mock AI service')

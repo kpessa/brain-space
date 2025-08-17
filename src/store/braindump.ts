@@ -112,7 +112,7 @@ const createNodesFromThoughts = (
   const sortedCategories = Object.entries(categorizedThoughts)
     .sort(([, a], [, b]) => b.length - a.length)
     .filter(([category]) => category !== 'misc') // Put misc at the end
-  
+
   // Add misc category back at the end if it exists
   if (categorizedThoughts.misc && categorizedThoughts.misc.length > 0) {
     sortedCategories.push(['misc', categorizedThoughts.misc])
@@ -123,15 +123,16 @@ const createNodesFromThoughts = (
   const categorySpacing = 180
   const categoryNames: Record<string, string> = {
     work: 'Work',
-    travel: 'Trips & Travel', 
+    travel: 'Trips & Travel',
     personal: 'Personal',
     projects: 'Projects & Goals',
     learning: 'Learning & Growth',
-    misc: 'Miscellaneous'
+    misc: 'Miscellaneous',
   }
 
   sortedCategories.forEach(([category, categoryThoughts], index) => {
-    const categoryDisplayName = categoryNames[category] || category.charAt(0).toUpperCase() + category.slice(1)
+    const categoryDisplayName =
+      categoryNames[category] || category.charAt(0).toUpperCase() + category.slice(1)
     const categoryNode: BrainDumpNode = {
       id: `category-${category}`,
       type: 'category',

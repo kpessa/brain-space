@@ -44,7 +44,7 @@ export class AnthropicProvider implements AIProvider {
 
       const data = await response.json()
       const content = data.content[0].text
-      
+
       // Parse the JSON response
       let result
       try {
@@ -137,7 +137,7 @@ export class AnthropicProvider implements AIProvider {
 
       const data = await response.json()
       const content = data.content[0].text
-      
+
       // Parse the JSON response
       let result
       try {

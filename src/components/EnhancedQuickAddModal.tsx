@@ -36,7 +36,7 @@ export function EnhancedQuickAddModal({ isOpen, onClose }: EnhancedQuickAddModal
         const aiService = createAIService()
         const result = await aiService.enhanceNode(trimmedText)
         const nodeData = result.nodeData || {}
-        
+
         // Add node with AI-enhanced data
         await addNode({
           type: nodeData.type || 'thought',
@@ -47,7 +47,7 @@ export function EnhancedQuickAddModal({ isOpen, onClose }: EnhancedQuickAddModal
           reasoning: nodeData.description || trimmedText,
           dueDate: nodeData.dueDate?.date,
           // Pass along all the enhanced data
-          ...nodeData
+          ...nodeData,
         })
       } else {
         // Manual mode - just add the node as-is
@@ -106,7 +106,7 @@ export function EnhancedQuickAddModal({ isOpen, onClose }: EnhancedQuickAddModal
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             {/* AI Toggle */}
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600 dark:text-gray-400">
@@ -140,7 +140,11 @@ export function EnhancedQuickAddModal({ isOpen, onClose }: EnhancedQuickAddModal
               <textarea
                 value={text}
                 onChange={e => setText(e.target.value)}
-                placeholder={useAI ? "Describe what's on your mind... AI will organize it" : "What's on your mind?"}
+                placeholder={
+                  useAI
+                    ? "Describe what's on your mind... AI will organize it"
+                    : "What's on your mind?"
+                }
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-brain-500 focus:border-transparent resize-none"
                 rows={useAI ? 3 : 2}
                 autoFocus

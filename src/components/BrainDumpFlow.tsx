@@ -1328,7 +1328,13 @@ function BrainDumpFlowInner() {
           position: { x: number; y: number },
           nodeData?: any
         ) => {
-          eventHandlers.handleNodeInputSubmit(text, type as 'thought' | 'category', position, undefined, nodeData)
+          eventHandlers.handleNodeInputSubmit(
+            text,
+            type as 'thought' | 'category',
+            position,
+            undefined,
+            nodeData
+          )
         }}
         onApplyAutoLayout={handleAutoLayout}
         onClose={() =>

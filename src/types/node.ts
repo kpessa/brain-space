@@ -33,7 +33,17 @@ export interface Recurrence {
   endDate?: string // optional ISO date for when recurrence should stop
 }
 
-type NodeType = "goal" | "project" | "task" | "option" | "idea" | "question" | "problem" | "insight" | "thought" | "concern";
+type NodeType =
+  | 'goal'
+  | 'project'
+  | 'task'
+  | 'option'
+  | 'idea'
+  | 'question'
+  | 'problem'
+  | 'insight'
+  | 'thought'
+  | 'concern'
 
 // AI-focused input type for GenAI - excludes system-managed fields
 export type GenAiNodeInput = {

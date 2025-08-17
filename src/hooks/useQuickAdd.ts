@@ -11,7 +11,18 @@ export interface QuickAddContext {
 }
 
 export interface QuickAddNodeData {
-  type: 'thought' | 'category' | 'goal' | 'project' | 'task' | 'option' | 'idea' | 'question' | 'problem' | 'insight' | 'concern'
+  type:
+    | 'thought'
+    | 'category'
+    | 'goal'
+    | 'project'
+    | 'task'
+    | 'option'
+    | 'idea'
+    | 'question'
+    | 'problem'
+    | 'insight'
+    | 'concern'
   text?: string // For thoughts
   name?: string // For categories
   category?: string

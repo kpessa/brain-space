@@ -83,15 +83,15 @@ export function EnhancedInputDialog({
               <Wand2 className="w-5 h-5 text-brain-600" />
               {title}
             </h3>
-            <button 
-              onClick={handleCancel} 
+            <button
+              onClick={handleCancel}
               className="text-gray-400 hover:text-gray-600"
               disabled={isProcessing}
             >
               <X className="w-5 h-5" />
             </button>
           </div>
-          
+
           {/* AI Status */}
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-600">
@@ -119,12 +119,12 @@ export function EnhancedInputDialog({
             ref={inputRef as any}
             value={inputValue}
             onChange={e => setInputValue(e.target.value)}
-            placeholder={useAI ? "Describe your thought... AI will organize it" : placeholder}
+            placeholder={useAI ? 'Describe your thought... AI will organize it' : placeholder}
             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brain-500 resize-none"
             rows={useAI ? 3 : 1}
             disabled={isProcessing}
           />
-          
+
           {/* AI Benefits */}
           {useAI && (
             <div className="mt-2 text-xs text-gray-500 bg-gray-50 p-2 rounded">
