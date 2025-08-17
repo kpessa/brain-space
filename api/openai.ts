@@ -19,9 +19,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${openaiKey}`
+        Authorization: `Bearer ${openaiKey}`,
       },
-      body: JSON.stringify(req.body)
+      body: JSON.stringify(req.body),
     })
 
     const data = await response.json()

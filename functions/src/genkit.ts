@@ -26,30 +26,62 @@ const AttemptInputSchema = z.object({
 })
 
 // Simplified due date schema for Google AI compatibility
-const DueDateSchema = z.object({
-  type: z.enum(['exact', 'relative']).describe('Type of due date'),
-  date: z.string().optional().describe('ISO date string for exact dates'),
-  offset: z.number().optional().describe('Number of units from now for relative dates'),
-  unit: z.enum(['minutes', 'hours', 'days', 'weeks', 'months']).optional().describe('Time unit for relative dates'),
-}).optional().describe('Due date information')
+const DueDateSchema = z
+  .object({
+    type: z.enum(['exact', 'relative']).describe('Type of due date'),
+    date: z.string().optional().describe('ISO date string for exact dates'),
+    offset: z.number().optional().describe('Number of units from now for relative dates'),
+    unit: z
+      .enum(['minutes', 'hours', 'days', 'weeks', 'months'])
+      .optional()
+      .describe('Time unit for relative dates'),
+  })
+  .optional()
+  .describe('Due date information')
 
-const RecurrenceSchema = z.object({
-  frequency: z.enum(['daily', 'weekly', 'monthly', 'custom']).describe('Frequency of recurrence'),
-  timesPerInterval: z.number().optional().describe('Times per interval (e.g., 2 times per day)'),
-  timesOfDay: z.array(z.string()).optional().describe('Specific times of day (e.g., ["08:00", "18:00"])'),
-  daysOfWeek: z.array(z.enum(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])).optional().describe('Days of week for weekly recurrence'),
-  interval: z.number().optional().describe('For custom intervals'),
-  unit: z.enum(['minutes', 'hours', 'days', 'weeks', 'months']).optional().describe('Unit used with interval'),
-  repeatCount: z.number().optional().describe('How many times to repeat'),
-  endDate: z.string().optional().describe('ISO date when recurrence should stop'),
-}).optional().describe('Recurrence pattern')
+const RecurrenceSchema = z
+  .object({
+    frequency: z.enum(['daily', 'weekly', 'monthly', 'custom']).describe('Frequency of recurrence'),
+    timesPerInterval: z.number().optional().describe('Times per interval (e.g., 2 times per day)'),
+    timesOfDay: z
+      .array(z.string())
+      .optional()
+      .describe('Specific times of day (e.g., ["08:00", "18:00"])'),
+    daysOfWeek: z
+      .array(z.enum(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']))
+      .optional()
+      .describe('Days of week for weekly recurrence'),
+    interval: z.number().optional().describe('For custom intervals'),
+    unit: z
+      .enum(['minutes', 'hours', 'days', 'weeks', 'months'])
+      .optional()
+      .describe('Unit used with interval'),
+    repeatCount: z.number().optional().describe('How many times to repeat'),
+    endDate: z.string().optional().describe('ISO date when recurrence should stop'),
+  })
+  .optional()
+  .describe('Recurrence pattern')
 
 // Schema exactly matching GenAiNodeInput
 const GenAiNodeInputSchema = z.object({
   title: z.string().optional().describe('Concise title for the node'),
   description: z.string().optional().describe('Detailed description or context'),
   aliases: z.array(z.string()).optional().describe('Alternative names or synonyms'),
-  type: z.enum(['goal', 'project', 'task', 'option', 'idea', 'question', 'problem', 'insight', 'thought', 'concern']).optional().describe('Node type classification'),
+  type: z
+    .enum([
+      'goal',
+      'project',
+      'task',
+      'option',
+      'idea',
+      'question',
+      'problem',
+      'insight',
+      'thought',
+      'concern',
+    ])
+    .optional()
+    .describe('Node type classification'),
   tags: z.array(z.string()).optional().describe('Categorical tags for organization'),
   urgency: z.number().optional().describe('Urgency level (1-10, higher is more urgent)'),
   importance: z.number().optional().describe('Importance level (1-10, higher is more important)'),

@@ -18,7 +18,7 @@ if (typeof window !== 'undefined') {
   const originalError = console.error
   console.error = (...args) => {
     const errorString = args[0]?.toString?.() || ''
-    
+
     // Suppress these expected errors
     if (
       errorString.includes('Failed to load resource') ||
@@ -29,7 +29,7 @@ if (typeof window !== 'undefined') {
       // These errors are expected when not using Firebase Hosting
       return
     }
-    
+
     originalError.apply(console, args)
   }
 }

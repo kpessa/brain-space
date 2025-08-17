@@ -93,19 +93,19 @@ export function PaneContextMenu({
   const handleAISubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!inputValue.trim()) return
-    
+
     setIsProcessing(true)
     try {
       const { createAIService } = await import('../services/ai')
       const aiService = createAIService()
       const result = await aiService.enhanceNode(inputValue.trim())
-      
+
       // Extract enhanced data
       const nodeData = result.nodeData || {}
       const nodeText = nodeData.title || inputValue.trim()
-      
+
       onAddNode(nodeText, 'thought', 'misc', flowPosition, nodeData)
-      
+
       onClose()
       setInputValue('')
     } catch (error) {
@@ -120,15 +120,15 @@ export function PaneContextMenu({
 
   const handleManualSubmit = () => {
     if (!selectedTemplate) return
-    
+
     const nodeText = inputValue.trim() || selectedTemplate.label
-    
+
     if (selectedTemplate.type === 'category') {
       onAddNode(nodeText, 'category', nodeText.toLowerCase(), flowPosition)
     } else {
       onAddNode(nodeText, selectedTemplate.type, selectedTemplate.category, flowPosition)
     }
-    
+
     onClose()
     setInputValue('')
     setSelectedTemplate(null)
@@ -159,7 +159,7 @@ export function PaneContextMenu({
               <X className="w-4 h-4" />
             </button>
           </div>
-          
+
           {/* AI Toggle */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -198,7 +198,7 @@ export function PaneContextMenu({
                 autoFocus
                 disabled={isProcessing}
               />
-              
+
               <div className="mt-3 text-xs text-gray-500">
                 <p>✨ AI will create:</p>
                 <ul className="ml-4 mt-1 space-y-0.5">
@@ -208,7 +208,7 @@ export function PaneContextMenu({
                   <li>• Due dates if mentioned</li>
                 </ul>
               </div>
-              
+
               <button
                 type="submit"
                 disabled={isProcessing || !inputValue.trim()}
@@ -264,16 +264,18 @@ export function PaneContextMenu({
                       Change
                     </button>
                   </div>
-                  
+
                   <input
                     type="text"
                     value={inputValue}
                     onChange={e => setInputValue(e.target.value)}
-                    placeholder={selectedTemplate.type === 'category' ? 'Category name...' : 'Node label...'}
+                    placeholder={
+                      selectedTemplate.type === 'category' ? 'Category name...' : 'Node label...'
+                    }
                     className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brain-500"
                     autoFocus
                   />
-                  
+
                   <button
                     onClick={handleManualSubmit}
                     className="w-full mt-3 px-3 py-2 bg-brain-600 text-white rounded-lg hover:bg-brain-700"

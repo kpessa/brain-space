@@ -97,7 +97,7 @@ export class GoogleCalendarService {
           apiKey: import.meta.env.VITE_GOOGLE_API_KEY ? 'present' : 'missing',
           discoveryDoc: import.meta.env.VITE_GOOGLE_CALENDAR_DISCOVERY_DOC,
         })
-        
+
         await window.gapi.client.init({
           apiKey: import.meta.env.VITE_GOOGLE_API_KEY,
           discoveryDocs: [import.meta.env.VITE_GOOGLE_CALENDAR_DISCOVERY_DOC],
@@ -118,7 +118,7 @@ export class GoogleCalendarService {
         clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID ? 'present' : 'missing',
         scopes: import.meta.env.VITE_GOOGLE_CALENDAR_SCOPES,
       })
-      
+
       this.tokenClient = window.google.accounts.oauth2.initTokenClient({
         client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
         scope: import.meta.env.VITE_GOOGLE_CALENDAR_SCOPES,
@@ -198,7 +198,7 @@ export class GoogleCalendarService {
   async authorize(immediate = false): Promise<boolean> {
     console.log('authorize called with immediate:', immediate)
     console.log('API states - GAPI:', this.gapiInited, 'GIS:', this.gisInited)
-    
+
     if (!this.gapiInited || !this.gisInited) {
       console.error('Google APIs not loaded - GAPI:', this.gapiInited, 'GIS:', this.gisInited)
       return false
@@ -207,7 +207,7 @@ export class GoogleCalendarService {
     // Check for existing token
     const existingToken = await this.getStoredAccessToken()
     console.log('Existing token:', existingToken ? 'found' : 'not found')
-    
+
     if (existingToken) {
       window.gapi.client.setToken({ access_token: existingToken })
       try {

@@ -35,7 +35,7 @@ export default function GoogleCalendarTest() {
   const [loading, setLoading] = useState(false)
   const [tokenInFirestore, setTokenInFirestore] = useState<boolean | null>(null)
   const [error, setError] = useState<string | null>(null)
-  
+
   // Debug: Check environment variables
   useEffect(() => {
     console.log('Google Calendar Environment Variables:', {
@@ -52,7 +52,7 @@ export default function GoogleCalendarTest() {
     const timer = setTimeout(() => {
       checkAuthStatus()
     }, 1000)
-    
+
     // Also check periodically if APIs are not ready
     const interval = setInterval(() => {
       const status = googleCalendarService.getInitStatus()
@@ -62,7 +62,7 @@ export default function GoogleCalendarTest() {
       // Force re-render to update status display
       setLoading(prev => prev)
     }, 500)
-    
+
     return () => {
       clearTimeout(timer)
       clearInterval(interval)
@@ -103,13 +103,13 @@ export default function GoogleCalendarTest() {
     try {
       const success = await googleCalendarService.authorize()
       setIsAuthorized(success)
-      
+
       if (success) {
         // Check token storage
         const userRef = doc(db, 'users', user!.uid, 'settings', 'googleCalendar')
         const docSnap = await getDoc(userRef)
         setTokenInFirestore(docSnap.exists() && !!docSnap.data()?.google_access_token)
-        
+
         // Fetch calendars after authorization
         await fetchCalendars()
       } else {
@@ -155,13 +155,8 @@ export default function GoogleCalendarTest() {
     try {
       const now = new Date()
       const oneMonthLater = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
-      
-      const eventList = await googleCalendarService.listEvents(
-        calendarId,
-        now,
-        oneMonthLater,
-        50
-      )
+
+      const eventList = await googleCalendarService.listEvents(calendarId, now, oneMonthLater, 50)
       setEvents(eventList)
     } catch (err) {
       console.error('Error fetching events:', err)
@@ -235,7 +230,9 @@ export default function GoogleCalendarTest() {
                     ) : (
                       <XCircle className="w-4 h-4 text-red-500" />
                     )}
-                    <span>Firebase Auth: {user ? `Logged in as ${user.email}` : 'Not logged in'}</span>
+                    <span>
+                      Firebase Auth: {user ? `Logged in as ${user.email}` : 'Not logged in'}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     {isAuthorized ? (
@@ -254,7 +251,7 @@ export default function GoogleCalendarTest() {
                     <span>Token in Firestore: {tokenInFirestore ? 'Stored' : 'Not stored'}</span>
                   </div>
                 </div>
-                
+
                 {/* API Init Status */}
                 <div className="mt-3 pt-3 border-t border-gray-200">
                   <h4 className="text-xs font-semibold text-gray-600 mb-1">API Initialization</h4>
@@ -296,36 +293,22 @@ export default function GoogleCalendarTest() {
 
               {/* Error Display */}
               {error && (
-                <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
-                  {error}
-                </div>
+                <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">{error}</div>
               )}
 
               {/* Action Buttons */}
               <div className="flex gap-3">
                 {!isAuthorized ? (
-                  <Button
-                    onClick={handleAuthorize}
-                    disabled={loading || !user}
-                    variant="primary"
-                  >
+                  <Button onClick={handleAuthorize} disabled={loading || !user} variant="primary">
                     {loading ? 'Authorizing...' : 'Authorize Google Calendar'}
                   </Button>
                 ) : (
                   <>
-                    <Button
-                      onClick={() => checkAuthStatus()}
-                      disabled={loading}
-                      variant="outline"
-                    >
+                    <Button onClick={() => checkAuthStatus()} disabled={loading} variant="outline">
                       <RefreshCw className="w-4 h-4 mr-2" />
                       Refresh Status
                     </Button>
-                    <Button
-                      onClick={handleSignOut}
-                      disabled={loading}
-                      variant="outline"
-                    >
+                    <Button onClick={handleSignOut} disabled={loading} variant="outline">
                       <LogOut className="w-4 h-4 mr-2" />
                       Sign Out
                     </Button>
@@ -338,7 +321,7 @@ export default function GoogleCalendarTest() {
                 <div className="space-y-3">
                   <h3 className="font-semibold">Your Calendars</h3>
                   <div className="grid gap-2">
-                    {calendars.map((calendar) => (
+                    {calendars.map(calendar => (
                       <div
                         key={calendar.id}
                         className="flex items-center justify-between p-3 bg-white rounded-lg border"
@@ -373,11 +356,7 @@ export default function GoogleCalendarTest() {
               {isAuthorized && (
                 <div className="space-y-3">
                   <h3 className="font-semibold">Test Operations</h3>
-                  <Button
-                    onClick={createTestEvent}
-                    disabled={loading}
-                    variant="primary"
-                  >
+                  <Button onClick={createTestEvent} disabled={loading} variant="primary">
                     Create Test Event (Tomorrow at 2 PM)
                   </Button>
                 </div>
@@ -388,11 +367,8 @@ export default function GoogleCalendarTest() {
                 <div className="space-y-3">
                   <h3 className="font-semibold">Upcoming Events</h3>
                   <div className="grid gap-2 max-h-96 overflow-y-auto">
-                    {events.map((event) => (
-                      <div
-                        key={event.id}
-                        className="p-3 bg-white rounded-lg border"
-                      >
+                    {events.map(event => (
+                      <div key={event.id} className="p-3 bg-white rounded-lg border">
                         <h4 className="font-medium">{event.summary}</h4>
                         <p className="text-sm text-gray-600">
                           {event.start.dateTime

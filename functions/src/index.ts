@@ -172,7 +172,7 @@ export const enhanceNode = onRequest(
       // Set API keys in environment for Genkit to use
       const googleKey =
         googleAiApiKey.value() || process.env.GOOGLE_AI_API_KEY || process.env.GOOGLE_GENAI_API_KEY
-      
+
       if (googleKey) {
         process.env.GOOGLE_GENAI_API_KEY = googleKey
         process.env.GOOGLE_AI_API_KEY = googleKey
