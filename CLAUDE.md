@@ -2,9 +2,12 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Current Status: Migration to Next.js
+## Current Status: Dual Repository Architecture
 
-**Important**: This project is currently being migrated from a React (Vite) + Firebase architecture to a Next.js fullstack application with React Server Components and App Router. The Next.js app is located in the `brain-space-nextjs/` subdirectory.
+**Important**: The Next.js application has been extracted to a separate repository for better separation of concerns. The original React (Vite) app remains in this repository while the Next.js migration continues independently.
+
+- **This Repository**: React (Vite) + Firebase architecture with AI provider system
+- **Separate Repository**: Next.js fullstack application (moved from `brain-space-nextjs/` subdirectory)
 
 ## High-Level Architecture
 
@@ -19,11 +22,11 @@ Brain Space is a PWA-first personal knowledge management system currently transi
    - `/src/lib/`: Utility functions and services
    - `/src/services/`: Business logic (AI providers, logging, sync)
 
-2. **New Next.js Application** (in `brain-space-nextjs/`)
+2. **Next.js Application** (separate repository)
    - App Router with React Server Components
    - Server-side rendering and API routes
-   - Gradual migration of components from the React app
-   - Modern Next.js patterns and best practices
+   - Deployed to Vercel production environment
+   - Authentication fixes and optimizations completed
 
 3. **Backend (Firebase + Genkit)**
    - Firebase Auth for authentication
@@ -31,10 +34,12 @@ Brain Space is a PWA-first personal knowledge management system currently transi
    - Firebase Functions for serverless AI processing
    - Genkit for AI model orchestration
 
-4. **AI Service Architecture**
-   - Factory pattern for swappable AI providers (OpenAI, Anthropic, Firebase)
-   - Firebase-hosted Genkit functions for secure API key management
-   - Mock AI service for development without API keys
+4. **AI Service Architecture** (Recently Refactored)
+   - Modular provider system with separate modules for each provider
+   - Providers: OpenAI, Anthropic, Firebase (new), Mock
+   - Firebase provider for secure server-side API key management
+   - Enhanced MockAIService with hierarchical categorization
+   - Factory pattern in `/src/services/ai.ts` for provider selection
 
 ## Common Development Commands
 
@@ -46,8 +51,8 @@ pnpm install              # Install dependencies
 pnpm run dev             # Start development server
 pnpm run storybook       # Start Storybook for component development
 
-# Next.js App (New)
-cd brain-space-nextjs && pnpm run dev  # Start Next.js development server
+# Next.js App (Separate Repository)
+# The Next.js app is now in a separate repository
 
 # Testing & Quality
 pnpm run lint            # Run ESLint
@@ -104,12 +109,12 @@ firebase functions:secrets:set OPENAI_API_KEY
 4. **Firebase Sync**: Authentication and data persistence handled through Firebase services
 5. **TypeScript**: Configured for rapid prototyping with relaxed rules (warnings instead of errors)
 
-### Migration Strategy to Next.js
-1. **Gradual Migration**: Components are being migrated one by one to `brain-space-nextjs/`
-2. **Server Components**: Leveraging React Server Components for better performance
-3. **API Routes**: Moving backend logic to Next.js API routes
-4. **Shared Code**: Reusing types, utilities, and business logic where possible
-5. **Parallel Development**: Both apps can run simultaneously during migration
+### Current Development Focus
+1. **AI Provider System**: Recently refactored for modularity and Firebase integration
+2. **Production Stability**: Both apps deployed and functional
+3. **Feature Development**: Continue building on React app while Next.js matures
+4. **Knowledge Management**: Brain dump flow with AI categorization
+5. **PWA Features**: Offline support and installability
 
 ## Key Features & Flows
 
@@ -121,7 +126,9 @@ firebase functions:secrets:set OPENAI_API_KEY
 
 ### AI Service Selection
 - `createAIService()` factory in `/src/services/ai.ts` handles provider selection
-- Firebase provider preferred for security (API keys stored as secrets)
+- Providers available: Firebase, OpenAI, Anthropic, Mock
+- Firebase provider preferred for production (server-side API keys)
+- Provider modules in `/src/services/aiProviders/`
 - Falls back to mock service if no provider configured
 
 ### Firebase Integration
