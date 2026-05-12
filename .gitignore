@@ -71,3 +71,5 @@ venv/
 .parcel-cache/
 coverage/
 .nyc_output/
+# Nested clone (use ~/code/brain-space-nextjs instead)
+brain-space-nextjs/
